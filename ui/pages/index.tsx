@@ -1,16 +1,14 @@
+
+
 import { getUploadPlaylistId, getVideoDescriptions } from '../utils/getVideoDescriptions';
 
 type Props = {
   descriptions: string[];
 };
 
-export async function getServerSideProps() {
-  const uploadPlaylistId = await getUploadPlaylistId();
-
-  const descriptions = await getVideoDescriptions(uploadPlaylistId);
-
-  console.log("these are descriptions")
-  console.log(descriptions)
+export async function getStaticProps() {
+  let playlistId = await getUploadPlaylistId();
+  let descriptions = await getVideoDescriptions(playlistId)
 
   return {
     props: {descriptions},
@@ -18,16 +16,83 @@ export async function getServerSideProps() {
 }
 
 export default function Index({descriptions}: Props) {
+
   return (
     <div className="p-12">
       <h1 className="text-center my-24 font-black tracking-tight text-6xl">
-        Links in the Description
+        Jenn's Links
       </h1>
-      <div className="columns-3 gap-3">
+      <div>
         {descriptions.map(description => {
-          return <div className="p-9 my-3 border-2 whitespace-pre-wrap">{description}</div>;
+          return (
+            <div>{description}</div>
+          )
         })}
       </div>
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+// type Props = {
+//   record: ChannelRecord;
+// };
+
+// export function getStaticProps() {
+//   const record = getRecord();
+
+//   return {
+//     props: {record},
+//   };
+// }
+
+// export default function Index({record}: Props) {
+//   const [displayLinkDetails, setDisplayLinkDetails] = useState(
+//     Array(record.Links.length).fill(false)
+//   );
+
+//   return (
+//     <div className="p-12">
+//       <h1 className="text-center my-24 font-black tracking-tight text-6xl">
+//         Jenn's Links
+//       </h1>
+//       <div>
+//         {record.Links.map((link, index) => {
+//           return (
+//             <div className="my-2">
+//               <button
+//                 className="p-1 bg-slate-300"
+//                 onClick={() => {
+        
+//                   displayLinkDetails[index] = !displayLinkDetails[index];
+        
+//                   setDisplayLinkDetails([...displayLinkDetails]);
+//                 }}
+//               >
+//                 +
+//               </button>
+//               {link.Brand !== ''
+//                 ? `${link.Brand} - ${link.Description}`
+//                 : `${link.Description}`}{' '}
+//               <a href={link.Href} target="_blank" className="text-blue-600">
+//                 {link.Href}
+//               </a>
+//               <div style={{display: displayLinkDetails[index] ? 'block' : 'none'}}>
+//                 {link.PublishedAt} {link.VideoTitle}
+//               </div>
+//             </div>
+//           );
+//         })}
+//       </div>
+//     </div>
+//   );
+// }
