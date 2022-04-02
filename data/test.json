@@ -1,0 +1,21 @@
+{
+    "channelUsername" : "",
+    "channelTitle": "",
+    "channelId": "",
+    "uploadPlaylistId": "",
+    "subscriberCount": 0,
+
+    "links": [
+        {
+            "href": "",
+            "brand": "",
+            "affiliate": false,
+            "description": "",
+            "category": "", // product, media, social, people, equipment 
+            "tags": [],
+            
+        }
+    ]
+
+
+}
