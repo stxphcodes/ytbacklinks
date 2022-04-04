@@ -1,10 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
-	"path/filepath"
 	"time"
 )
 
@@ -19,26 +15,26 @@ type Record struct {
 	Links       []*Link
 }
 
-func createRecord(channelId string, links []*Link) error {
-	f, err := os.Create(filepath.Join(DATA_DIRECTORY, fmt.Sprintf("%s.json", channelId)))
-	if err != nil {
-		return err
-	}
-	defer f.Close()
+// func createRecord(channelId string, links []*Link) error {
+// 	f, err := os.Create(filepath.Join(DATA_DIRECTORY, fmt.Sprintf("%s.json", channelId)))
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer f.Close()
 
-	r := &Record{
-		ChannelUsername: CHANNEL_USERNAME,
-		ChannelTitle:    CHANNEL_TITLE,
-		ChannelId:       CHANNEL_ID,
-		LastUpdated:     time.Now(),
-		Links:           links,
-	}
+// 	r := &Record{
+// 		ChannelUsername: CHANNEL_USERNAME,
+// 		ChannelTitle:    CHANNEL_TITLE,
+// 		ChannelId:       CHANNEL_ID,
+// 		LastUpdated:     time.Now(),
+// 		Links:           links,
+// 	}
 
-	encoder := json.NewEncoder(f)
-	encoder.SetIndent("", "    ")
-	if err := encoder.Encode(r); err != nil {
-		return err
-	}
+// 	encoder := json.NewEncoder(f)
+// 	encoder.SetIndent("", "    ")
+// 	if err := encoder.Encode(r); err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }

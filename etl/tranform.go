@@ -39,7 +39,7 @@ func trimSpecialChars(s string) string {
 	return s
 }
 
-func snippetsToLinks(snippets map[string]Snippet) ([]*Link, error) {
+func snippetsToLinks(snippets map[string]VideoSnippet) ([]*Link, error) {
 	var links []*Link
 
 	for videoId, snippet := range snippets {

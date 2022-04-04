@@ -1,18 +1,18 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
+
+	firebase "firebase.google.com/go"
+	"google.golang.org/api/option"
 )
 
-const (
-	CHANNEL_USERNAME = "clothesencounters"
-	CHANNEL_TITLE    = "Jenn Im"
-	CHANNEL_ID       = "UCgWfS_47YPVbKx5EK4FLm4A"
-
-	YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3"
+var (
+	CHANNEL_TITLES = []string{"Jenn Im"}
 )
 
 func main() {
@@ -23,31 +23,80 @@ func main() {
 
 func run() error {
 	var (
-		apiKey string
+		apiKey              string
+		firebaseCredsPath   string
+		firebaseDatabaseUrl string
 	)
 
 	flag.StringVar(&apiKey, "key", "", "API Key to use for Youtube API.")
+	flag.StringVar(&firebaseCredsPath, "firebaseCreds", "", "Path to service account for firebase.")
+	flag.StringVar(&firebaseDatabaseUrl, "firebaseDatabase", "", "Firebase database url.")
+
 	flag.Parse()
 
-	if apiKey == "" {
-		return fmt.Errorf("Missing API Key")
+	switch "" {
+	case apiKey:
+		return fmt.Errorf("Missing API key.")
+
+	case firebaseCredsPath:
+		return fmt.Errorf("Missing firebase creds path.")
+
+	case firebaseDatabaseUrl:
+		return fmt.Errorf("Missing firebase database url.")
+
 	}
 
+	// Connect to firebase database.
+	ctx := context.Background()
+	conf := &firebase.Config{
+		DatabaseURL: firebaseDatabaseUrl,
+	}
+
+	opt := option.WithCredentialsFile(firebaseCredsPath)
+
+	app, err := firebase.NewApp(ctx, conf, opt)
+	if err != nil {
+		return err
+	}
+
+	firebaseClient, err := app.Database(ctx)
+	if err != nil {
+		return err
+	}
+
+	lastUpdated, err := queryLastUpdated(firebaseClient, ctx)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("this is last updated")
+	fmt.Println(lastUpdated)
+
+	// Connect to youtube via regular http client.
 	httpClient := http.DefaultClient
-	playlistId, err := getUploadPlaylist(httpClient, CHANNEL_USERNAME, apiKey)
+
+	videos, err := extractVideosByLastUpdated(httpClient, apiKey, lastUpdated)
 	if err != nil {
 		return err
 	}
 
-	snippets, err := getVideoSnippets(httpClient, playlistId, apiKey)
-	if err != nil {
-		return err
-	}
+	fmt.Println(videos)
+	return nil
 
-	links, err := snippetsToLinks(snippets)
-	if err != nil {
-		return err
-	}
+	// playlistId, err := getUploadPlaylist(httpClient, channelId, apiKey)
+	// if err != nil {
+	// 	return err
+	// }
 
-	return createRecord(CHANNEL_ID, links)
+	// snippets, err := getVideoSnippets(httpClient, playlistId, apiKey)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// links, err := snippetsToLinks(snippets)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// return createRecord(CHANNEL_ID, links)
 }
