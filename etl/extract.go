@@ -5,37 +5,26 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 )
 
 const YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3"
 
-func extractVideosByLastUpdated(client *http.Client, apiKey string, lastUpdated time.Time) (map[string]VideoSnippet, error) {
-	channelId, err := searchChannelIdByTitle(client, apiKey, CHANNEL_TITLES[0])
+func extractChannel(client *http.Client, apiKey, channelTitle string) (*ChannelResponse, error) {
+	channelId, err := searchChannelIdByTitle(client, apiKey, channelTitle)
 	if err != nil {
 		return nil, err
 	}
 
-	videoIds, err := searchVideoIdsAfterPublishedDate(client, apiKey, channelId, lastUpdated)
+	return getChannelByChannelId(client, apiKey, channelId)
+}
+
+func extractVideosByLastUpdated(client *http.Client, apiKey, channelId string, lastUpdated string) (*VideoResponse, error) {
+	videoIds, err := searchVideoIdsAfterPublishedDate(client, apiKey, channelId, lastUpdated, "")
 	if err != nil {
 		return nil, err
 	}
 
 	return getVideosByVideoIds(client, apiKey, videoIds)
-}
-
-func extractVideos(client *http.Client, apiKey, channelTitle string) (map[string]VideoSnippet, error) {
-	channelId, err := searchChannelIdByTitle(client, apiKey, CHANNEL_TITLES[0])
-	if err != nil {
-		return nil, err
-	}
-
-	playlistId, err := getUploadPlaylistByChannelId(client, apiKey, channelId)
-	if err != nil {
-		return nil, err
-	}
-
-	return getVideosByUploadPlaylist(client, apiKey, playlistId)
 }
 
 func searchChannelIdByTitle(client *http.Client, apiKey, channelTitle string) (string, error) {
@@ -82,10 +71,34 @@ func searchChannelIdByTitle(client *http.Client, apiKey, channelTitle string) (s
 	return r.Items[0].Snippet.ChannelId, nil
 }
 
-func getUploadPlaylistByChannelId(client *http.Client, apiKey, channelId string) (string, error) {
+type ChannelResponse struct {
+	Items []struct {
+		Id      string
+		Snippet struct {
+			Title       string
+			Description string
+			CustomUrl   string
+			Thumbnails  struct {
+				Default struct {
+					Url string
+				}
+				High struct {
+					Url string
+				}
+			}
+		}
+		ContentDetails struct {
+			RelatedPlaylists struct {
+				Uploads string
+			}
+		}
+	}
+}
+
+func getChannelByChannelId(client *http.Client, apiKey, channelId string) (*ChannelResponse, error) {
 	req, err := http.NewRequest("GET", YOUTUBE_API_URL, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	req.URL.Path = fmt.Sprintf("%s/%s", req.URL.Path, "channels")
@@ -93,36 +106,26 @@ func getUploadPlaylistByChannelId(client *http.Client, apiKey, channelId string)
 	// set params
 	q := req.URL.Query()
 	q.Add("key", apiKey)
-	q.Add("part", "contentDetails")
+	q.Add("part", "snippet,contentDetails")
 	q.Add("id", channelId)
 
 	req.URL.RawQuery = q.Encode()
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	type Response struct {
-		Items []struct {
-			ContentDetails struct {
-				RelatedPlaylists struct {
-					Uploads string
-				}
-			}
-		}
-	}
-
-	var r Response
+	var r ChannelResponse
 	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return r.Items[0].ContentDetails.RelatedPlaylists.Uploads, nil
+	return &r, nil
 }
 
-func searchVideoIdsAfterPublishedDate(client *http.Client, apiKey, channelId string, lastUpdated time.Time) ([]string, error) {
+func searchVideoIdsAfterPublishedDate(client *http.Client, apiKey, channelId, lastUpdated, pageToken string) ([]string, error) {
 	req, err := http.NewRequest("GET", YOUTUBE_API_URL, nil)
 	if err != nil {
 		return nil, err
@@ -135,12 +138,18 @@ func searchVideoIdsAfterPublishedDate(client *http.Client, apiKey, channelId str
 	q.Add("type", "video")
 	q.Add("part", "snippet")
 	q.Add("channelId", channelId)
-	q.Add("publishedAfter", lastUpdated.String())
+	q.Add("publishedAfter", lastUpdated)
+	// by default results are split to 5 resultsPerPage.
+	// setting maxResults helps return more.
+	q.Add("maxResults", "100")
+	// get results by page.
+	q.Add("pageToken", pageToken)
 
 	req.URL.RawQuery = q.Encode()
 
 	type Response struct {
-		Items []struct {
+		NextPageToken string
+		Items         []struct {
 			Id struct {
 				VideoId string
 			}
@@ -163,19 +172,43 @@ func searchVideoIdsAfterPublishedDate(client *http.Client, apiKey, channelId str
 		ids = append(ids, item.Id.VideoId)
 	}
 
+	if r.NextPageToken != "" {
+		nextPageIds, err := searchVideoIdsAfterPublishedDate(
+			client,
+			apiKey,
+			channelId,
+			lastUpdated,
+			r.NextPageToken)
+		if err != nil {
+			return nil, err
+		}
+		ids = append(ids, nextPageIds...)
+	}
+
 	return ids, nil
 }
 
-type VideoSnippet struct {
-	PublishedAt string
-	Title       string
-	Description string
-	ResourceId  struct {
-		VideoId string
+type VideoResponse struct {
+	Items []struct {
+		Id      string
+		Snippet struct {
+			PublishedAt string
+			ChannelId   string
+			Title       string
+			Description string
+			Thumbnails  struct {
+				Default struct {
+					Url string
+				}
+				High struct {
+					Url string
+				}
+			}
+		}
 	}
 }
 
-func getVideosByVideoIds(client *http.Client, apiKey string, ids []string) (map[string]VideoSnippet, error) {
+func getVideosByVideoIds(client *http.Client, apiKey string, ids []string) (*VideoResponse, error) {
 	req, err := http.NewRequest("GET", YOUTUBE_API_URL, nil)
 	if err != nil {
 		return nil, err
@@ -191,70 +224,100 @@ func getVideosByVideoIds(client *http.Client, apiKey string, ids []string) (map[
 
 	req.URL.RawQuery = q.Encode()
 
-	type Response struct {
-		Items []struct {
-			Snippet VideoSnippet
-		}
-	}
-
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	var r Response
+	var r VideoResponse
 	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
 		return nil, err
 	}
 
-	m := make(map[string]VideoSnippet)
-	for _, item := range r.Items {
-		m[item.Snippet.ResourceId.VideoId] = item.Snippet
-	}
-
-	return m, nil
-
+	return &r, nil
 }
 
-func getVideosByUploadPlaylist(client *http.Client, apiKey, playlistId string) (map[string]VideoSnippet, error) {
-	req, err := http.NewRequest("GET", YOUTUBE_API_URL, nil)
-	if err != nil {
-		return nil, err
-	}
+// unused.
 
-	req.URL.Path = fmt.Sprintf("%s/%s", req.URL.Path, "playlistItems")
+// func getVideosByUploadPlaylist(client *http.Client, apiKey, playlistId string) (map[string]VideoSnippet, error) {
+// 	req, err := http.NewRequest("GET", YOUTUBE_API_URL, nil)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	// set params
-	q := req.URL.Query()
-	q.Add("key", apiKey)
-	q.Add("part", "snippet")
-	q.Add("maxResults", "10")
-	q.Add("playlistId", playlistId)
+// 	req.URL.Path = fmt.Sprintf("%s/%s", req.URL.Path, "playlistItems")
 
-	req.URL.RawQuery = q.Encode()
+// 	// set params
+// 	q := req.URL.Query()
+// 	q.Add("key", apiKey)
+// 	q.Add("part", "snippet")
+// 	q.Add("maxResults", "10")
+// 	q.Add("playlistId", playlistId)
 
-	type Response struct {
-		Items []struct {
-			Snippet VideoSnippet
-		}
-	}
+// 	req.URL.RawQuery = q.Encode()
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+// 	type Response struct {
+// 		Items []struct {
+// 			Snippet VideoSnippet
+// 		}
+// 	}
 
-	var r Response
-	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
-		return nil, err
-	}
+// 	resp, err := client.Do(req)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer resp.Body.Close()
 
-	m := make(map[string]VideoSnippet)
-	for _, item := range r.Items {
-		m[item.Snippet.ResourceId.VideoId] = item.Snippet
-	}
+// 	var r Response
+// 	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
+// 		return nil, err
+// 	}
 
-	return m, nil
-}
+// 	m := make(map[string]VideoSnippet)
+// 	for _, item := range r.Items {
+// 		m[item.Snippet.ResourceId.VideoId] = item.Snippet
+// 	}
+
+// 	return m, nil
+// }
+
+// func getUploadPlaylistByChannelId(client *http.Client, apiKey, channelId string) (string, error) {
+// 	req, err := http.NewRequest("GET", YOUTUBE_API_URL, nil)
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	req.URL.Path = fmt.Sprintf("%s/%s", req.URL.Path, "channels")
+
+// 	// set params
+// 	q := req.URL.Query()
+// 	q.Add("key", apiKey)
+// 	q.Add("part", "contentDetails")
+// 	q.Add("id", channelId)
+
+// 	req.URL.RawQuery = q.Encode()
+
+// 	resp, err := client.Do(req)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	defer resp.Body.Close()
+
+// 	type Response struct {
+// 		Items []struct {
+// 			ContentDetails struct {
+// 				RelatedPlaylists struct {
+// 					Uploads string
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	var r Response
+// 	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
+// 		return "", err
+// 	}
+
+// 	return r.Items[0].ContentDetails.RelatedPlaylists.Uploads, nil
+// }

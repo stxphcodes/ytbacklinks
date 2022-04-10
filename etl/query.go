@@ -2,18 +2,27 @@ package main
 
 import (
 	"context"
-	"time"
 
 	"firebase.google.com/go/db"
 )
 
-func queryLastUpdated(client *db.Client, ctx context.Context) (time.Time, error) {
+func queryLastUpdated(ctx context.Context, client *db.Client) (string, error) {
 	ref := client.NewRef("/lastUpdated")
 
-	var date string
-	if err := ref.Get(ctx, &date); err != nil {
-		return time.Time{}, err
+	// get last element of array
+	query := ref.OrderByKey().LimitToLast(1)
+
+	// query returns map[array #]lastDate
+	//var m map[int]string
+	var m []string
+	if err := query.Get(ctx, &m); err != nil {
+		return "", err
 	}
 
-	return time.Time{}, nil
+	var date string
+	for _, value := range m {
+		date = value
+	}
+
+	return date, nil
 }

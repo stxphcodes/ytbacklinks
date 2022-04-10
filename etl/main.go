@@ -51,7 +51,6 @@ func run() error {
 	conf := &firebase.Config{
 		DatabaseURL: firebaseDatabaseUrl,
 	}
-
 	opt := option.WithCredentialsFile(firebaseCredsPath)
 
 	app, err := firebase.NewApp(ctx, conf, opt)
@@ -64,7 +63,10 @@ func run() error {
 		return err
 	}
 
-	lastUpdated, err := queryLastUpdated(firebaseClient, ctx)
+	// Connect to youtube via regular http client.
+	httpClient := http.DefaultClient
+
+	lastUpdated, err := queryLastUpdated(ctx, firebaseClient)
 	if err != nil {
 		return err
 	}
@@ -72,31 +74,33 @@ func run() error {
 	fmt.Println("this is last updated")
 	fmt.Println(lastUpdated)
 
-	// Connect to youtube via regular http client.
-	httpClient := http.DefaultClient
+	for _, channelTitle := range CHANNEL_TITLES {
+		channelResponse, err := extractChannel(httpClient, apiKey, channelTitle)
+		if err != nil {
+			return err
+		}
 
-	videos, err := extractVideosByLastUpdated(httpClient, apiKey, lastUpdated)
-	if err != nil {
-		return err
+		channel := channelResponse.toChannel()
+		if err := loadChannel(ctx, firebaseClient, channel); err != nil {
+			return err
+		}
+
+		videoResponse, err := extractVideosByLastUpdated(httpClient, apiKey, channel.Id, lastUpdated)
+		if err != nil {
+			return err
+		}
+		videos := videoResponse.toVideos()
+		if err := loadVideos(ctx, firebaseClient, videos); err != nil {
+			return err
+		}
+
+		links, err := videosToLinks(videos)
+		if err != nil {
+			return err
+		}
+
+		return loadLinks(ctx, firebaseClient, links)
 	}
 
-	fmt.Println(videos)
 	return nil
-
-	// playlistId, err := getUploadPlaylist(httpClient, channelId, apiKey)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// snippets, err := getVideoSnippets(httpClient, playlistId, apiKey)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// links, err := snippetsToLinks(snippets)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// return createRecord(CHANNEL_ID, links)
 }
