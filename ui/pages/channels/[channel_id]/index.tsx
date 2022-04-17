@@ -51,34 +51,41 @@ export default function Index({videos, channel}: Props) {
                 <div className="shadow-sm border-2 p-4 grid grid-cols-4 gap-x-8">
                   <div className="">
                     <img src={video.ThumbnailUrl} />
-                    <h1 className="font-black py-2"><a href={`https://youtube.com/watch?v=${video.Id}`} target="_blank">{video.Title}</a></h1>
+                    <h1 className="font-black py-2">
+                      <a
+                        href={`https://youtube.com/watch?v=${video.Id}`}
+                        target="_blank"
+                      >
+                        {video.Title}
+                      </a>
+                    </h1>
                     <p className="py-2">{video.PublishedAt}</p>
                   </div>
 
                   <div className="col-span-3">
                     <h1 className="font-black">Links</h1>
                     <ul className="list-outside list-disc">
-                    <div className="grid grid-cols-3 gap-x-6">
-                      {video.Links.map(link => {
-                        if (link.Description.length > 60) {
-                          return <></>;
-                        }
-                        return (
-                          <li>
-                            {' '}
-                            <a
-                              href={link.Href}
-                              target="_blank"
-                              className="text-sky-400"
-                            >
-                              {link.Brand !== ''
-                                ? `${link.Brand} - ${link.Description}`
-                                : link.Description}
-                            </a>
-                          </li>
-                        );
-                      })}
-                    </div>
+                      <div className="grid grid-cols-3 gap-x-6">
+                        {video.Links.map(link => {
+                          if (link.Description.length > 60) {
+                            return <></>;
+                          }
+                          return (
+                            <li>
+                              {' '}
+                              <a
+                                href={link.Href}
+                                target="_blank"
+                                className="text-sky-400"
+                              >
+                                {link.Brand !== ''
+                                  ? `${link.Brand} - ${link.Description}`
+                                  : link.Description}
+                              </a>
+                            </li>
+                          );
+                        })}
+                      </div>
                     </ul>
                   </div>
                 </div>
