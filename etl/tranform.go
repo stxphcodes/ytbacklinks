@@ -11,10 +11,6 @@ import (
 	"mvdan.cc/xurls"
 )
 
-var (
-	socialMediaLinks = [...]string{"instagram", "facebook", "twitter"}
-)
-
 type Channel struct {
 	Id               string
 	Title            string
@@ -51,6 +47,7 @@ type Video struct {
 	Description  string
 	PublishedAt  string
 	ThumbnailUrl string
+	LastUpdated  string
 }
 
 func (r *VideoResponse) toVideos() map[string]*Video {
@@ -63,6 +60,7 @@ func (r *VideoResponse) toVideos() map[string]*Video {
 			Description:  item.Snippet.Description,
 			PublishedAt:  item.Snippet.PublishedAt,
 			ThumbnailUrl: item.Snippet.Thumbnails.High.Url,
+			LastUpdated:  time.Now().Format(time.RFC3339),
 		}
 
 		if v.ThumbnailUrl == "" {
@@ -76,16 +74,18 @@ func (r *VideoResponse) toVideos() map[string]*Video {
 }
 
 type Link struct {
-	Id          string
-	Href        string
-	Brand       string
-	Description string
-	Category    string
-	PublishedAt string
-	VideoId     string
-	VideoTitle  string
-	ChannelId   string
-	Tags        []string
+	Id            string
+	Href          string
+	Brand         string
+	Description   string
+	Category      string
+	PublishedAt   string
+	VideoId       string
+	VideoTitle    string
+	ChannelId     string
+	Tags          []string
+	LastUpdated   string
+	OtherVideoIds []string
 }
 
 func trimSpecialChars(s string) string {
@@ -102,6 +102,55 @@ func trimSpecialChars(s string) string {
 	})
 
 	return s
+}
+
+func videosToLinksByVideoId(videos map[string]*Video) (map[string]map[string]*Link, error) {
+	videoLinks := make(map[string]map[string]*Link)
+
+	for videoId, video := range videos {
+		links := make(map[string]*Link)
+
+		// iterate through each line in description
+		sc := bufio.NewScanner(strings.NewReader(video.Description))
+		for sc.Scan() {
+			line := sc.Text()
+			rawUrl := xurls.Strict.FindString(line)
+			if rawUrl == "" {
+				continue
+			}
+
+			// get link description and remove special chars before and after
+			description := strings.Split(line, rawUrl)[0]
+			brand := ""
+			if len(strings.Split(description, "-")) == 2 {
+				brand = strings.Split(description, "-")[0]
+				description = strings.Split(description, "-")[1]
+			}
+
+			brand = trimSpecialChars(brand)
+			description = trimSpecialChars(description)
+			encodedUrl := base64.URLEncoding.EncodeToString([]byte(rawUrl))
+
+			link := &Link{
+				Id:          encodedUrl,
+				Category:    getLinkCategory(rawUrl),
+				ChannelId:   video.ChannelId,
+				VideoId:     videoId,
+				VideoTitle:  video.Title,
+				PublishedAt: video.PublishedAt,
+				Href:        rawUrl,
+				Description: description,
+				Brand:       brand,
+				LastUpdated: time.Now().Format(time.RFC3339),
+			}
+
+			links[link.Id] = link
+		}
+
+		videoLinks[videoId] = links
+	}
+
+	return videoLinks, nil
 }
 
 func videosToLinks(videos map[string]*Video) (map[string]*Link, error) {
@@ -133,6 +182,7 @@ func videosToLinks(videos map[string]*Video) (map[string]*Link, error) {
 
 			link := &Link{
 				Id:          encodedId,
+				Category:    getLinkCategory(rawUrl),
 				ChannelId:   video.ChannelId,
 				VideoId:     videoId,
 				VideoTitle:  video.Title,
@@ -140,14 +190,8 @@ func videosToLinks(videos map[string]*Video) (map[string]*Link, error) {
 				Href:        rawUrl,
 				Description: description,
 				Brand:       brand,
-			}
-
-			// categorize social media links
-			for _, socialMediaLink := range socialMediaLinks {
-				if strings.Contains(rawUrl, socialMediaLink) {
-					link.Category = "social media"
-					break
-				}
+				Tags:        []string{""},
+				LastUpdated: time.Now().Format(time.RFC3339),
 			}
 
 			links[link.Id] = link
@@ -155,4 +199,25 @@ func videosToLinks(videos map[string]*Video) (map[string]*Link, error) {
 	}
 
 	return links, nil
+}
+
+func getLinkCategory(link string) string {
+	var (
+		socialMediaLinks = [...]string{"instagram", "facebook", "twitter"}
+		musicLinks       = [...]string{"spotify"}
+	)
+
+	for _, l := range socialMediaLinks {
+		if strings.Contains(link, l) {
+			return "social media"
+		}
+	}
+
+	for _, l := range musicLinks {
+		if strings.Contains(link, l) {
+			return "music"
+		}
+	}
+
+	return ""
 }

@@ -3,11 +3,22 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 )
 
 const YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3"
+
+func checkResponse(resp *http.Response) error {
+	statusOK := resp.StatusCode >= 200 && resp.StatusCode < 300
+	if statusOK {
+		return nil
+	}
+
+	b, _ := ioutil.ReadAll(resp.Body)
+	return fmt.Errorf(string(b))
+}
 
 func extractChannel(client *http.Client, apiKey, channelTitle string) (*ChannelResponse, error) {
 	channelId, err := searchChannelIdByTitle(client, apiKey, channelTitle)
@@ -54,6 +65,10 @@ func searchChannelIdByTitle(client *http.Client, apiKey, channelTitle string) (s
 	}
 	defer resp.Body.Close()
 
+	if err := checkResponse(resp); err != nil {
+		return "", err
+	}
+
 	type Response struct {
 		Items []struct {
 			Snippet struct {
@@ -66,6 +81,10 @@ func searchChannelIdByTitle(client *http.Client, apiKey, channelTitle string) (s
 	var r Response
 	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
 		return "", err
+	}
+
+	if len(r.Items) < 1 {
+		return "", fmt.Errorf("No channel found for title.")
 	}
 
 	return r.Items[0].Snippet.ChannelId, nil
@@ -117,6 +136,10 @@ func getChannelByChannelId(client *http.Client, apiKey, channelId string) (*Chan
 	}
 	defer resp.Body.Close()
 
+	if err := checkResponse(resp); err != nil {
+		return nil, err
+	}
+
 	var r ChannelResponse
 	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
 		return nil, err
@@ -161,6 +184,10 @@ func searchVideoIdsAfterPublishedDate(client *http.Client, apiKey, channelId, la
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if err := checkResponse(resp); err != nil {
+		return nil, err
+	}
 
 	var r Response
 	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
@@ -209,33 +236,61 @@ type VideoResponse struct {
 }
 
 func getVideosByVideoIds(client *http.Client, apiKey string, ids []string) (*VideoResponse, error) {
-	req, err := http.NewRequest("GET", YOUTUBE_API_URL, nil)
-	if err != nil {
-		return nil, err
+	var response VideoResponse
+
+	// Youtube maxes video requests by 50.
+	n := 1
+	if len(ids) > 50 {
+		n = len(ids) / 50
+		if len(ids)%50 > 0 {
+			n += 1
+		}
 	}
 
-	req.URL.Path = fmt.Sprintf("%s/%s", req.URL.Path, "videos")
+	for i := 0; i < n; i++ {
+		start := i * 50
+		end := start + 50
 
-	// set params
-	q := req.URL.Query()
-	q.Add("key", apiKey)
-	q.Add("part", "snippet")
-	q.Add("id", strings.Join(ids, ","))
+		if end > len(ids) {
+			end = len(ids)
+		}
 
-	req.URL.RawQuery = q.Encode()
+		idsToUse := ids[start:end]
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
+		req, err := http.NewRequest("GET", YOUTUBE_API_URL, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		req.URL.Path = fmt.Sprintf("%s/%s", req.URL.Path, "videos")
+
+		// set params
+		q := req.URL.Query()
+		q.Add("key", apiKey)
+		q.Add("part", "snippet")
+		q.Add("id", strings.Join(idsToUse, ","))
+
+		req.URL.RawQuery = q.Encode()
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		if err := checkResponse(resp); err != nil {
+			return nil, err
+		}
+
+		var r VideoResponse
+		if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
+			return nil, err
+		}
+
+		response.Items = append(response.Items, r.Items...)
 	}
-	defer resp.Body.Close()
 
-	var r VideoResponse
-	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
-		return nil, err
-	}
-
-	return &r, nil
+	return &response, nil
 }
 
 // unused.

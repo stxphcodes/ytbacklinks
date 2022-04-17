@@ -11,8 +11,9 @@ import (
 	"google.golang.org/api/option"
 )
 
+//"Jenn Im", "Freesia Park",
 var (
-	CHANNEL_TITLES = []string{"Jenn Im"}
+	CHANNEL_TITLES = []string{"theneedledrop"}
 )
 
 func main() {
@@ -79,27 +80,30 @@ func run() error {
 		if err != nil {
 			return err
 		}
-
 		channel := channelResponse.toChannel()
-		if err := loadChannel(ctx, firebaseClient, channel); err != nil {
-			return err
-		}
 
 		videoResponse, err := extractVideosByLastUpdated(httpClient, apiKey, channel.Id, lastUpdated)
 		if err != nil {
 			return err
 		}
 		videos := videoResponse.toVideos()
-		if err := loadVideos(ctx, firebaseClient, videos); err != nil {
-			return err
-		}
 
-		links, err := videosToLinks(videos)
+		links, err := videosToLinksByVideoId(videos)
 		if err != nil {
 			return err
 		}
 
-		return loadLinks(ctx, firebaseClient, links)
+		if err := loadChannel(ctx, firebaseClient, channel); err != nil {
+			return err
+		}
+
+		if err := loadVideosbyChannelId(ctx, firebaseClient, channel.Id, videos); err != nil {
+			return err
+		}
+
+		if err := loadLinksByChannelAndVideoIds(ctx, firebaseClient, channel.Id, links); err != nil {
+			return err
+		}
 	}
 
 	return nil
