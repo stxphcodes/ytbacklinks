@@ -1,11 +1,11 @@
 import { GetServerSideProps } from 'next';
 
 import { getChannel } from '../../../utils/getChannels';
-import { getVideos, VideoResponse } from '../../../utils/getVideos';
-import { Channel } from '../../../utils/types';
+import { getVideos } from '../../../utils/getVideos';
+import { Channel, VideoUI } from '../../../utils/types';
 
 type Props = {
-  videos: VideoResponse | null;
+  videos: VideoUI[] | null;
   channel: Channel | null;
 };
 
@@ -46,7 +46,7 @@ export default function Index({videos, channel}: Props) {
 
         <div className="col-span-3">
           {videos &&
-            Object.entries(videos).map(([videoId, video]) => {
+            videos.map(video => {
               return (
                 <div className="shadow-sm border-2 p-4 grid grid-cols-4 gap-x-8">
                   <div className="">
