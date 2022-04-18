@@ -1,1 +1,1 @@
-Curation of youtubers' links in the description.
+Curated links from youtube description boxes.
