@@ -1,10 +1,9 @@
 import { GetServerSideProps } from 'next';
 
 import ErrorPage from '../../../components/error';
-import { ApiResponse } from '../../../utils/error';
 import { getChannel } from '../../../utils/getChannels';
 import { getVideos } from '../../../utils/getVideos';
-import { Channel, VideoUI } from '../../../utils/types';
+import { ApiResponse, Channel, VideoUI } from '../../../utils/types';
 
 type Props = {
   videos: VideoUI[] | null;
