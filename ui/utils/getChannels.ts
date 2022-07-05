@@ -24,8 +24,9 @@ export async function getChannels(): Promise<ApiResponse> {
     return a;
   }
 
-  let r: ChannelsResponse = await response.json();
   try {
+    let r: ChannelsResponse = await response.json();
+
     await Promise.all(
       Object.keys(r).map(async channelId => {
         let videoCountResp = await getVideoCount(channelId);
@@ -41,13 +42,19 @@ export async function getChannels(): Promise<ApiResponse> {
         r[channelId].LinkCount = linkCountResp.Message;
       })
     );
-  } catch (error: any) {
-    return error;
-  }
 
-  a.RawMessage = r;
-  a.Message = r;
-  return a;
+    a.RawMessage = r;
+    a.Message = r;
+    return a;
+  } catch (error: any) {
+    return {
+      Ok: false,
+      Status: 500,
+      StatusText: 'Internal Server',
+      Message: 'error getting channels response',
+      RawMessage: null,
+    }
+  }
 }
 
 export async function getChannel(channelId: string): Promise<ApiResponse> {
