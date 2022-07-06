@@ -1,12 +1,12 @@
 import Link from 'next/link';
 
 import ErrorPage from '../components/error';
+import { TApiResponse } from '../utils/apiResponse';
 import { ChannelsResponse, getChannels } from '../utils/getChannels';
-import { ApiResponse } from '../utils/types';
 
 type Props = {
   channels: ChannelsResponse | null;
-  error: ApiResponse | null;
+  error: TApiResponse | null;
 };
 
 export async function getServerSideProps() {

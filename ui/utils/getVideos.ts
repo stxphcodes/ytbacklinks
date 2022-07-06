@@ -1,80 +1,85 @@
-import { ApiResponse, Link, VideoUI } from './types';
+import { ApiResponse, TApiResponse } from './apiResponse';
+import { Link, VideoUI } from './types';
 
 const FIREBASE_URL = 'https://backlinks-81c44-default-rtdb.firebaseio.com/';
 
-export async function getVideos(channelId: string): Promise<ApiResponse> {
+export async function getVideos(channelId: string): Promise<TApiResponse> {
   let firebase = new URL(FIREBASE_URL);
   firebase.pathname = `videosByChannels/${channelId}.json`;
 
-  let response = await fetch(firebase.toString());
-  let a: ApiResponse = {
-    Ok: response.ok,
-    Status: response.status,
-    StatusText: response.statusText,
-    Message: null,
-    RawMessage: null,
-  }
-
-  if (!response.ok) {
-   a.Message = "Unable to fetch  videos"
-   return a
-  }
-  
-
-  let data: {[videoId: string]: VideoUI} = await response.json();
-
-  let sorted = Object.values(data).sort((videoA, videoB) =>
-    videoB.PublishedAt.localeCompare(videoA.PublishedAt)
-  );
-
-  try {
-    await Promise.all(
-    sorted.map(async (video, index) => {
-      let linksResponse = await getLinks(channelId, video.Id);
-      if (!linksResponse.Ok){
-        return Promise.reject(linksResponse)
+  let a = new ApiResponse();
+  await fetch(firebase.toString())
+    .then(response => {
+      a.UpdateWithResponse(response);
+      if (!response.ok) {
+        throw new Error('Unable to fetch videos');
       }
 
-      sorted[index].Links = linksResponse.Message
-
-      // sorted[index].Links = await getLinks(channelId, video.Id);
+      return response.json();
     })
-  )}catch (error: any) {
+    .then(async (data: {[videoId: string]: VideoUI}) => {
+      if (!data) {
+        throw new Error('Unexpected respoonse in getVideos');
+      }
 
-return error;
-  };
+      let sorted = Object.values(data).sort((videoA, videoB) =>
+        videoB.PublishedAt.localeCompare(videoA.PublishedAt)
+      );
 
-  a.Message = sorted;
+      await Promise.all(
+        sorted.map(async (video, index) => {
+          let linksResponse = await getLinks(channelId, video.Id);
+          console.log('this is links repsonse');
+          console.log(linksResponse);
 
-  return a
+          if (!linksResponse.Ok) {
+            return Promise.reject(linksResponse.Message);
+          }
+
+          sorted[index].Links = linksResponse.Message;
+        })
+      );
+
+      a.Message = sorted;
+    })
+    .catch(error => {
+      a.Ok && a.SetDefaultError();
+      a.Message = error.message || error || 'Unknown';
+    });
+
+  return a.Serialize();
 }
 
-async function getLinks(channelId: string, videoId: string): Promise<ApiResponse> {
+async function getLinks(
+  channelId: string,
+  videoId: string
+): Promise<TApiResponse> {
   let firebase = new URL(FIREBASE_URL);
   firebase.pathname = `linksByChannelsAndVideos/${channelId}/${videoId}.json`;
 
-  let response = await fetch(firebase.toString());
-  let a: ApiResponse = {
-    Ok: response.ok,
-    Status: response.status,
-    StatusText: response.statusText,
-    Message: null,
-    RawMessage: null,
-  }
+  let a = new ApiResponse();
 
-  if (!response.ok) {
-   a.Message = "Unable to fetch links"
-   return a
-  }
+  await fetch(firebase.toString())
+    .then(response => {
+      a.UpdateWithResponse(response);
+      if (!a.Ok) {
+        throw new Error('Unable to fetch links');
+      }
+      return response.json();
+    })
+    .then((r: {[linkId: string]: Link}) => {
+      let links: Link[] = [];
 
-  let links: Link[] = [];
- 
-    let r: {[linkId: string]: Link} = await response.json();
-    r && Object.entries(r).map(([linkId, link]) => {
-      links.push(link);
+      r &&
+        Object.entries(r).map(([linkId, link]) => {
+          links.push(link);
+        });
+      a.Message = links;
+    })
+    .catch(error => {
+      a.Ok && a.SetDefaultError();
+      a.Message = error.message || 'Unknown';
     });
-  
 
-    a.Message = links
-    return a
+  return a.Serialize();
 }

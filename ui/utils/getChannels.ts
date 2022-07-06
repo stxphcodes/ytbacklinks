@@ -1,4 +1,5 @@
-import { ApiResponse, Channel, ChannelUI } from './types';
+import { ApiResponse, TApiResponse } from './apiResponse';
+import { Channel, ChannelUI } from './types';
 
 //const FIREBASE_URL = 'https://links-81c44-default-rtdb.firebaseio.com/';
 const FIREBASE_URL = 'https://backlinks-81c44-default-rtdb.firebaseio.com/';
@@ -7,51 +8,24 @@ export type ChannelsResponse = {
   [key: string]: ChannelUI;
 };
 
-function handleResponse(response: Response, a: ApiResponse) {
-  a.Ok = response.ok;
-  a.Status = response.status;
-  a.StatusText = response.statusText;
-
-  // throw if non-networking error is encountered
-  if (!a.Ok) {
-    throw new Error('Error calling url');
-  }
-
-  return response;
-}
-
-export async function getChannels(): Promise<ApiResponse> {
+export async function getChannels(): Promise<TApiResponse> {
   let firebase = new URL(FIREBASE_URL);
   firebase.pathname = `channels.json`;
 
-  let a: ApiResponse = {
-    Ok: false,
-    Status: 500,
-    StatusText: 'Internal Server',
-    Message: null,
-    RawMessage: null,
-  };
+  let a = new ApiResponse();
 
   await fetch(firebase.toString())
     .then(response => {
-      a.Ok = response.ok;
-      a.Status = response.status;
-      a.StatusText = response.statusText;
+      a.UpdateWithResponse(response);
 
       // throw if non-networking error is encountered
       if (!a.Ok) {
         throw new Error('Error calling url');
       }
 
-      return response;
+      return response.json();
     })
-    .then(async response => {
-      let r: ChannelsResponse = await response.json().catch(error => {
-        throw new Error(
-          error.message || 'Error calling json() on response object'
-        );
-      });
-
+    .then(async (r: ChannelsResponse) => {
       // handle if r is null
       if (!r) {
         throw new Error('Unexpected response object type');
@@ -77,73 +51,47 @@ export async function getChannels(): Promise<ApiResponse> {
       a.Message = r;
     })
     .catch(error => {
-      if (a.Ok) {
-        a.Ok = false;
-        a.Status = 500;
-        a.StatusText = 'Internal Server';
-      }
-
+      a.Ok && a.SetDefaultError();
       a.Message = error.message || 'Unknown';
     });
 
-  return a;
+  return a.Serialize();
 }
 
-export async function getChannel(channelId: string): Promise<ApiResponse> {
+
+export async function getChannel(channelId: string): Promise<TApiResponse> {
   let firebase = new URL(FIREBASE_URL);
   firebase.pathname = `channels/${channelId}.json`;
-  let a: ApiResponse = {
-    Ok: false,
-    Status: 500,
-    StatusText: 'Internal Server',
-    Message: null,
-    RawMessage: null,
-  };
+
+  let a = new ApiResponse();
 
   await fetch(firebase.toString())
     .then(response => {
-      a.Ok = response.ok;
-      a.Status = response.status;
-      a.StatusText = response.statusText;
+      a.UpdateWithResponse(response);
 
       // throw if non-networking error is encountered
       if (!a.Ok) {
         throw new Error('Error calling url');
       }
 
-      return response;
+      return response.json();
     })
-    .then(async response => {
-      let c: Channel = await response.json().catch(error => {
-        throw new Error(
-          error.message || 'Error calling json() on response object'
-        );
-      });
-
-      if (c) {
-        a.Message = c;
-        return;
+    .then((c: Channel) => {
+      if (!c) {
+        throw new Error(`${channelId} not found in database`);
       }
 
-      a.Ok = false;
-      a.Status = 404;
-      a.StatusText = 'Not Found';
-      throw new Error(`${channelId} not found in database`);
+      a.Message = c;
     })
     .catch(error => {
-      if (a.Ok) {
-        a.Ok = false;
-        a.Status = 500;
-        a.StatusText = 'Internal Server';
-      }
-
+      a.Ok && a.SetDefaultError();
       a.Message = error.message || 'Unknown error';
     });
 
-  return a;
+  return a.Serialize();
 }
 
-async function getVideoCount(channelId: string): Promise<ApiResponse> {
+async function getVideoCount(channelId: string): Promise<TApiResponse> {
   type Response = {
     [key: string]: boolean;
   };
@@ -152,25 +100,32 @@ async function getVideoCount(channelId: string): Promise<ApiResponse> {
   firebase.pathname = `videosByChannels/${channelId}.json`;
   firebase.searchParams.append('shallow', 'true');
 
-  let response = await fetch(firebase.toString());
+  let a = new ApiResponse();
+  await fetch(firebase.toString())
+    .then(response => {
+      a.UpdateWithResponse(response);
 
-  let a: ApiResponse = {
-    Ok: response.ok,
-    Status: response.status,
-    StatusText: response.statusText,
-    Message: null,
-    RawMessage: null,
-  };
+      // throw if non-networking error is encountered
+      if (!a.Ok) {
+        throw new Error('Error calling url. Unable to get video count');
+      }
 
-  if (!a.Ok) {
-    a.Message = 'Unable to get video counts';
-    return a;
-  }
+      return response.json();
+    })
+    .then((r: Response) => {
+      if (!r) {
+        throw new Error('Error calling getVideoCount. Type not expected');
+      }
 
-  let r: Response = await response.json();
-  a.RawMessage = r;
-  a.Message = Object.keys(r).length;
-  return a;
+      a.RawMessage = r;
+      a.Message = Object.keys(r).length;
+    })
+    .catch(error => {
+      a.Ok && a.SetDefaultError();
+      a.Message = error.message || 'Unknown error';
+    });
+
+  return a.Serialize();
 }
 
 // async function getVideoCount(channelId: string): Promise<number> {
@@ -191,7 +146,7 @@ async function getVideoCount(channelId: string): Promise<ApiResponse> {
 //   return -1;
 // }
 
-async function getLinkCount(channelId: string): Promise<ApiResponse> {
+async function getLinkCount(channelId: string): Promise<TApiResponse> {
   type Response = {
     [key: string]: boolean;
   };
@@ -200,22 +155,30 @@ async function getLinkCount(channelId: string): Promise<ApiResponse> {
   firebase.pathname = `linksByChannels/${channelId}.json`;
   firebase.searchParams.append('shallow', 'true');
 
-  let response = await fetch(firebase.toString());
-  let a: ApiResponse = {
-    Ok: response.ok,
-    Status: response.status,
-    StatusText: response.statusText,
-    Message: null,
-    RawMessage: null,
-  };
+  let a = new ApiResponse();
+  await fetch(firebase.toString())
+    .then(response => {
+      a.UpdateWithResponse(response);
 
-  if (!a.Ok) {
-    a.Message = 'Unable to get link count';
-    return a;
-  }
+      // throw if non-networking error is encountered
+      if (!a.Ok) {
+        throw new Error('Error calling url. Unable to get video count');
+      }
 
-  let r: Response = await response.json();
-  a.RawMessage = r;
-  a.Message = Object.keys(r).length;
-  return a;
+      return response.json();
+    })
+    .then((r: Response) => {
+      if (!r) {
+        throw new Error('Error calling getVideoCount. Type not expected');
+      }
+
+      a.RawMessage = r;
+      a.Message = Object.keys(r).length;
+    })
+    .catch(error => {
+      a.Ok && a.SetDefaultError();
+      a.Message = error.message || 'Unknown error';
+    });
+
+  return a.Serialize();
 }

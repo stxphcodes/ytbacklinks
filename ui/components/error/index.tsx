@@ -1,7 +1,7 @@
-import { ApiResponse } from '../../utils/types';
+import { TApiResponse } from '../../utils/apiResponse';
 
 type Props = {
-  response: ApiResponse;
+  response: TApiResponse;
 };
 
 export default function ErrorPage({response}: Props) {
