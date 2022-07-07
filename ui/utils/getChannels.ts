@@ -1,4 +1,6 @@
-import { ApiResponse, TApiResponse } from './apiResponse';
+import {
+    ErrNullResponse, ErrRequest, ErrUnknown, ResponseError, ResponseWrapper, TResponseWrapper
+} from './responseWrapper';
 import { Channel, ChannelUI } from './types';
 
 //const FIREBASE_URL = 'https://links-81c44-default-rtdb.firebaseio.com/';
@@ -8,90 +10,84 @@ export type ChannelsResponse = {
   [key: string]: ChannelUI;
 };
 
-export async function getChannels(): Promise<TApiResponse> {
+export async function getChannels(): Promise<TResponseWrapper> {
   let firebase = new URL(FIREBASE_URL);
   firebase.pathname = `channels.json`;
 
-  let a = new ApiResponse();
-
+  let r = new ResponseWrapper();
   await fetch(firebase.toString())
     .then(response => {
-      a.UpdateWithResponse(response);
-
-      // throw if non-networking error is encountered
-      if (!a.Ok) {
-        throw new Error('Error calling url');
+      r.UpdateWithResponse(response);
+      if (!r.Ok) {
+        throw new ResponseError(`${ErrRequest}: ${firebase.toString()}`);
       }
 
       return response.json();
     })
-    .then(async (r: ChannelsResponse) => {
-      // handle if r is null
-      if (!r) {
-        throw new Error('Unexpected response object type');
+    .then(async (data: ChannelsResponse) => {
+      if (!data) {
+        throw new ResponseError(ErrNullResponse);
       }
 
       await Promise.all(
-        Object.keys(r).map(async channelId => {
+        Object.keys(data).map(async channelId => {
           let videoCountResp = await getVideoCount(channelId);
           if (!videoCountResp.Ok) {
             return Promise.reject(videoCountResp);
           }
-          r[channelId].VideoCount = videoCountResp.Message;
+          data[channelId].VideoCount = videoCountResp.Message;
 
           let linkCountResp = await getLinkCount(channelId);
           if (!linkCountResp.Ok) {
             return Promise.reject(linkCountResp);
           }
-          r[channelId].LinkCount = linkCountResp.Message;
+          data[channelId].LinkCount = linkCountResp.Message;
         })
       );
 
-      a.RawMessage = r;
-      a.Message = r;
+      r.RawMessage = data;
+      r.Message = data;
     })
     .catch(error => {
-      a.Ok && a.SetDefaultError();
-      a.Message = error.message || 'Unknown';
+      r.Ok && r.SetDefaultError();
+      r.Message = error.Message || ErrUnknown;
+      r.RawMessage = error.RawMessage || `In ${getChannels.name}`;
     });
 
-  return a.Serialize();
+  return r.Serialize();
 }
 
-
-export async function getChannel(channelId: string): Promise<TApiResponse> {
+export async function getChannel(channelId: string): Promise<TResponseWrapper> {
   let firebase = new URL(FIREBASE_URL);
   firebase.pathname = `channels/${channelId}.json`;
 
-  let a = new ApiResponse();
-
+  let r = new ResponseWrapper();
   await fetch(firebase.toString())
     .then(response => {
-      a.UpdateWithResponse(response);
-
-      // throw if non-networking error is encountered
-      if (!a.Ok) {
-        throw new Error('Error calling url');
+      r.UpdateWithResponse(response);
+      if (!r.Ok) {
+        throw new ResponseError(`${ErrRequest} ${firebase.toString()}`);
       }
 
       return response.json();
     })
-    .then((c: Channel) => {
-      if (!c) {
-        throw new Error(`${channelId} not found in database`);
+    .then((data: Channel) => {
+      if (!data) {
+        throw new ResponseError(ErrNullResponse);
       }
 
-      a.Message = c;
+      r.Message = data;
     })
     .catch(error => {
-      a.Ok && a.SetDefaultError();
-      a.Message = error.message || 'Unknown error';
+      r.Ok && r.SetDefaultError();
+      r.Message = error.Message || ErrUnknown;
+      r.RawMessage = error.RawMessage || `In ${getChannel.name}`;
     });
 
-  return a.Serialize();
+  return r.Serialize();
 }
 
-async function getVideoCount(channelId: string): Promise<TApiResponse> {
+async function getVideoCount(channelId: string): Promise<TResponseWrapper> {
   type Response = {
     [key: string]: boolean;
   };
@@ -100,53 +96,34 @@ async function getVideoCount(channelId: string): Promise<TApiResponse> {
   firebase.pathname = `videosByChannels/${channelId}.json`;
   firebase.searchParams.append('shallow', 'true');
 
-  let a = new ApiResponse();
+  let r = new ResponseWrapper();
   await fetch(firebase.toString())
     .then(response => {
-      a.UpdateWithResponse(response);
-
-      // throw if non-networking error is encountered
-      if (!a.Ok) {
-        throw new Error('Error calling url. Unable to get video count');
+      r.UpdateWithResponse(response);
+      if (!r.Ok) {
+        throw new ResponseError(`${ErrRequest} ${firebase.toString()}`);
       }
 
       return response.json();
     })
-    .then((r: Response) => {
-      if (!r) {
-        throw new Error('Error calling getVideoCount. Type not expected');
+    .then((data: Response) => {
+      if (!data) {
+        throw new ResponseError(ErrNullResponse);
       }
 
-      a.RawMessage = r;
-      a.Message = Object.keys(r).length;
+      r.RawMessage = data;
+      r.Message = Object.keys(data).length;
     })
     .catch(error => {
-      a.Ok && a.SetDefaultError();
-      a.Message = error.message || 'Unknown error';
+      r.Ok && r.SetDefaultError();
+      r.Message = error.Message || ErrUnknown;
+      r.RawMessage = error.RawMessage || `In ${getVideoCount.name}`;
     });
 
-  return a.Serialize();
+  return r.Serialize();
 }
 
-// async function getVideoCount(channelId: string): Promise<number> {
-//   type Response = {
-//     [key: string]: boolean;
-//   };
-
-//   let firebase = new URL(FIREBASE_URL);
-//   firebase.pathname = `videosByChannels/${channelId}.json`;
-//   firebase.searchParams.append('shallow', 'true');
-
-//   let response = await fetch(firebase.toString());
-//   if (response.ok) {
-//     let r: Response = await response.json();
-//     return Object.keys(r).length;
-//   }
-
-//   return -1;
-// }
-
-async function getLinkCount(channelId: string): Promise<TApiResponse> {
+async function getLinkCount(channelId: string): Promise<TResponseWrapper> {
   type Response = {
     [key: string]: boolean;
   };
@@ -155,30 +132,29 @@ async function getLinkCount(channelId: string): Promise<TApiResponse> {
   firebase.pathname = `linksByChannels/${channelId}.json`;
   firebase.searchParams.append('shallow', 'true');
 
-  let a = new ApiResponse();
+  let r = new ResponseWrapper();
   await fetch(firebase.toString())
     .then(response => {
-      a.UpdateWithResponse(response);
-
-      // throw if non-networking error is encountered
-      if (!a.Ok) {
-        throw new Error('Error calling url. Unable to get video count');
+      r.UpdateWithResponse(response);
+      if (!r.Ok) {
+        throw new ResponseError(`${ErrRequest} ${firebase.toString()}`);
       }
 
       return response.json();
     })
-    .then((r: Response) => {
-      if (!r) {
-        throw new Error('Error calling getVideoCount. Type not expected');
+    .then((data: Response) => {
+      if (!data) {
+        throw new ResponseError(ErrNullResponse);
       }
 
-      a.RawMessage = r;
-      a.Message = Object.keys(r).length;
+      r.RawMessage = data;
+      r.Message = Object.keys(data).length;
     })
     .catch(error => {
-      a.Ok && a.SetDefaultError();
-      a.Message = error.message || 'Unknown error';
+      r.Ok && r.SetDefaultError();
+      r.Message = error.Message || ErrUnknown;
+      r.RawMessage = error.RawMessage || `In ${getLinkCount.name}`;
     });
 
-  return a.Serialize();
+  return r.Serialize();
 }
