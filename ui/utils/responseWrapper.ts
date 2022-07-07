@@ -1,7 +1,22 @@
+
+export const ErrRequest = 'Error requesting URL';
+export const ErrNullResponse = 'Null response received';
+export const ErrUnknown = 'Unknown'
+
+export class ResponseError {
+  Message: string;
+  RawMessage: string | null;
+
+  constructor (message: string, rawmessage: string|null = null) {
+    this.Message = message;
+    this.RawMessage = rawmessage;
+  }
+}
+
 // Create a type to address serialization errors when setting props to
 // object in data fetching functions like getServerSideProps.
 // Class objects do not automatically serialize to JSON but types do.
-export type TApiResponse = {
+export type TResponseWrapper = {
   Ok: boolean;
   Status: number;
   StatusText: string;
@@ -9,7 +24,7 @@ export type TApiResponse = {
   RawMessage: any;
 };
 
-export class ApiResponse {
+export class ResponseWrapper {
   Ok: boolean;
   Status: number;
   StatusText: string;
@@ -42,7 +57,7 @@ export class ApiResponse {
     this.StatusText = 'Internal Server';
   }
 
-  Serialize(): TApiResponse {
+  Serialize(): TResponseWrapper {
     return JSON.parse(JSON.stringify(this));
   }
 }
