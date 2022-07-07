@@ -1,15 +1,15 @@
 import { GetServerSideProps } from 'next';
 
 import ErrorPage from '../../../components/error';
-import { TApiResponse } from '../../../utils/apiResponse';
 import { getChannel } from '../../../utils/getChannels';
 import { getVideos } from '../../../utils/getVideos';
+import { TResponseWrapper } from '../../../utils/responseWrapper';
 import { Channel, VideoUI } from '../../../utils/types';
 
 type Props = {
   videos: VideoUI[] | null;
   channel: Channel | null;
-  error: TApiResponse | null;
+  error: TResponseWrapper | null;
 };
 
 export const getServerSideProps: GetServerSideProps = async context => {

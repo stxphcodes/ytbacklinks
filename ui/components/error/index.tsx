@@ -1,7 +1,7 @@
-import { TApiResponse } from '../../utils/apiResponse';
+import { TResponseWrapper } from '../../utils/responseWrapper';
 
 type Props = {
-  response: TApiResponse;
+  response: TResponseWrapper;
 };
 
 export default function ErrorPage({response}: Props) {
@@ -12,6 +12,8 @@ export default function ErrorPage({response}: Props) {
       </h1>
       <h3 className="text-center my-4 font-black tracking-tight text-3xl">
         {response.Message}
+        <br />
+        {response.RawMessage}
       </h3>
     </div>
   );
