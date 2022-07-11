@@ -1,20 +1,36 @@
 import Link from 'next/link';
 
+import ErrorPage from '../components/error';
 import { ChannelsResponse, getChannels } from '../utils/getChannels';
+import { TResponseWrapper } from '../utils/responseWrapper';
 
 type Props = {
   channels: ChannelsResponse | null;
+  error: TResponseWrapper | null;
 };
 
-export async function getStaticProps() {
-  let channels = await getChannels();
+export async function getServerSideProps() {
+  let response = await getChannels();
+
+  if (response.Ok) {
+    return {
+      props: {
+        channels: response.Message,
+        error: null,
+      },
+    };
+  }
 
   return {
-    props: {channels},
+    props: {channels: null, error: response},
   };
 }
 
-export default function Index({channels}: Props) {
+export default function Index({channels, error}: Props) {
+  if (error) {
+    return <ErrorPage response={error} />;
+  }
+
   return (
     <div className="p-12">
       <h1 className="text-center my-12 font-black tracking-tight text-6xl">
@@ -57,57 +73,3 @@ export default function Index({channels}: Props) {
     </div>
   );
 }
-
-// type Props = {
-//   record: ChannelRecord;
-// };
-
-// export function getStaticProps() {
-//   const record = getRecord();
-
-//   return {
-//     props: {record},
-//   };
-// }
-
-// export default function Index({record}: Props) {
-//   const [displayLinkDetails, setDisplayLinkDetails] = useState(
-//     Array(record.Links.length).fill(false)
-//   );
-
-//   return (
-//     <div className="p-12">
-//       <h1 className="text-center my-24 font-black tracking-tight text-6xl">
-//         Jenn's Links
-//       </h1>
-//       <div>
-//         {record.Links.map((link, index) => {
-//           return (
-//             <div className="my-2">
-//               <button
-//                 className="p-1 bg-slate-300"
-//                 onClick={() => {
-
-//                   displayLinkDetails[index] = !displayLinkDetails[index];
-
-//                   setDisplayLinkDetails([...displayLinkDetails]);
-//                 }}
-//               >
-//                 +
-//               </button>
-//               {link.Brand !== ''
-//                 ? `${link.Brand} - ${link.Description}`
-//                 : `${link.Description}`}{' '}
-//               <a href={link.Href} target="_blank" className="text-blue-600">
-//                 {link.Href}
-//               </a>
-//               <div style={{display: displayLinkDetails[index] ? 'block' : 'none'}}>
-//                 {link.PublishedAt} {link.VideoTitle}
-//               </div>
-//             </div>
-//           );
-//         })}
-//       </div>
-//     </div>
-//   );
-// }

@@ -1,50 +1,83 @@
 import { GetServerSideProps } from 'next';
 
+import ErrorPage from '../../../components/error';
 import { getChannel } from '../../../utils/getChannels';
 import { getVideos } from '../../../utils/getVideos';
+import { ErrUrlParam, ResponseWrapper, TResponseWrapper } from '../../../utils/responseWrapper';
 import { Channel, VideoUI } from '../../../utils/types';
 
 type Props = {
-  videos: VideoUI[] | null;
   channel: Channel | null;
+  videos: VideoUI[] | null;
+  error: TResponseWrapper | null;
 };
 
 export const getServerSideProps: GetServerSideProps = async context => {
-  const channel_id = context.params?.channel_id;
+  let channel = null;
+  let videos = null;
+  let error = null;
 
-  if (typeof channel_id === 'string') {
-    let videos = await getVideos(channel_id);
-    let channel = await getChannel(channel_id);
+  const channel_id = context.params?.channel_id;
+  if (typeof channel_id !== 'string') {
+    let error = new ResponseWrapper(
+      false,
+      400,
+      'Bad Request',
+      `${ErrUrlParam} ${channel_id}`
+    ).Serialize();
 
     return {
-      props: {videos, channel},
+      props: {channel, videos, error},
     };
   }
 
+  let channelResponse = await getChannel(channel_id);
+  if (!channelResponse.Ok) {
+    error = channelResponse;
+    return {
+      props: {videos, channel, error},
+    };
+  }
+  channel = channelResponse.Message;
+
+  let videoResponse = await getVideos(channel_id);
+  if (!videoResponse.Ok) {
+    error = videoResponse;
+    return {
+      props: {videos, channel, error},
+    };
+  }
+  videos = videoResponse.Message;
+
   return {
-    props: {},
+    props: {videos, channel, error},
   };
 };
 
-export default function Index({videos, channel}: Props) {
-  if (channel === null) {
-    return <div>500 error</div>;
+export default function Index({videos, channel, error}: Props) {
+  if (error) {
+    return <ErrorPage response={error} />;
   }
 
   return (
     <div className="p-12">
       <div className="grid grid-cols-4 gap-x-2">
         <div>
-          <img src={channel.ThumbnailUrl}></img>
+          <img src={channel?.ThumbnailUrl}></img>
 
           <h1 className="py-4 font-black tracking-tight text-4xl">
-            {channel.Title}
+            {channel?.Title}
           </h1>
-          <p className="pb-4">{channel.Description}</p>
-          <p>Last Updated: {channel.LastUpdated}</p>
+          <p className="pb-4">{channel?.Description}</p>
+          <p>Last Updated: {channel?.LastUpdated}</p>
         </div>
 
         <div className="col-span-3">
+          <input
+            className="appearance-none  border-none w-full text-gray-700 mr-3 py-1 px-2 my-2 leading-tight focus:outline-none"
+            name="searchString"
+            placeholder="Search for product or brand"
+          />
           {videos &&
             videos.map(video => {
               return (

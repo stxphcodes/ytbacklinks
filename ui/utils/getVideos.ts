@@ -1,50 +1,90 @@
+import {
+    ErrNullResponse, ErrRequest, ErrUnknown, ResponseError, ResponseWrapper, TResponseWrapper
+} from './responseWrapper';
 import { Link, VideoUI } from './types';
 
 const FIREBASE_URL = 'https://backlinks-81c44-default-rtdb.firebaseio.com/';
 
-export async function getVideos(channelId: string): Promise<VideoUI[] | null> {
+export async function getVideos(channelId: string): Promise<TResponseWrapper> {
   let firebase = new URL(FIREBASE_URL);
   firebase.pathname = `videosByChannels/${channelId}.json`;
 
-  let response = await fetch(firebase.toString());
-  if (!response.ok) {
-    console.log(response);
-    return null;
-  }
+  let r = new ResponseWrapper();
+  await fetch(firebase.toString())
+    .then(response => {
+      r.UpdateWithResponse(response);
+      if (!response.ok) {
+        throw new ResponseError(`${ErrRequest} ${firebase.toString()}`);
+      }
 
-  let data: {[videoId: string]: VideoUI} = await response.json();
-
-  let sorted = Object.values(data).sort((videoA, videoB) =>
-    videoB.PublishedAt.localeCompare(videoA.PublishedAt)
-  );
-
-  await Promise.all(
-    sorted.map(async (video, index) => {
-      sorted[index].Links = await getLinks(channelId, video.Id);
+      return response.json();
     })
-  );
+    .then(async (data: {[videoId: string]: VideoUI}) => {
+      if (!data) {
+        throw new ResponseError(ErrNullResponse);
+      }
 
-  return sorted;
+      let filtered: VideoUI[] = []
+      await Promise.all(
+        Object.values(data).map(async (video, index) => {
+          let linksResponse = await getLinks(channelId, video.Id);
+          // only return videos that have links
+          if (linksResponse.Ok) {
+            video.Links = linksResponse.Message;
+            filtered.push(video)
+          } 
+        })
+      );
+
+      // sort by publish date
+      filtered.sort((a, b) => (b.PublishedAt.localeCompare(a.PublishedAt)))
+
+      r.Message = filtered;
+    })
+    .catch(error => {
+      r.Ok && r.SetDefaultError();
+      r.Message = error.Message || ErrUnknown;
+      r.RawMessage = error.RawMessage || `In ${getVideos.name}`;
+    });
+
+  return r.Serialize();
 }
 
-async function getLinks(channelId: string, videoId: string): Promise<Link[]> {
+async function getLinks(
+  channelId: string,
+  videoId: string
+): Promise<TResponseWrapper> {
   let firebase = new URL(FIREBASE_URL);
   firebase.pathname = `linksByChannelsAndVideos/${channelId}/${videoId}.json`;
 
-  let response = await fetch(firebase.toString());
+  let r = new ResponseWrapper();
+  await fetch(firebase.toString())
+    .then(response => {
+      r.UpdateWithResponse(response);
+      if (!r.Ok) {
+        throw new ResponseError(`${ErrRequest} ${firebase.toString()}`);
+      }
+      return response.json();
+    })
+    .then((data: {[linkId: string]: Link}) => {
+      if(!data) {
+        throw new ResponseError(ErrNullResponse)
+      }
 
-  let links: Link[] = [];
-  if (response.ok) {
-    let r: {[linkId: string]: Link} = await response.json();
+      let links: Link[] = [];
 
-    if (r === null) {
-      return links;
-    }
+      data &&
+        Object.entries(data).map(([linkId, link]) => {
+          links.push(link);
+        });
 
-    Object.entries(r).map(([linkId, link]) => {
-      links.push(link);
+      r.Message = links;
+    })
+    .catch(error => {
+      r.Ok && r.SetDefaultError();
+      r.Message = error.Message || ErrUnknown;
+      r.RawMessage = error.RawMessage || `In ${getLinks.name}`;
     });
-  }
 
-  return links;
+  return r.Serialize();
 }
