@@ -1,12 +1,3 @@
-// export interface ApiResponse {
-//   Ok: boolean;
-//   Status: number;
-//   StatusText: string;
-//   Message: any;
-//   RawMessage: any;
-//   }
-// };
-
 export type Channel = {
   Id: string;
   Title: string;

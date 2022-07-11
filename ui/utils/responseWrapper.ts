@@ -14,9 +14,9 @@ export class ResponseError {
   }
 }
 
-// Create a type to address serialization errors when setting props to
-// object in data fetching functions like getServerSideProps.
-// Class objects do not automatically serialize to JSON but types do.
+// Create a type to address serialization errors.
+// Class objects do not automatically serialize to JSON 
+// but types do.
 export type TResponseWrapper = {
   Ok: boolean;
   Status: number;

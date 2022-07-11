@@ -3,7 +3,7 @@ import { GetServerSideProps } from 'next';
 import ErrorPage from '../../../components/error';
 import { getChannel } from '../../../utils/getChannels';
 import { getVideos } from '../../../utils/getVideos';
-import { ResponseWrapper, TResponseWrapper } from '../../../utils/responseWrapper';
+import { ErrUrlParam, ResponseWrapper, TResponseWrapper } from '../../../utils/responseWrapper';
 import { Channel, VideoUI } from '../../../utils/types';
 
 type Props = {
@@ -23,7 +23,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       false,
       400,
       'Bad Request',
-      `Unexpected URL parameter ${channel_id}`
+      `${ErrUrlParam} ${channel_id}`
     ).Serialize();
 
     return {
