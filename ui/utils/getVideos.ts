@@ -24,22 +24,22 @@ export async function getVideos(channelId: string): Promise<TResponseWrapper> {
         throw new ResponseError(ErrNullResponse);
       }
 
-      let sorted = Object.values(data).sort((videoA, videoB) =>
-        videoB.PublishedAt.localeCompare(videoA.PublishedAt)
-      );
-
+      let filtered: VideoUI[] = []
       await Promise.all(
-        sorted.map(async (video, index) => {
+        Object.values(data).map(async (video, index) => {
           let linksResponse = await getLinks(channelId, video.Id);
-          if (!linksResponse.Ok) {
-            return Promise.reject(linksResponse);
-          }
-
-          sorted[index].Links = linksResponse.Message;
+          // only return videos that have links
+          if (linksResponse.Ok) {
+            video.Links = linksResponse.Message;
+            filtered.push(video)
+          } 
         })
       );
 
-      r.Message = sorted;
+      // sort by publish date
+      filtered.sort((a, b) => (b.PublishedAt.localeCompare(a.PublishedAt)))
+
+      r.Message = filtered;
     })
     .catch(error => {
       r.Ok && r.SetDefaultError();
@@ -67,6 +67,10 @@ async function getLinks(
       return response.json();
     })
     .then((data: {[linkId: string]: Link}) => {
+      if(!data) {
+        throw new ResponseError(ErrNullResponse)
+      }
+
       let links: Link[] = [];
 
       data &&

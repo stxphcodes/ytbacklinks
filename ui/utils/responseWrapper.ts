@@ -2,6 +2,7 @@
 export const ErrRequest = 'Error requesting URL';
 export const ErrNullResponse = 'Null response received';
 export const ErrUnknown = 'Unknown'
+export const ErrUrlParam = 'Unexpected URL parameter'
 
 export class ResponseError {
   Message: string;

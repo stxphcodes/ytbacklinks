@@ -3,32 +3,31 @@ import { GetServerSideProps } from 'next';
 import ErrorPage from '../../../components/error';
 import { getChannel } from '../../../utils/getChannels';
 import { getVideos } from '../../../utils/getVideos';
-import { TResponseWrapper } from '../../../utils/responseWrapper';
+import { ResponseWrapper, TResponseWrapper } from '../../../utils/responseWrapper';
 import { Channel, VideoUI } from '../../../utils/types';
 
 type Props = {
-  videos: VideoUI[] | null;
   channel: Channel | null;
+  videos: VideoUI[] | null;
   error: TResponseWrapper | null;
 };
 
 export const getServerSideProps: GetServerSideProps = async context => {
-  const channel_id = context.params?.channel_id;
-  let error = null;
-  let videos = null;
   let channel = null;
+  let videos = null;
+  let error = null;
 
+  const channel_id = context.params?.channel_id;
   if (typeof channel_id !== 'string') {
-    error = {
-      Ok: false,
-      Status: 400,
-      StatusText: 'Bad Request',
-      Message: 'unexpected url parameter type',
-      RawMessage: null,
-    };
+    let error = new ResponseWrapper(
+      false,
+      400,
+      'Bad Request',
+      `Unexpected URL parameter ${channel_id}`
+    ).Serialize();
 
     return {
-      props: {videos, channel, error},
+      props: {channel, videos, error},
     };
   }
 

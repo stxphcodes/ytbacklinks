@@ -10,19 +10,19 @@ type Props = {
 };
 
 export async function getServerSideProps() {
-  let apiResponse = await getChannels();
+  let response = await getChannels();
 
-  if (apiResponse.Ok) {
+  if (response.Ok) {
     return {
       props: {
-        channels: apiResponse.Message,
+        channels: response.Message,
         error: null,
       },
     };
   }
 
   return {
-    props: {channels: null, error: apiResponse},
+    props: {channels: null, error: response},
   };
 }
 
