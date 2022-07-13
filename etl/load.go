@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"firebase.google.com/go/db"
 )
@@ -16,6 +17,7 @@ const (
 	VIDEOS_REF                   = "/videos"
 	CHANNELS_REF                 = "/channels"
 	VIDEOS_BY_CHANNELS_REF       = "/videosByChannels"
+	LAST_UPDATED_REF             = "/lastUpdated"
 )
 
 func loadChannel(ctx context.Context, client *db.Client, c *Channel) error {
@@ -107,110 +109,123 @@ func loadLinksByChannelAndVideoIds(ctx context.Context, client *db.Client, chann
 	return nil
 }
 
+func updateLastUpdated(ctx context.Context, client *db.Client) error {
+	ref := client.NewRef(LAST_UPDATED_REF)
+
+	var dates []string
+	if err := ref.Get(ctx, &dates); err != nil {
+		return err
+	}
+
+	dates = append(dates, time.Now().Format(time.RFC3339))
+
+	return ref.Set(ctx, dates)
+}
+
 // unused.
 
 // func loadLinks(ctx context.Context, client *db.Client, links map[string]*Link) error {
-// 	ref := client.NewRef(LINKS_REF)
+//  ref := client.NewRef(LINKS_REF)
 
-// 	// Get video ids from database.
-// 	var linkIds map[string]interface{}
-// 	if err := ref.GetShallow(ctx, &linkIds); err != nil {
-// 		return err
-// 	}
+//  // Get video ids from database.
+//  var linkIds map[string]interface{}
+//  if err := ref.GetShallow(ctx, &linkIds); err != nil {
+//      return err
+//  }
 
-// 	// No videos exist yet. Upload in bulk.
-// 	if len(linkIds) == 0 {
-// 		if err := ref.Set(ctx, links); err != nil {
-// 			return err
-// 		}
-// 	}
+//  // No videos exist yet. Upload in bulk.
+//  if len(linkIds) == 0 {
+//      if err := ref.Set(ctx, links); err != nil {
+//          return err
+//      }
+//  }
 
-// 	// Only upload videos that don't already exist.
-// 	linksToUpload := make(map[string]interface{})
-// 	for id, link := range links {
-// 		_, ok := linkIds[id]
-// 		if !ok {
-// 			linksToUpload[id] = link
-// 		}
-// 	}
+//  // Only upload videos that don't already exist.
+//  linksToUpload := make(map[string]interface{})
+//  for id, link := range links {
+//      _, ok := linkIds[id]
+//      if !ok {
+//          linksToUpload[id] = link
+//      }
+//  }
 
-// 	if len(linksToUpload) == 0 {
-// 		return nil
-// 	}
+//  if len(linksToUpload) == 0 {
+//      return nil
+//  }
 
-// 	// Upload new links.
-// 	newRef := ref.Parent()
-// 	childRef := newRef.Child("links")
-// 	return childRef.Update(ctx, linksToUpload)
+//  // Upload new links.
+//  newRef := ref.Parent()
+//  childRef := newRef.Child("links")
+//  return childRef.Update(ctx, linksToUpload)
 // }
 
 // func deduplicateLinks(videoLinks map[string]map[string]*Link) map[string]*Link {
-// 	l := make(map[string]*Link)
+//  l := make(map[string]*Link)
 
-// 	for videoId, links := range videoLinks {
-// 		for linkId, link := range links {
-// 			_, ok := l[linkId]
-// 			if !ok {
-// 				l[linkId] = link
-// 				continue
-// 			}
+//  for videoId, links := range videoLinks {
+//      for linkId, link := range links {
+//          _, ok := l[linkId]
+//          if !ok {
+//              l[linkId] = link
+//              continue
+//          }
 
-// 			l[linkId].OtherVideoIds = append(l[linkId].OtherVideoIds, videoId)
-// 		}
-// 	}
+//          l[linkId].OtherVideoIds = append(l[linkId].OtherVideoIds, videoId)
+//      }
+//  }
 
-// 	return l
+//  return l
 // }
 
 // func loadLinksByChannelIds(ctx context.Context, client *db.Client, channelId string, videoLinks map[string]map[string]*Link) error {
-// 	ref := client.NewRef(fmt.Sprintf("%s/%s", LINKS_BY_CHANNELS_REF, channelId))
-// 	// Get ids from database.
-// 	var linkIds map[string]interface{}
-// 	if err := ref.GetShallow(ctx, &linkIds); err != nil {
-// 		return err
-// 	}
+//  ref := client.NewRef(fmt.Sprintf("%s/%s", LINKS_BY_CHANNELS_REF, channelId))
+//  // Get ids from database.
+//  var linkIds map[string]interface{}
+//  if err := ref.GetShallow(ctx, &linkIds); err != nil {
+//      return err
+//  }
 
-// 	deduplicatedLinks := deduplicateLinks(videoLinks)
+//  deduplicatedLinks := deduplicateLinks(videoLinks)
 
-// 	// Upload in bulk.
-// 	if err := ref.Set(ctx, deduplicatedLinks); err != nil {
-// 		return err
-// 	}
+//  // Upload in bulk.
+//  if err := ref.Set(ctx, deduplicatedLinks); err != nil {
+//      return err
+//  }
 
-// 	return nil
+//  return nil
 // }
 
 // func loadVideos(ctx context.Context, client *db.Client, videos map[string]*Video) error {
-// 	ref := client.NewRef(VIDEOS_REF)
+//  ref := client.NewRef(VIDEOS_REF)
 
-// 	// Get video ids from database.
-// 	var videoIds map[string]interface{}
-// 	if err := ref.GetShallow(ctx, &videoIds); err != nil {
-// 		return err
-// 	}
+//  // Get video ids from database.
+//  var videoIds map[string]interface{}
+//  if err := ref.GetShallow(ctx, &videoIds); err != nil {
+//      return err
+//  }
 
-// 	if len(videoIds) == 0 {
-// 		// No videos exist yet. Upload in bulk.
-// 		if err := ref.Set(ctx, videos); err != nil {
-// 			return err
-// 		}
-// 	}
+//  if len(videoIds) == 0 {
+//      // No videos exist yet. Upload in bulk.
+//      if err := ref.Set(ctx, videos); err != nil {
+//          return err
+//      }
+//  }
 
-// 	// Only upload videos that don't already exist.
-// 	videosToUpload := make(map[string]interface{})
-// 	for id, video := range videos {
-// 		_, ok := videoIds[id]
-// 		if !ok {
-// 			videosToUpload[id] = video
-// 		}
-// 	}
+//  // Only upload videos that don't already exist.
+//  videosToUpload := make(map[string]interface{})
+//  for id, video := range videos {
+//      _, ok := videoIds[id]
+//      if !ok {
+//          videosToUpload[id] = video
+//      }
+//  }
 
-// 	if len(videosToUpload) == 0 {
-// 		return nil
-// 	}
+//  if len(videosToUpload) == 0 {
+//      return nil
+//  }
 
-// 	// Upload new videos.
-// 	newRef := ref.Parent()
-// 	childRef := newRef.Child(VIDEOS_REF)
-// 	return childRef.Update(ctx, videosToUpload)
+//  // Upload new videos.
+//  newRef := ref.Parent()
+//  childRef := newRef.Child(VIDEOS_REF)
+//  return childRef.Update(ctx, videosToUpload)
 // }
