@@ -6,9 +6,6 @@ import (
 	"fmt"
 	"strings"
 	"time"
-	"unicode"
-
-	"mvdan.cc/xurls"
 )
 
 type Channel struct {
@@ -88,22 +85,6 @@ type Link struct {
 	OtherVideoIds []string
 }
 
-func trimSpecialChars(s string) string {
-	s = strings.TrimLeftFunc(s, func(r rune) bool {
-		return !unicode.IsLetter(r) && !unicode.IsNumber(r)
-	})
-
-	s = strings.TrimRightFunc(s, func(r rune) bool {
-		if r == ')' {
-			return false
-		}
-
-		return !unicode.IsLetter(r) && !unicode.IsNumber(r)
-	})
-
-	return s
-}
-
 func videosToLinksByVideoId(videos map[string]*Video) (map[string]map[string]*Link, error) {
 	videoLinks := make(map[string]map[string]*Link)
 
@@ -114,21 +95,13 @@ func videosToLinksByVideoId(videos map[string]*Video) (map[string]map[string]*Li
 		sc := bufio.NewScanner(strings.NewReader(video.Description))
 		for sc.Scan() {
 			line := sc.Text()
-			rawUrl := xurls.Strict.FindString(line)
-			if rawUrl == "" {
+
+			rawUrl, ok := getLinkUrl(line)
+			if !ok {
 				continue
 			}
 
-			// get link description and remove special chars before and after
-			description := strings.Split(line, rawUrl)[0]
-			brand := ""
-			if len(strings.Split(description, "-")) == 2 {
-				brand = strings.Split(description, "-")[0]
-				description = strings.Split(description, "-")[1]
-			}
-
-			brand = trimSpecialChars(brand)
-			description = trimSpecialChars(description)
+			description, brand := getLinkDescriptionAndBrand(line, rawUrl)
 			encodedUrl := base64.URLEncoding.EncodeToString([]byte(rawUrl))
 
 			link := &Link{
@@ -161,21 +134,13 @@ func videosToLinks(videos map[string]*Video) (map[string]*Link, error) {
 		sc := bufio.NewScanner(strings.NewReader(video.Description))
 		for sc.Scan() {
 			line := sc.Text()
-			rawUrl := xurls.Strict.FindString(line)
-			if rawUrl == "" {
+
+			rawUrl, ok := getLinkUrl(line)
+			if !ok {
 				continue
 			}
 
-			// get link description and remove special chars before and after
-			description := strings.Split(line, rawUrl)[0]
-			brand := ""
-			if len(strings.Split(description, "-")) == 2 {
-				brand = strings.Split(description, "-")[0]
-				description = strings.Split(description, "-")[1]
-			}
-
-			brand = trimSpecialChars(brand)
-			description = trimSpecialChars(description)
+			description, brand := getLinkDescriptionAndBrand(line, rawUrl)
 
 			unencodedId := fmt.Sprintf("%s %s", video.ChannelId, rawUrl)
 			encodedId := base64.URLEncoding.EncodeToString([]byte(unencodedId))
@@ -199,25 +164,4 @@ func videosToLinks(videos map[string]*Video) (map[string]*Link, error) {
 	}
 
 	return links, nil
-}
-
-func getLinkCategory(link string) string {
-	var (
-		socialMediaLinks = [...]string{"instagram", "facebook", "twitter"}
-		musicLinks       = [...]string{"spotify"}
-	)
-
-	for _, l := range socialMediaLinks {
-		if strings.Contains(link, l) {
-			return "social media"
-		}
-	}
-
-	for _, l := range musicLinks {
-		if strings.Contains(link, l) {
-			return "music"
-		}
-	}
-
-	return ""
 }
