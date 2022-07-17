@@ -10,8 +10,7 @@ import (
 	"mvdan.cc/xurls"
 )
 
-// parseVideoDescription parses the description box of a video for
-// all links.
+// parseVideoDescription parses for all links in a video description box.
 func parseVideoDescription(video *Video) (map[string]*Link, error) {
 	links := make(map[string]*Link)
 
