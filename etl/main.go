@@ -117,7 +117,7 @@ func updateLinks(ctx context.Context, firebaseClient *db.Client, dryRun bool) er
 		log.Println("Number of links: ", getNumberOfLinks(links))
 
 		if dryRun {
-			log.Println("Skip uploading data.\n")
+			log.Print("Skip uploading data.\n")
 			continue
 		}
 
@@ -125,7 +125,7 @@ func updateLinks(ctx context.Context, firebaseClient *db.Client, dryRun bool) er
 			return err
 		}
 
-		log.Println("Successfully updated database.\n")
+		log.Print("Successfully updated database.\n")
 	}
 
 	return nil
@@ -163,7 +163,7 @@ func runETL(ctx context.Context, firebaseClient *db.Client, httpClient *http.Cli
 		return err
 	}
 
-	log.Println("This is last update date: %s", lastUpdated)
+	log.Printf("This is last update date: %s", lastUpdated)
 
 	for _, channelTitle := range channels {
 		channelResponse, err := extractChannel(httpClient, youtubeApiKey, channelTitle)
@@ -188,7 +188,7 @@ func runETL(ctx context.Context, firebaseClient *db.Client, httpClient *http.Cli
 		log.Println("Number of links: ", getNumberOfLinks(links))
 
 		if dryRun {
-			log.Println("Skip uploading data.\n")
+			log.Print("Skip uploading data.\n")
 			continue
 		} else {
 			if err := loadChannel(ctx, firebaseClient, channel); err != nil {
@@ -203,7 +203,7 @@ func runETL(ctx context.Context, firebaseClient *db.Client, httpClient *http.Cli
 				return err
 			}
 
-			log.Println("Successfully updated database.\n")
+			log.Print("Successfully updated database.\n")
 		}
 	}
 
