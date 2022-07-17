@@ -1,10 +1,6 @@
 package main
 
 import (
-	"bufio"
-	"encoding/base64"
-	"fmt"
-	"strings"
 	"time"
 )
 
@@ -91,33 +87,9 @@ func videosToLinksByVideoId(videos map[string]*Video) (map[string]map[string]*Li
 	for videoId, video := range videos {
 		links := make(map[string]*Link)
 
-		// iterate through each line in description
-		sc := bufio.NewScanner(strings.NewReader(video.Description))
-		for sc.Scan() {
-			line := sc.Text()
-
-			rawUrl, ok := getLinkUrl(line)
-			if !ok {
-				continue
-			}
-
-			description, brand := getLinkDescriptionAndBrand(line, rawUrl)
-			encodedUrl := base64.URLEncoding.EncodeToString([]byte(rawUrl))
-
-			link := &Link{
-				Id:          encodedUrl,
-				Category:    getLinkCategory(rawUrl),
-				ChannelId:   video.ChannelId,
-				VideoId:     videoId,
-				VideoTitle:  video.Title,
-				PublishedAt: video.PublishedAt,
-				Href:        rawUrl,
-				Description: description,
-				Brand:       brand,
-				LastUpdated: time.Now().Format(time.RFC3339),
-			}
-
-			links[link.Id] = link
+		links, err := parseVideoDescription(video)
+		if err != nil {
+			return nil, err
 		}
 
 		videoLinks[videoId] = links
@@ -126,42 +98,42 @@ func videosToLinksByVideoId(videos map[string]*Video) (map[string]map[string]*Li
 	return videoLinks, nil
 }
 
-func videosToLinks(videos map[string]*Video) (map[string]*Link, error) {
-	links := make(map[string]*Link)
+// func videosToLinks(videos map[string]*Video) (map[string]*Link, error) {
+// 	links := make(map[string]*Link)
 
-	for videoId, video := range videos {
-		// iterate through each line in description
-		sc := bufio.NewScanner(strings.NewReader(video.Description))
-		for sc.Scan() {
-			line := sc.Text()
+// 	for videoId, video := range videos {
+// 		// iterate through each line in description
+// 		sc := bufio.NewScanner(strings.NewReader(video.Description))
+// 		for sc.Scan() {
+// 			line := sc.Text()
 
-			rawUrl, ok := getLinkUrl(line)
-			if !ok {
-				continue
-			}
+// 			rawUrl, ok := getLinkUrl(line)
+// 			if !ok {
+// 				continue
+// 			}
 
-			description, brand := getLinkDescriptionAndBrand(line, rawUrl)
+// 			description, brand := getLinkDescriptionAndBrand("", line, rawUrl)
 
-			unencodedId := fmt.Sprintf("%s %s", video.ChannelId, rawUrl)
-			encodedId := base64.URLEncoding.EncodeToString([]byte(unencodedId))
+// 			unencodedId := fmt.Sprintf("%s %s", video.ChannelId, rawUrl)
+// 			encodedId := base64.URLEncoding.EncodeToString([]byte(unencodedId))
 
-			link := &Link{
-				Id:          encodedId,
-				Category:    getLinkCategory(rawUrl),
-				ChannelId:   video.ChannelId,
-				VideoId:     videoId,
-				VideoTitle:  video.Title,
-				PublishedAt: video.PublishedAt,
-				Href:        rawUrl,
-				Description: description,
-				Brand:       brand,
-				Tags:        []string{""},
-				LastUpdated: time.Now().Format(time.RFC3339),
-			}
+// 			link := &Link{
+// 				Id:          encodedId,
+// 				Category:    getLinkCategory(rawUrl),
+// 				ChannelId:   video.ChannelId,
+// 				VideoId:     videoId,
+// 				VideoTitle:  video.Title,
+// 				PublishedAt: video.PublishedAt,
+// 				Href:        rawUrl,
+// 				Description: description,
+// 				Brand:       brand,
+// 				Tags:        []string{""},
+// 				LastUpdated: time.Now().Format(time.RFC3339),
+// 			}
 
-			links[link.Id] = link
-		}
-	}
+// 			links[link.Id] = link
+// 		}
+// 	}
 
-	return links, nil
-}
+// 	return links, nil
+// }
