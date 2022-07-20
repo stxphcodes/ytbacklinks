@@ -63,7 +63,7 @@ export default function Index({videos, channel, error}: Props) {
     <div className="p-12">
       <div className="grid grid-cols-4 gap-x-2">
         <div>
-          <img src={channel?.ThumbnailUrl}></img>
+          <img src={channel?.ThumbnailUrl} referrerPolicy="no-referrer"></img>
 
           <h1 className="py-4 font-black tracking-tight text-4xl">
             {channel?.Title}
@@ -81,7 +81,10 @@ export default function Index({videos, channel, error}: Props) {
           {videos &&
             videos.map(video => {
               return (
-                <div className="shadow-sm border-2 p-4 grid grid-cols-4 gap-x-8">
+                <div
+                  className="shadow-sm border-2 p-4 grid grid-cols-4 gap-x-8"
+                  key={video.Id}
+                >
                   <div className="">
                     <img src={video.ThumbnailUrl} />
                     <h1 className="font-black py-2">
@@ -100,11 +103,8 @@ export default function Index({videos, channel, error}: Props) {
                     <ul className="list-outside list-disc">
                       <div className="grid grid-cols-3 gap-x-6">
                         {video.Links.map(link => {
-                          if (link.Description.length > 60) {
-                            return <></>;
-                          }
                           return (
-                            <li>
+                            <li key={link.Id}>
                               {' '}
                               <a
                                 href={link.Href}

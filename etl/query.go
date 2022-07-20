@@ -13,9 +13,9 @@ func queryLastUpdated(ctx context.Context, client *db.Client) (string, error) {
 	// get last element of array
 	query := ref.OrderByKey().LimitToLast(1)
 
-	// query returns map[array #]lastDate
-	//var m map[int]string
-	var m []string
+	// query returns map[array last #]lastDate
+	// and map has length of 1
+	var m map[int]string
 	if err := query.Get(ctx, &m); err != nil {
 		return "", err
 	}

@@ -44,7 +44,7 @@ export default function Index({channels, error}: Props) {
         {channels &&
           Object.entries(channels).map(([channelId, channel]) => {
             return (
-              <Link href={`/channels/${channelId}`}>
+              <Link href={`/channels/${channelId}`} key={channelId}>
                 <button className="shadow-sm border-2 text-left p-1">
                   <div className="grid grid-cols-3 gap-x-2">
                     <div>
@@ -52,6 +52,8 @@ export default function Index({channels, error}: Props) {
                         alt={`${channel.Title} channel thumbnail`}
                         src={channel.ThumbnailUrl}
                         className="w-fit h-auto"
+                        // Fixes 403 error: https://stackoverflow.com/a/61042200
+                        referrerPolicy="no-referrer"
                       />
                     </div>
 
