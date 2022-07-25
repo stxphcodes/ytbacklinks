@@ -2,15 +2,18 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"strings"
 	"time"
 
-	"firebase.google.com/go/db"
+	"cloud.google.com/go/firestore"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
+	LASTUPDATED_DOC_PATH = "etl-metadata/last-updated"
+	CHANNELS_COLLECTION  = "channels"
+
 	LINKS_REF                    = "/links"
 	LINKS_BY_CHANNELS_REF        = "/linksByChannels"
 	LINKS_BY_CHANNELS_VIDEOS_REF = "/linksByChannelsAndVideos"
@@ -20,88 +23,50 @@ const (
 	LAST_UPDATED_REF             = "/lastUpdated"
 )
 
-func loadChannel(ctx context.Context, client *db.Client, c *Channel) error {
-	ref := client.NewRef(fmt.Sprintf("%s/%s", CHANNELS_REF, c.Id))
-
-	// use a transaction to check if channel already exists.
-	if err := ref.Transaction(ctx, func(t db.TransactionNode) (interface{}, error) {
-		var current Channel
-		if err := t.Unmarshal(&current); err != nil {
-			return nil, err
-		}
-
-		// channel doesn't exist yet, create.
-		if current.Id == "" {
-			return &c, nil
-		}
-
-		// if fields are all the same, don't update.
-		if current.Description == c.Description &&
-			current.ThumbnailUrl == c.ThumbnailUrl &&
-			current.CustomUrl == c.CustomUrl &&
-			current.UploadPlaylistId == c.UploadPlaylistId &&
-			current.Title == c.Title {
-			return nil, errors.New("channel already exists")
-		}
-
-		// a field changed, update.
-		return &c, nil
-	}); err != nil {
-		if !strings.Contains(err.Error(), "exists") {
-			return err
-		}
-	}
-
-	return nil
+func loadChannel(ctx context.Context, client *firestore.Client, c *Channel) error {
+	cref := client.Collection(CHANNELS_COLLECTION)
+	_, err := cref.Doc(c.Id).Set(ctx, &c)
+	return err
 }
 
-func loadVideosbyChannelId(ctx context.Context, client *db.Client, channelId string, videos map[string]*Video) error {
-	ref := client.NewRef(fmt.Sprintf("%s/%s", VIDEOS_BY_CHANNELS_REF, channelId))
+func loadVideosbyChannelId(ctx context.Context, client *firestore.Client, channelId string, videos map[string]*Video) error {
+	cref := client.Collection(channelId)
+	batch := client.Batch()
 
-	// Get video ids from database.
-	var videoIds map[string]interface{}
-	if err := ref.GetShallow(ctx, &videoIds); err != nil {
-		return err
-	}
-
-	if len(videoIds) == 0 {
-		// No videos exist yet. Upload in bulk.
-		if err := ref.Set(ctx, videos); err != nil {
-			return err
+	for videoId, video := range videos {
+		docRef := cref.Doc(videoId)
+		// check if video exists
+		snap, err := docRef.Get(ctx)
+		if err != nil {
+			if status.Code(err) != codes.NotFound {
+				return err
+			}
 		}
-	}
 
-	// Only upload videos that don't already exist.
-	videosToUpload := make(map[string]interface{})
-	for id, video := range videos {
-		_, ok := videoIds[id]
-		if !ok {
-			videosToUpload[id] = video
+		if snap.Exists() {
+			continue
 		}
+
+		// doc doesn't exist yet, create
+		batch.Set(docRef, &video)
 	}
 
-	if len(videosToUpload) == 0 {
-		return nil
-	}
+	_, err := batch.Commit(ctx)
 
-	// Upload new videos.
-	newRef := ref.Parent()
-	childRef := newRef.Child(fmt.Sprintf("%s", channelId))
-	return childRef.Update(ctx, videosToUpload)
+	return err
 }
 
-func loadLinksByChannelAndVideoIds(ctx context.Context, client *db.Client, channelId string, videoLinks map[string]map[string]*Link) error {
+func loadLinksByChannelAndVideoIds(ctx context.Context, client *firestore.Client, channelId string, videoLinks map[string]map[string]*Link) error {
 	for videoId, links := range videoLinks {
-		ref := client.NewRef(fmt.Sprintf("%s/%s/%s", LINKS_BY_CHANNELS_VIDEOS_REF, channelId, videoId))
+		cref := client.Collection(fmt.Sprintf("%s/%s/links", channelId, videoId))
+		batch := client.Batch()
 
-		// Get ids from database.
-		var linkIds map[string]interface{}
-		if err := ref.GetShallow(ctx, &linkIds); err != nil {
-			return err
+		for linkId, link := range links {
+			batch.Set(cref.Doc(linkId), link)
 		}
 
 		// Upload in bulk. This will overwrite what's existing in ref.
-		if err := ref.Set(ctx, links); err != nil {
+		if _, err := batch.Commit(ctx); err != nil {
 			return err
 		}
 	}
@@ -109,17 +74,25 @@ func loadLinksByChannelAndVideoIds(ctx context.Context, client *db.Client, chann
 	return nil
 }
 
-func updateLastUpdated(ctx context.Context, client *db.Client) error {
-	ref := client.NewRef(LAST_UPDATED_REF)
+func updateLastUpdated(ctx context.Context, client *firestore.Client) error {
+	doc := client.Doc(LASTUPDATED_DOC_PATH)
 
-	var dates []string
-	if err := ref.Get(ctx, &dates); err != nil {
-		return err
-	}
+	_, err := doc.Update(ctx, []firestore.Update{
+		{Path: "dates", Value: firestore.ArrayUnion(time.Now().Format(time.RFC3339))},
+	})
 
-	dates = append(dates, time.Now().Format(time.RFC3339))
+	return err
 
-	return ref.Set(ctx, dates)
+	// ref := client.NewRef(LAST_UPDATED_REF)
+
+	// var dates []string
+	// if err := ref.Get(ctx, &dates); err != nil {
+	// 	return err
+	// }
+
+	// dates = append(dates, time.Now().Format(time.RFC3339))
+
+	// return ref.Set(ctx, dates)
 }
 
 // unused.

@@ -92,6 +92,10 @@ func videosToLinksByVideoId(videos map[string]*Video) (map[string]map[string]*Li
 			return nil, err
 		}
 
+		if len(links) == 0 {
+			continue
+		}
+
 		videoLinks[videoId] = links
 	}
 
