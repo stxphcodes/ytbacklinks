@@ -48,9 +48,17 @@ export type Link = {
   Description: string;
   Category: string;
   PublishedAt: string;
-  VideoId: string;
-  VideoTitle: string;
-  ChannelId: string;
   Tags: string[];
   LastUpdated: string;
 };
+
+export type FirebaseConfig = {
+  apiKey: string;
+  authDomain: string;
+  databaseURL: string;
+  projectId: string;
+  storageBucket: string;
+  messagingSenderId: string;
+  appId: string;
+  measurementId: string;
+}

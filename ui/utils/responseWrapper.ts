@@ -58,6 +58,12 @@ export class ResponseWrapper {
     this.StatusText = 'Internal Server';
   }
 
+  SetDefaultOk() {
+    this.Ok = true;
+    this.Status = 200;
+    this.StatusText = 'Ok';
+  }
+
   Serialize(): TResponseWrapper {
     return JSON.parse(JSON.stringify(this));
   }

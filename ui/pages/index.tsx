@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import ErrorPage from '../components/error';
 import { ChannelsResponse, getChannels } from '../utils/getChannels';
+import { getFirestoreClient } from '../utils/getFirestoreClient';
 import { TResponseWrapper } from '../utils/responseWrapper';
 
 type Props = {
@@ -10,8 +11,15 @@ type Props = {
 };
 
 export async function getServerSideProps() {
-  let response = await getChannels();
+  let firestoreResponse = getFirestoreClient()
+  if (!firestoreResponse.Ok) {
+    return {
+      props: {channels: null, error: firestoreResponse}
+    }
+  }
+  let firestoreClient = firestoreResponse.Message
 
+  let response = await getChannels(firestoreClient);
   if (response.Ok) {
     return {
       props: {
