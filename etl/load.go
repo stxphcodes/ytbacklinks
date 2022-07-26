@@ -13,14 +13,6 @@ import (
 const (
 	LASTUPDATED_DOC_PATH = "etl-metadata/last-updated"
 	CHANNELS_COLLECTION  = "channels"
-
-	LINKS_REF                    = "/links"
-	LINKS_BY_CHANNELS_REF        = "/linksByChannels"
-	LINKS_BY_CHANNELS_VIDEOS_REF = "/linksByChannelsAndVideos"
-	VIDEOS_REF                   = "/videos"
-	CHANNELS_REF                 = "/channels"
-	VIDEOS_BY_CHANNELS_REF       = "/videosByChannels"
-	LAST_UPDATED_REF             = "/lastUpdated"
 )
 
 func loadChannel(ctx context.Context, client *firestore.Client, c *Channel) error {
@@ -78,21 +70,13 @@ func updateLastUpdated(ctx context.Context, client *firestore.Client) error {
 	doc := client.Doc(LASTUPDATED_DOC_PATH)
 
 	_, err := doc.Update(ctx, []firestore.Update{
-		{Path: "dates", Value: firestore.ArrayUnion(time.Now().Format(time.RFC3339))},
+		{
+			Path:  "dates",
+			Value: firestore.ArrayUnion(time.Now().Format(time.RFC3339)),
+		},
 	})
 
 	return err
-
-	// ref := client.NewRef(LAST_UPDATED_REF)
-
-	// var dates []string
-	// if err := ref.Get(ctx, &dates); err != nil {
-	// 	return err
-	// }
-
-	// dates = append(dates, time.Now().Format(time.RFC3339))
-
-	// return ref.Set(ctx, dates)
 }
 
 // unused.

@@ -172,9 +172,21 @@ func runETL(ctx context.Context, firestoreClient *firestore.Client, httpClient *
 			return err
 		}
 
+		// Update channel video and link counts.
+		channel.VideoCount, channel.LinkCount, err = queryVideoAndLinkCount(
+			ctx,
+			firestoreClient,
+			channel.Id,
+		)
+		if err != nil {
+			return err
+		}
+		channel.VideoCount += len(videos)
+		channel.LinkCount += getNumberOfLinks(links)
+
 		log.Println("Channel: ", channelTitle)
-		log.Println("Number of videos: ", len(videos))
-		log.Println("Number of links: ", getNumberOfLinks(links))
+		log.Println("Number of new videos: ", len(videos))
+		log.Println("Number of new links: ", getNumberOfLinks(links))
 
 		if dryRun {
 			log.Print("Skip uploading data.\n\n")

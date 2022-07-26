@@ -64,3 +64,36 @@ func queryVideosByChannelId(ctx context.Context, client *firestore.Client) (map[
 
 	return channelToVideos, nil
 }
+
+func queryVideoAndLinkCount(ctx context.Context, client *firestore.Client, channelId string) (int, int, error) {
+	cdoc, err := client.Collection("channels").Doc(channelId).Get(ctx)
+	if err != nil {
+		return -1, -1, err
+	}
+
+	var c Channel
+	if err := cdoc.DataTo(&c); err != nil {
+		return -1, -1, err
+	}
+
+	return c.VideoCount, c.LinkCount, nil
+}
+
+func queryVideoAndLinkCountFromFirestore(ctx context.Context, client *firestore.Client, channelId string) (int, int, error) {
+	vrefs, err := client.Collection(channelId).DocumentRefs(ctx).GetAll()
+	if err != nil {
+		return -1, -1, err
+	}
+
+	linkCount := 0
+	for _, vref := range vrefs {
+		lrefs, err := vref.Collection("links").DocumentRefs(ctx).GetAll()
+		if err != nil {
+			return -1, -1, err
+		}
+
+		linkCount += len(lrefs)
+	}
+
+	return len(vrefs), linkCount, nil
+}

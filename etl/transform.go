@@ -12,6 +12,8 @@ type Channel struct {
 	UploadPlaylistId string
 	ThumbnailUrl     string
 	LastUpdated      string
+	VideoCount       int
+	LinkCount        int
 }
 
 func (r *ChannelResponse) toChannel() *Channel {
