@@ -9,16 +9,15 @@ import (
 	"net/http"
 	"strings"
 
-	firebase "firebase.google.com/go"
-	"firebase.google.com/go/db"
+	"cloud.google.com/go/firestore"
 	"google.golang.org/api/option"
 )
 
 type Config struct {
 	YoutubeApiKey string
-	Firebase      struct {
-		Creds string
-		Url   string
+	Firestore     struct {
+		Creds     string
+		ProjectId string
 	}
 	ChannelTitles string
 	ChannelsInput string
@@ -38,8 +37,8 @@ func run() error {
 	)
 
 	flag.StringVar(&cfg.YoutubeApiKey, "youtube.key", "", "API Key to use for Youtube API.")
-	flag.StringVar(&cfg.Firebase.Creds, "firebase.creds", "", "Path to service account for firebase.")
-	flag.StringVar(&cfg.Firebase.Url, "firebase.url", "", "Firebase database url.")
+	flag.StringVar(&cfg.Firestore.Creds, "firestore.creds", "", "Path to service account for firestore.")
+	flag.StringVar(&cfg.Firestore.ProjectId, "firestore.projectid", "", "Firestore project id.")
 	flag.StringVar(&cfg.ChannelTitles, "channel.titles", "", "List of channel titles (separated by ,) to include in ETL.")
 	flag.StringVar(&cfg.ChannelsInput, "channels.input", "", "Path to file containing channel titles.")
 	flag.BoolVar(&dryRun, "dry.run", true, "Dry run - does not upload data to database.")
@@ -51,36 +50,31 @@ func run() error {
 	case cfg.YoutubeApiKey:
 		return fmt.Errorf("Missing API key.")
 
-	case cfg.Firebase.Creds:
-		return fmt.Errorf("Missing firebase creds path.")
+	case cfg.Firestore.Creds:
+		return fmt.Errorf("Missing firestore creds path.")
 
-	case cfg.Firebase.Url:
-		return fmt.Errorf("Missing firebase database url.")
+	case cfg.Firestore.ProjectId:
+		return fmt.Errorf("Missing firestore project id.")
 	}
 
-	// Connect to firebase database.
+	// Connect to firestore database.
 	ctx := context.Background()
-	conf := &firebase.Config{
-		DatabaseURL: cfg.Firebase.Url,
-	}
-	opt := option.WithCredentialsFile(cfg.Firebase.Creds)
 
-	app, err := firebase.NewApp(ctx, conf, opt)
+	firestoreClient, err := firestore.NewClient(
+		ctx,
+		cfg.Firestore.ProjectId,
+		option.WithCredentialsFile(cfg.Firestore.Creds))
 	if err != nil {
 		return err
 	}
-
-	firebaseClient, err := app.Database(ctx)
-	if err != nil {
-		return err
-	}
+	defer firestoreClient.Close()
 
 	// Connect to youtube via regular http client.
 	httpClient := http.DefaultClient
 
 	// Only update existing links.
 	if renewLinks {
-		return updateLinks(ctx, firebaseClient, dryRun)
+		return updateLinks(ctx, firestoreClient, dryRun)
 	}
 
 	// Otherwise run full ETL process to fetch new videos and links
@@ -90,30 +84,24 @@ func run() error {
 		return err
 	}
 
-	return runETL(ctx, firebaseClient, httpClient, cfg.YoutubeApiKey, channels, dryRun)
+	return runETL(ctx, firestoreClient, httpClient, cfg.YoutubeApiKey, channels, dryRun)
 
 }
 
-func updateLinks(ctx context.Context, firebaseClient *db.Client, dryRun bool) error {
-	channelsToVideos, err := queryVideosByChannelId(ctx, firebaseClient)
+func updateLinks(ctx context.Context, firestoreClient *firestore.Client, dryRun bool) error {
+	channelsToVideos, err := queryVideosByChannelId(ctx, firestoreClient)
 	if err != nil {
 		return err
 	}
 
-	for channelId, videos := range channelsToVideos {
+	for channel, videos := range channelsToVideos {
 		links, err := videosToLinksByVideoId(videos)
 		if err != nil {
 			return err
 		}
 
-		channelTitle, err := queryChannelTitleById(ctx, firebaseClient, channelId)
-		if err != nil {
-			log.Println("Couldn't get channel title")
-			channelTitle = channelId
-		}
-
 		log.Println("Only renewing links.")
-		log.Println("Channel: ", channelTitle)
+		log.Println("Channel: ", channel.Title)
 		log.Println("Number of videos: ", len(videos))
 		log.Println("Number of links: ", getNumberOfLinks(links))
 
@@ -122,7 +110,7 @@ func updateLinks(ctx context.Context, firebaseClient *db.Client, dryRun bool) er
 			continue
 		}
 
-		if err := loadLinksByChannelAndVideoIds(ctx, firebaseClient, channelId, links); err != nil {
+		if err := loadLinksByChannelAndVideoIds(ctx, firestoreClient, channel.Id, links); err != nil {
 			return err
 		}
 
@@ -158,8 +146,8 @@ func getNumberOfLinks(linksByVideo map[string]map[string]*Link) int {
 	return total
 }
 
-func runETL(ctx context.Context, firebaseClient *db.Client, httpClient *http.Client, youtubeApiKey string, channels []string, dryRun bool) error {
-	lastUpdated, err := queryLastUpdated(ctx, firebaseClient)
+func runETL(ctx context.Context, firestoreClient *firestore.Client, httpClient *http.Client, youtubeApiKey string, channels []string, dryRun bool) error {
+	lastUpdated, err := queryLastUpdated(ctx, firestoreClient)
 	if err != nil {
 		return err
 	}
@@ -184,23 +172,35 @@ func runETL(ctx context.Context, firebaseClient *db.Client, httpClient *http.Cli
 			return err
 		}
 
+		// Update channel video and link counts.
+		channel.VideoCount, channel.LinkCount, err = queryVideoAndLinkCount(
+			ctx,
+			firestoreClient,
+			channel.Id,
+		)
+		if err != nil {
+			return err
+		}
+		channel.VideoCount += len(videos)
+		channel.LinkCount += getNumberOfLinks(links)
+
 		log.Println("Channel: ", channelTitle)
-		log.Println("Number of videos: ", len(videos))
-		log.Println("Number of links: ", getNumberOfLinks(links))
+		log.Println("Number of new videos: ", len(videos))
+		log.Println("Number of new links: ", getNumberOfLinks(links))
 
 		if dryRun {
 			log.Print("Skip uploading data.\n\n")
 			continue
 		} else {
-			if err := loadChannel(ctx, firebaseClient, channel); err != nil {
+			if err := loadChannel(ctx, firestoreClient, channel); err != nil {
 				return err
 			}
 
-			if err := loadVideosbyChannelId(ctx, firebaseClient, channel.Id, videos); err != nil {
+			if err := loadVideosbyChannelId(ctx, firestoreClient, channel.Id, videos); err != nil {
 				return err
 			}
 
-			if err := loadLinksByChannelAndVideoIds(ctx, firebaseClient, channel.Id, links); err != nil {
+			if err := loadLinksByChannelAndVideoIds(ctx, firestoreClient, channel.Id, links); err != nil {
 				return err
 			}
 
@@ -208,5 +208,5 @@ func runETL(ctx context.Context, firebaseClient *db.Client, httpClient *http.Cli
 		}
 	}
 
-	return updateLastUpdated(ctx, firebaseClient)
+	return updateLastUpdated(ctx, firestoreClient)
 }

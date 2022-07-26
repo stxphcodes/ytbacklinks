@@ -12,6 +12,8 @@ type Channel struct {
 	UploadPlaylistId string
 	ThumbnailUrl     string
 	LastUpdated      string
+	VideoCount       int
+	LinkCount        int
 }
 
 func (r *ChannelResponse) toChannel() *Channel {
@@ -90,6 +92,10 @@ func videosToLinksByVideoId(videos map[string]*Video) (map[string]map[string]*Li
 		links, err := parseVideoDescription(video)
 		if err != nil {
 			return nil, err
+		}
+
+		if len(links) == 0 {
+			continue
 		}
 
 		videoLinks[videoId] = links

@@ -2,6 +2,7 @@ import { GetServerSideProps } from 'next';
 
 import ErrorPage from '../../../components/error';
 import { getChannel } from '../../../utils/getChannels';
+import { getFirestoreClient } from '../../../utils/getFirestoreClient';
 import { getVideos } from '../../../utils/getVideos';
 import { ErrUrlParam, ResponseWrapper, TResponseWrapper } from '../../../utils/responseWrapper';
 import { Channel, VideoUI } from '../../../utils/types';
@@ -31,7 +32,16 @@ export const getServerSideProps: GetServerSideProps = async context => {
     };
   }
 
-  let channelResponse = await getChannel(channel_id);
+  let firestoreResponse = getFirestoreClient()
+  if (!firestoreResponse.Ok) {
+    let error = firestoreResponse
+    return {
+      props: {channel, videos, error}
+    }
+  }
+  let firestoreClient = firestoreResponse.Message
+
+  let channelResponse = await getChannel(firestoreClient, channel_id);
   if (!channelResponse.Ok) {
     error = channelResponse;
     return {
@@ -40,7 +50,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
   }
   channel = channelResponse.Message;
 
-  let videoResponse = await getVideos(channel_id);
+  let videoResponse = await getVideos(firestoreClient, channel_id);
   if (!videoResponse.Ok) {
     error = videoResponse;
     return {
