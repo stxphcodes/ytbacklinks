@@ -8,8 +8,12 @@ import (
 	"github.com/typesense/typesense-go/typesense/api"
 )
 
+const (
+	LINK_COLLECTION = "links"
+)
+
 func getTSDocCount(ts *typesense.Client) (int, error) {
-	resp, err := ts.Collection("links").Retrieve()
+	resp, err := ts.Collection(LINK_COLLECTION).Retrieve()
 	if err != nil {
 		return -1, err
 	}
@@ -18,7 +22,7 @@ func getTSDocCount(ts *typesense.Client) (int, error) {
 }
 
 func createLinkCollection(ts *typesense.Client) error {
-	_, err := ts.Collection("links").Delete()
+	_, err := ts.Collection(LINK_COLLECTION).Delete()
 	if err != nil {
 		if !strings.Contains(err.Error(), "No collection with name") {
 			return err
@@ -87,7 +91,7 @@ func loadLinksToTypesense(ts *typesense.Client, links []interface{}) error {
 		BatchSize: typedInt(40),
 	}
 
-	resp, err := ts.Collection("links").Documents().Import(links, params)
+	resp, err := ts.Collection(LINK_COLLECTION).Documents().Import(links, params)
 	if err != nil {
 		return err
 	}
