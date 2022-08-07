@@ -83,11 +83,6 @@ export default function Index({videos, channel, error}: Props) {
         </div>
 
         <div className="col-span-3">
-          <input
-            className="appearance-none  border-none w-full text-gray-700 mr-3 py-1 px-2 my-2 leading-tight focus:outline-none"
-            name="searchString"
-            placeholder="Search for product or brand"
-          />
           {videos &&
             videos.map(video => {
               return (
