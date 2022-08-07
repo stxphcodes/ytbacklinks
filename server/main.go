@@ -9,6 +9,7 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 	"github.com/typesense/typesense-go/typesense"
 	"google.golang.org/api/option"
 )
@@ -26,11 +27,9 @@ type Config struct {
 }
 
 func main() {
-
 	if err := run(); err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 func run() error {
@@ -45,7 +44,7 @@ func run() error {
 
 	ctx := context.Background()
 
-	// Connect to firestore database.
+	// Initialize firestore client.
 	fs, err := firestore.NewClient(
 		ctx,
 		cfg.Firestore.ProjectId,
@@ -80,6 +79,8 @@ func run() error {
 
 	// Setup HTTP server.
 	mux := echo.New()
+	mux.Pre(middleware.RemoveTrailingSlash())
+	mux.Use(middleware.Logger())
 
 	mux.GET("/search", SearchHandler(ts, &cfg))
 
