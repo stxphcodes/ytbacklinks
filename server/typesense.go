@@ -42,8 +42,9 @@ func createLinkCollection(ts *typesense.Client) error {
 				Type: "string",
 			},
 			{
-				Name: "ChannelId",
-				Type: "string",
+				Name:  "ChannelId",
+				Type:  "string",
+				Facet: typedBool(true),
 			},
 			{
 				Name:  "Description",
@@ -67,15 +68,21 @@ func createLinkCollection(ts *typesense.Client) error {
 				Name: "PublishedAt",
 				Type: "string",
 			},
-
 			{
-				Name: "VideoId",
-				Type: "string",
+				Name: "PublishedAtInt",
+				Type: "int64",
+				Sort: typedBool(true),
+			},
+			{
+				Name:  "VideoId",
+				Type:  "string",
+				Facet: typedBool(true),
 			},
 			{
 				Name:  "VideoTitle",
 				Type:  "string",
 				Infix: typedBool(true),
+				Facet: typedBool(true),
 			},
 		},
 	}
@@ -88,7 +95,7 @@ func createLinkCollection(ts *typesense.Client) error {
 func loadLinksToTypesense(ts *typesense.Client, links []interface{}) error {
 	params := &api.ImportDocumentsParams{
 		Action:    typedString("create"),
-		BatchSize: typedInt(40),
+		BatchSize: typedInt(100),
 	}
 
 	resp, err := ts.Collection(LINK_COLLECTION).Documents().Import(links, params)

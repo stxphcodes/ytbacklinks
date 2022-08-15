@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"time"
 
 	"cloud.google.com/go/firestore"
 )
@@ -29,6 +30,8 @@ type Link struct {
 	VideoTitle  string
 	ChannelId   string
 	LastUpdated string
+
+	PublishedAtInt int64
 }
 
 func extractLinksFromFirestore(ctx context.Context, fs *firestore.Client) ([]interface{}, error) {
@@ -46,6 +49,12 @@ func extractLinksFromFirestore(ctx context.Context, fs *firestore.Client) ([]int
 		if err := doc.DataTo(&link); err != nil {
 			return nil, err
 		}
+
+		t, err := time.Parse(time.RFC3339, link.PublishedAt)
+		if err != nil {
+			return nil, err
+		}
+		link.PublishedAtInt = t.Unix()
 
 		links = append(links, &link)
 	}
