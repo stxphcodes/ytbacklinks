@@ -33,12 +33,18 @@ func main() {
 }
 
 func run() error {
-	var cfg Config
+	var (
+		cfg           Config
+		forceRecreate bool
+		skipFirestore bool
+	)
 	flag.StringVar(&cfg.HttpAddr, "http.addr", "0.0.0.0:8000", "HTTP bind address.")
 	flag.StringVar(&cfg.Typesense.ApiKey, "typesense.key", "", "API Key to use for Typesense.")
 	flag.StringVar(&cfg.Typesense.URL, "typesense.url", "http://typesense:8108", "URL to Typesense server.")
 	flag.StringVar(&cfg.Firestore.CredsPath, "firestore.creds", "", "Path to service account for firestore.")
 	flag.StringVar(&cfg.Firestore.ProjectId, "firestore.projectid", "", "Firestore project id.")
+	flag.BoolVar(&forceRecreate, "force.recreate", false, "Force recreate typesense collection.")
+	flag.BoolVar(&skipFirestore, "skip.firestore", false, "Skip checking firestore for new docs.")
 
 	flag.Parse()
 
@@ -65,15 +71,30 @@ func run() error {
 		return fmt.Errorf("error initializing typesense client %s", err.Error())
 	}
 
-	// Check if typesense documents need to be recreated.
-	equal, err := compareDataCounts(ctx, ts, fs)
-	if err != nil {
-		return err
-	}
-
-	if !equal {
+	switch true {
+	case forceRecreate:
 		if err := recreateLinkCollection(ctx, &cfg, ts, fs); err != nil {
 			return err
+		}
+		log.Printf("Recreated link collection in typesense.")
+
+	case skipFirestore:
+		log.Printf("Skipped check to recreate link collection in typesense.")
+		break
+
+	default:
+		equal, err := compareDataCounts(ctx, ts, fs)
+		if err != nil {
+			return err
+		}
+
+		if equal {
+			log.Printf("No need to recreat link collection in typesense.")
+		} else {
+			if err := recreateLinkCollection(ctx, &cfg, ts, fs); err != nil {
+				return err
+			}
+			log.Printf("Recreated link collection in typesense.")
 		}
 	}
 
@@ -82,7 +103,7 @@ func run() error {
 	mux.Pre(middleware.RemoveTrailingSlash())
 	mux.Use(middleware.Logger())
 
-	mux.GET("/search", SearchHandler(ts, &cfg))
+	mux.POST("/search", SearchHandler(ts, &cfg))
 
 	return mux.Start(cfg.HttpAddr)
 }
