@@ -1,7 +1,9 @@
 import { collection, doc, Firestore, getDoc, getDocs } from 'firebase/firestore';
 
-import { ErrUnknown, ResponseError, ResponseWrapper, TResponseWrapper } from './responseWrapper';
-import { ChannelUI } from './types';
+import { ChannelUI } from '../utilsLibrary/firestoreTypes';
+import {
+    ErrUnknown, ResponseError, ResponseWrapper, TResponseWrapper
+} from '../utilsLibrary/responseWrapper';
 
 export type ChannelsResponse = {
   [key: string]: ChannelUI;

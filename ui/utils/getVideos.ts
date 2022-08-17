@@ -1,7 +1,7 @@
 import { collection, Firestore, getDocs } from 'firebase/firestore';
 
-import { ErrUnknown, ResponseWrapper, TResponseWrapper } from './responseWrapper';
-import { VideoUI } from './types';
+import { VideoUI } from '../utilsLibrary/firestoreTypes';
+import { ErrUnknown, ResponseWrapper, TResponseWrapper } from '../utilsLibrary/responseWrapper';
 
 export async function getVideos(firestore: Firestore, channelId: string): Promise<TResponseWrapper> {
   let r = new ResponseWrapper();

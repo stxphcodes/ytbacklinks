@@ -1,4 +1,4 @@
-import { TResponseWrapper } from '../../utils/responseWrapper';
+import { TResponseWrapper } from '../../utilsLibrary/responseWrapper';
 
 type Props = {
   response: TResponseWrapper;
