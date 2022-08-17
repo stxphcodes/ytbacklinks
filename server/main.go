@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -15,8 +16,9 @@ import (
 )
 
 type Config struct {
-	HttpAddr  string
-	Typesense struct {
+	HttpAddr    string
+	CORSOrigins string
+	Typesense   struct {
 		ApiKey string
 		URL    string
 	}
@@ -39,6 +41,7 @@ func run() error {
 		skipFirestore bool
 	)
 	flag.StringVar(&cfg.HttpAddr, "http.addr", "0.0.0.0:8000", "HTTP bind address.")
+	flag.StringVar(&cfg.CORSOrigins, "cors.origin", "*", "CORS origins, separated by ,")
 	flag.StringVar(&cfg.Typesense.ApiKey, "typesense.key", "", "API Key to use for Typesense.")
 	flag.StringVar(&cfg.Typesense.URL, "typesense.url", "http://typesense:8108", "URL to Typesense server.")
 	flag.StringVar(&cfg.Firestore.CredsPath, "firestore.creds", "", "Path to service account for firestore.")
@@ -102,6 +105,9 @@ func run() error {
 	mux := echo.New()
 	mux.Pre(middleware.RemoveTrailingSlash())
 	mux.Use(middleware.Logger())
+	cors := middleware.DefaultCORSConfig
+	cors.AllowOrigins = strings.Split(cfg.CORSOrigins, ",")
+	mux.Use(middleware.CORSWithConfig(cors))
 
 	mux.POST("/search", SearchHandler(ts, &cfg))
 
