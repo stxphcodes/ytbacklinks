@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -40,8 +41,10 @@ type SearchResult struct {
 
 func SearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		var r SearchRequest
+		bytes, _ := json.Marshal(ctx.Request())
+		log.Println("Received request: %s", string(bytes))
 
+		var r SearchRequest
 		if err := ctx.Bind(&r); err != nil {
 			return echo.NewHTTPError(400, "Bad request. Expected SearchRequest type.")
 		}
