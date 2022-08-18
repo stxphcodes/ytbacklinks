@@ -39,10 +39,15 @@ type SearchResult struct {
 	VideoTitleHits map[string]map[string]struct{}
 }
 
+func printLog(s string, data interface{}) {
+	bytes, _ := json.Marshal(data)
+	log.Println("%s: %s", s, string(bytes))
+	return
+}
+
 func SearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		bytes, _ := json.Marshal(ctx.Request())
-		log.Println("Received request: %s", string(bytes))
+		printLog("Received request", ctx.Request())
 
 		var r SearchRequest
 		if err := ctx.Bind(&r); err != nil {
@@ -72,6 +77,8 @@ func SearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 			return err
 		}
 
+		printLog("Result from typesense", tsResult)
+
 		result := &SearchResult{
 			TypesenseCount: *tsResult.Found,
 			VideoIds:       make(map[string]struct{}),
@@ -84,7 +91,9 @@ func SearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 			return err
 		}
 
-		return ctx.JSON(200, result.toResponse(r.Term))
+		response := result.toResponse(r.Term)
+		printLog("Response being sent", response)
+		return ctx.JSON(200, response)
 	}
 }
 
