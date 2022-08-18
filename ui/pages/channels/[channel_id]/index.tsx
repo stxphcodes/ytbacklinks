@@ -1,95 +1,167 @@
 import { GetServerSideProps } from 'next';
+import { useEffect, useState } from 'react';
 
 import ErrorPage from '../../../components/error';
+import SearchBar from '../../../components/searchbar';
 import { getChannel } from '../../../utils/getChannels';
 import { getFirestoreClient } from '../../../utils/getFirestoreClient';
+import { getTypesenseServerUrl } from '../../../utils/getTypesenseServer';
 import { getVideos } from '../../../utils/getVideos';
-import { ErrUrlParam, ResponseWrapper, TResponseWrapper } from '../../../utils/responseWrapper';
-import { Channel, VideoUI } from '../../../utils/types';
+import { postSearchRequest } from '../../../utils/postSearchRequest';
+import { Channel, VideoUI } from '../../../utilsLibrary/firestoreTypes';
+import {
+    ErrUrlParam, ResponseWrapper, TResponseWrapper
+} from '../../../utilsLibrary/responseWrapper';
+import { SearchRequest } from '../../../utilsLibrary/searchTypes';
 
 type Props = {
   channel: Channel | null;
   videos: VideoUI[] | null;
   error: TResponseWrapper | null;
+  typesenseUrl: string | null;
 };
 
 export const getServerSideProps: GetServerSideProps = async context => {
-  let channel = null;
-  let videos = null;
-  let error = null;
-
   const channel_id = context.params?.channel_id;
   if (typeof channel_id !== 'string') {
-    let error = new ResponseWrapper(
-      false,
-      400,
-      'Bad Request',
-      `${ErrUrlParam} ${channel_id}`
-    ).Serialize();
-
     return {
-      props: {channel, videos, error},
+      props: {
+        error: new ResponseWrapper(
+          false,
+          400,
+          'Bad Request',
+          `${ErrUrlParam} ${channel_id}`
+        ).Serialize(),
+      },
     };
   }
 
-  let firestoreResponse = getFirestoreClient()
+  let firestoreResponse = getFirestoreClient();
   if (!firestoreResponse.Ok) {
-    let error = firestoreResponse
     return {
-      props: {channel, videos, error}
-    }
+      props: {error: firestoreResponse},
+    };
   }
-  let firestoreClient = firestoreResponse.Message
+  let firestoreClient = firestoreResponse.Message;
+
+  let typesenseUrlResponse = getTypesenseServerUrl();
+  if (!typesenseUrlResponse.Ok) {
+    return {
+      props: {error: typesenseUrlResponse},
+    };
+  }
+  let typesenseUrl = typesenseUrlResponse.Message;
 
   let channelResponse = await getChannel(firestoreClient, channel_id);
   if (!channelResponse.Ok) {
-    error = channelResponse;
     return {
-      props: {videos, channel, error},
+      props: {error: channelResponse},
     };
   }
-  channel = channelResponse.Message;
 
   let videoResponse = await getVideos(firestoreClient, channel_id);
   if (!videoResponse.Ok) {
-    error = videoResponse;
     return {
-      props: {videos, channel, error},
+      props: {error: videoResponse},
     };
   }
-  videos = videoResponse.Message;
 
   return {
-    props: {videos, channel, error},
+    props: {
+      channel: channelResponse.Message,
+      videos: videoResponse.Message,
+      typesenseUrl: typesenseUrl,
+      error: null,
+    },
   };
 };
 
-export default function Index({videos, channel, error}: Props) {
+export default function Index({videos, channel, typesenseUrl, error}: Props) {
   if (error) {
     return <ErrorPage response={error} />;
   }
+
+  if (!channel || !videos || !typesenseUrl) {
+    return (
+      <ErrorPage
+        response={new ResponseWrapper(
+          false,
+          500,
+          'Server Error',
+          'Unable to get channel info and videos.'
+        ).Serialize()}
+      />
+    );
+  }
+
+  return (
+    <ChannelPage
+      channel={channel}
+      videos={videos}
+      typesenseUrl={typesenseUrl}
+    />
+  );
+}
+
+function ChannelPage(props: {
+  channel: Channel;
+  videos: VideoUI[];
+  typesenseUrl: string;
+}) {
+  const [searchResults, setSearchResults] = useState(['']);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [videosToShow, setVideosToShow] = useState(props.videos);
+
+  async function handleSearchSubmit(event: React.FormEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    let request: SearchRequest = {
+      channelId: props.channel.Id,
+      term: searchTerm,
+    };
+
+    let response = await postSearchRequest(props.typesenseUrl, request);
+    setSearchResults(response.Message.VideoIds);
+  }
+
+  function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setSearchTerm(event.target.value);
+  }
+
+  useEffect(() => {
+    if (searchTerm == '') {
+      setVideosToShow(props.videos);
+    } else {
+      setVideosToShow(
+        props.videos.filter(video => searchResults.includes(video.Id))
+      );
+    }
+  }, [searchResults]);
 
   return (
     <div className="p-12">
       <div className="grid grid-cols-4 gap-x-2">
         <div>
-          <img src={channel?.ThumbnailUrl} referrerPolicy="no-referrer"></img>
+          <img
+            src={props.channel.ThumbnailUrl}
+            referrerPolicy="no-referrer"
+          ></img>
 
           <h1 className="py-4 font-black tracking-tight text-4xl">
-            {channel?.Title}
+            {props.channel.Title}
           </h1>
-          <p className="pb-4">{channel?.Description}</p>
-          <p>Last Updated: {channel?.LastUpdated}</p>
+          <p className="pb-4">{props.channel.Description}</p>
+          <p>Last Updated: {props.channel.LastUpdated}</p>
         </div>
 
         <div className="col-span-3">
-          <input
-            className="appearance-none  border-none w-full text-gray-700 mr-3 py-1 px-2 my-2 leading-tight focus:outline-none"
-            name="searchString"
-            placeholder="Search for product or brand"
+          <SearchBar
+            inputValue={searchTerm}
+            handleSubmit={handleSearchSubmit}
+            handleInputChange={handleInputChange}
           />
-          {videos &&
-            videos.map(video => {
+
+          {videosToShow &&
+            videosToShow.map(video => {
               return (
                 <div
                   className="shadow-sm border-2 p-4 grid grid-cols-4 gap-x-8"

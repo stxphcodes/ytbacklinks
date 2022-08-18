@@ -3,7 +3,7 @@ import Link from 'next/link';
 import ErrorPage from '../components/error';
 import { ChannelsResponse, getChannels } from '../utils/getChannels';
 import { getFirestoreClient } from '../utils/getFirestoreClient';
-import { TResponseWrapper } from '../utils/responseWrapper';
+import { TResponseWrapper } from '../utilsLibrary/responseWrapper';
 
 type Props = {
   channels: ChannelsResponse | null;

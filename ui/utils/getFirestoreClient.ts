@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
-import { TResponseWrapper } from './responseWrapper';
+import { TResponseWrapper } from '../utilsLibrary/responseWrapper';
 
 export function getFirestoreClient(): TResponseWrapper {
     if (!process.env.FIREBASE_CONFIG || process.env.FIREBASE_CONFIG == "") {
