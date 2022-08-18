@@ -3,10 +3,8 @@ import {
 } from '../utilsLibrary/responseWrapper';
 import { SearchChannelResponse, SearchRequest } from '../utilsLibrary/searchTypes';
 
-const TYPESENSE_URL = 'http://localhost:8000';
-
-export async function postSearchRequest(request: SearchRequest) {
-  let serverUrl = new URL(TYPESENSE_URL);
+export async function postSearchRequest(typesenseUrl: string, request: SearchRequest) {
+  let serverUrl = new URL(typesenseUrl);
   serverUrl.pathname = `/search`;
 
   let r = new ResponseWrapper();
