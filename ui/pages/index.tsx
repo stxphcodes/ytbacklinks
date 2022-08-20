@@ -59,12 +59,12 @@ export default function Index({channels, error}: Props) {
 function HomePage(props: {channels: Channel[]}) {
   return (
     <div className="p-12 bg-theme-beige">
-      <h1 className="text-center my-12 font-black text-6xl">YT BackLinks</h1>
-      <h3 className="text-center my-4 font-black text-theme-yt-red text-3xl">
+      <Header />
+
+      <h3 className="font-black text-center text-theme-yt-red text-3xl">
         Featured Channels
       </h3>
-
-      <div className="grid grid-cols-4 gap-x-2 gap-y-2">
+      <div className="grid grid-cols-4 gap-4">
         {props.channels.map(channel => {
           return <ChannelCard channel={channel} />;
         })}
@@ -73,10 +73,27 @@ function HomePage(props: {channels: Channel[]}) {
   );
 }
 
+function Header() {
+  return (
+    <div className="my-12 text-center">
+      <h1 className="text-6xl mb-8 font-black">
+        <span className="text-theme-yt-red">Youtube</span> BackLinks
+      </h1>
+      <h3>
+        <span className="font-black">back·link</span>{' '}
+        <span className="text-theme-beige-3">(noun)</span>{' '}
+        <span className="italic">
+          an incoming hyperlink from one web page to another website{' '}
+        </span>
+      </h3>
+    </div>
+  );
+}
+
 function ChannelCard(props: {channel: Channel}) {
   return (
     <Link href={`/channels/${props.channel.Id}`} key={props.channel.Id}>
-      <button className="bg-white shadow-lg border-2 text-left p-1">
+      <button className="bg-white shadow-lg text-center p-2 hover:scale-105">
         <img
           alt={`${props.channel.Title} channel thumbnail`}
           src={props.channel.ThumbnailUrl}
@@ -85,7 +102,7 @@ function ChannelCard(props: {channel: Channel}) {
           referrerPolicy="no-referrer"
         />
 
-        <h1 className="font-black text-xl text-center">
+        <h1 className="font-black text-xl py-2">
           {props.channel.Title}
         </h1>
 
