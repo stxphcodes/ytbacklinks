@@ -3,14 +3,17 @@ import { collection, Firestore, getDocs } from 'firebase/firestore';
 import { VideoUI } from '../utilsLibrary/firestoreTypes';
 import { ErrUnknown, ResponseWrapper, TResponseWrapper } from '../utilsLibrary/responseWrapper';
 
-export async function getVideos(firestore: Firestore, channelId: string): Promise<TResponseWrapper> {
+export async function getVideos(
+  firestore: Firestore,
+  channelId: string
+): Promise<TResponseWrapper> {
   let r = new ResponseWrapper();
 
   try {
-    let filtered: VideoUI[] = [];
+    let videos: VideoUI[] = [];
     const videoDocs = await getDocs(collection(firestore, channelId));
-    
-    videoDocs.forEach( vdoc => {
+
+    videoDocs.forEach(vdoc => {
       let vdata = vdoc.data();
       let video: VideoUI = {
         Id: vdata.Id,
@@ -22,11 +25,11 @@ export async function getVideos(firestore: Firestore, channelId: string): Promis
         LastUpdated: vdata.LastUpdated,
         Links: [],
       };
-      filtered.push(video)
-    })
+      videos.push(video);
+    });
 
     await Promise.all(
-      filtered.map(async video => {
+      videos.map(async video => {
         const linkDocs = await getDocs(
           collection(firestore, `${channelId}/${video.Id}/links`)
         );
@@ -43,15 +46,20 @@ export async function getVideos(firestore: Firestore, channelId: string): Promis
             LastUpdated: ldata.LastUpdated,
           });
         });
+
+        // sort linsk alphabetically
+        video.Links.sort()
+        // then sort links by longest description to shortest description
+        video.Links.sort((a, b) => b.Description.length - a.Description.length)
       })
     );
 
-    // sort by publish date
-    filtered.sort((a, b) => b.PublishedAt.localeCompare(a.PublishedAt));
+    // sort by publish date 
+    videos.sort((a, b) => b.PublishedAt.localeCompare(a.PublishedAt));
 
     r.SetDefaultOk();
-    r.RawMessage = filtered;
-    r.Message = filtered;
+    r.RawMessage = videos;
+    r.Message = videos;
   } catch (error: any) {
     r.Ok && r.SetDefaultError();
     r.Message = error.Message || error.message || ErrUnknown;

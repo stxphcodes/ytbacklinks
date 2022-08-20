@@ -1,9 +1,16 @@
 import '../styles/base.css';
 
-import type { AppProps } from 'next/app'
+import Navbar from '../components/navbar';
 
-function MyApp({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />
+import type {AppProps} from 'next/app';
+
+function MyApp({Component, pageProps}: AppProps) {
+  return (
+    <>
+      <Navbar />
+      <Component {...pageProps} />
+    </>
+  );
 }
 
-export default MyApp
+export default MyApp;

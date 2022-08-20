@@ -6,19 +6,9 @@ export type Channel = {
   UploadPlaylistId: string;
   ThumbnailUrl: string;
   LastUpdated: string;
+  LinkCount: number;
+  VideoCount: number;
 };
-
-export type ChannelUI = {
-    Id: string;
-    Title: string;
-    Description: string;
-    CustomUrl: string;
-    UploadPlaylistId: string;
-    ThumbnailUrl: string;
-    LastUpdated: string;
-    VideoCount: number;
-    LinkCount: number;
-  };
 
 export type Video = {
   Id: string;
@@ -31,15 +21,15 @@ export type Video = {
 };
 
 export type VideoUI = {
-    Id: string;
-    Title: string;
-    ChannelId: string;
-    Description: string;
-    PublishedAt: string;
-    ThumbnailUrl: string;
-    LastUpdated: string;
-    Links: Link[];
-}
+  Id: string;
+  Title: string;
+  ChannelId: string;
+  Description: string;
+  PublishedAt: string;
+  ThumbnailUrl: string;
+  LastUpdated: string;
+  Links: Link[];
+};
 
 export type Link = {
   Id: string;
@@ -61,4 +51,4 @@ export type FirebaseConfig = {
   messagingSenderId: string;
   appId: string;
   measurementId: string;
-}
+};
