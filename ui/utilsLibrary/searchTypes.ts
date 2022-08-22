@@ -7,6 +7,6 @@ export type SearchChannelResponse = {
     HitCount: number;
     Term: string;
     VideoIds: string[];
-    LinkHits: Map<string, string[]>;
-    VideoTitleHits: Map<string, string[]>;
+    LinkHits: any; // map-like type: [string, string[]]
+    VideoTitleHits: any; // map-like type: [string, string[]]
 }
