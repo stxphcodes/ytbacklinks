@@ -12,7 +12,7 @@ import { Channel, Link, VideoUI } from '../../../utilsLibrary/firestoreTypes';
 import {
     ErrUrlParam, ResponseWrapper, TResponseWrapper
 } from '../../../utilsLibrary/responseWrapper';
-import { SearchRequest } from '../../../utilsLibrary/searchTypes';
+import { SearchChannelResponse, SearchRequest } from '../../../utilsLibrary/searchTypes';
 
 type Props = {
   channel: Channel | null;
@@ -108,19 +108,31 @@ function ChannelPage(props: {
   videos: VideoUI[];
   typesenseUrl: string;
 }) {
-  const [searchResults, setSearchResults] = useState(['']);
+  const [searchResponse, setSearchResponse] = useState<TResponseWrapper | null>(
+    null
+  );
   const [searchTerm, setSearchTerm] = useState('');
   const [videosToShow, setVideosToShow] = useState(props.videos);
+  const [searchError, setSearchError] = useState<TResponseWrapper | null>(null);
+  const [searchHits, setSearchHits] = useState<SearchChannelResponse | null>(
+    null
+  );
 
   async function handleSearchSubmit(event: React.FormEvent<HTMLButtonElement>) {
     event.preventDefault();
+
     let request: SearchRequest = {
       channelId: props.channel.Id,
       term: searchTerm,
     };
 
+    if (request.term === '') {
+      setSearchResponse(null);
+      return;
+    }
+
     let response = await postSearchRequest(props.typesenseUrl, request);
-    setSearchResults(response.Message.VideoIds);
+    setSearchResponse(response);
   }
 
   function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -128,14 +140,38 @@ function ChannelPage(props: {
   }
 
   useEffect(() => {
-    if (searchTerm == '') {
+    if (!searchResponse) {
       setVideosToShow(props.videos);
-    } else {
-      setVideosToShow(
-        props.videos.filter(video => searchResults.includes(video.Id))
-      );
+      setSearchHits(null);
+      return;
     }
-  }, [searchResults]);
+
+    if (!searchResponse.Ok) {
+      setSearchError(searchResponse);
+      return;
+    }
+
+    if (!searchResponse.Message.HitCount) {
+      setSearchError(
+        new ResponseWrapper(
+          false,
+          404,
+          'Not found',
+          'No results found for search term.',
+          null
+        ).Serialize()
+      );
+      return;
+    }
+
+    setVideosToShow(
+      props.videos.filter(video =>
+        searchResponse.Message.VideoIds.includes(video.Id)
+      )
+    );
+
+    setSearchHits(searchResponse.Message);
+  }, [searchResponse]);
 
   return (
     <div className="grid grid-cols-5">
@@ -152,10 +188,11 @@ function ChannelPage(props: {
           />
         </div>
 
-        {videosToShow &&
-          videosToShow.map(video => {
-            return <VideoCard video={video} />;
-          })}
+        <SearchResults
+          error={searchError}
+          videos={videosToShow}
+          searchHits={searchHits}
+        />
       </div>
     </div>
   );
@@ -186,7 +223,56 @@ function ChannelSidebar(props: {channel: Channel}) {
   );
 }
 
-function VideoCard(props: {video: VideoUI}) {
+function SearchResults(props: {
+  videos: VideoUI[];
+  error: TResponseWrapper | null;
+  searchHits: SearchChannelResponse | null;
+}) {
+  if (props.error) {
+    return (
+      <div>
+        <p>
+          {props.error.Status} - {props.error.StatusText}
+        </p>
+        <p>{props.error.Message}</p>
+      </div>
+    );
+  }
+
+  if (!props.searchHits) {
+    return (
+      <>
+        {props.videos.map(video => {
+          return <VideoCard video={video} linkHits={[]} />;
+        })}
+      </>
+    );
+  }
+
+  return (
+    <>
+    <HitCount searchHits={props.searchHits} />
+      {props.videos.map(video => {
+        if (
+          props.searchHits &&
+          (!props.searchHits.LinkHits[video.Id] ||
+            !props.searchHits.LinkHits[video.Id].length)
+        ) {
+          return <VideoCard video={video} linkHits={[]} />;
+        }
+
+        return (
+          <VideoCard
+            video={video}
+            linkHits={props.searchHits && props.searchHits.LinkHits[video.Id]}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+function VideoCard(props: {video: VideoUI; linkHits: string[]}) {
   return (
     <div
       className="bg-theme-beige-1 grid grid-cols-4 gap-x-8 mt-4 p-4 rounded-lg shadow-sm"
@@ -209,7 +295,12 @@ function VideoCard(props: {video: VideoUI}) {
       <div className="col-span-3">
         <ul className="flex flex-wrap place-content-start">
           {props.video.Links.map(link => {
-            return <LinkButton link={link} />;
+            return (
+              <LinkButton
+                link={link}
+                active={props.linkHits.includes(link.Id)}
+              />
+            );
           })}
         </ul>
       </div>
@@ -217,16 +308,37 @@ function VideoCard(props: {video: VideoUI}) {
   );
 }
 
-function LinkButton(props: {link: Link}) {
+function LinkButton(props: {link: Link; active: boolean}) {
   return (
     <li key={props.link.Id} className="p-2">
       <a href={props.link.Href} target="_blank">
-        <button className="bg-theme-beige hover:bg-theme-beige-2 hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left">
-          {props.link.Brand !== ''
-            ? `${props.link.Brand} - ${props.link.Description}`
-            : props.link.Description}
-        </button>
+        {props.active ? (
+          <button className="bg-theme-beige border-2 border-theme-yt-red hover:bg-theme-beige-2 hover:border-none hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left ">
+            {props.link.Brand !== ''
+              ? `${props.link.Brand} - ${props.link.Description}`
+              : props.link.Description}
+          </button>
+        ) : (
+          <button className="bg-theme-beige hover:bg-theme-beige-2 hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left">
+            {props.link.Brand !== ''
+              ? `${props.link.Brand} - ${props.link.Description}`
+              : props.link.Description}
+          </button>
+        )}
       </a>
     </li>
   );
+}
+
+function HitCount(props: {
+  searchHits: SearchChannelResponse
+}) {
+  return (
+    <div className="flex flex-wrap place-content-start">
+         <button className="bg-theme-yt-red p-2 rounded  text-left text-white">
+           Total Results: {props.searchHits.HitCount}
+          </button>
+    </div>
+
+  )
 }
