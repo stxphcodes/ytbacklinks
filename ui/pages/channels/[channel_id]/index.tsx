@@ -143,6 +143,7 @@ function ChannelPage(props: {
     if (!searchResponse) {
       setVideosToShow(props.videos);
       setSearchHits(null);
+      setSearchError(null);
       return;
     }
 
