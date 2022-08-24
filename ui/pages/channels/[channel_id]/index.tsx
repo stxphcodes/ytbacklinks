@@ -235,7 +235,7 @@ function SearchResults(props: {
 }) {
   if (props.error) {
     if (props.error.Status === 404) {
-      return <HitCount totalHits={0} />
+      return <HitCount totalHits={0} />;
     }
 
     return (
@@ -252,7 +252,7 @@ function SearchResults(props: {
     return (
       <>
         {props.videos.map(video => {
-          return <VideoCard video={video} linkHits={[]} />;
+          return <VideoCard video={video} titleHit={false} linkHits={[]} key={video.Id}/>;
         })}
       </>
     );
@@ -260,19 +260,32 @@ function SearchResults(props: {
 
   return (
     <>
-    <HitCount totalHits={props.searchHits.HitCount} />
+      <HitCount totalHits={props.searchHits.HitCount} />
       {props.videos.map(video => {
         if (
           props.searchHits &&
           (!props.searchHits.LinkHits[video.Id] ||
             !props.searchHits.LinkHits[video.Id].length)
         ) {
-          return <VideoCard video={video} linkHits={[]} />;
+          return (
+            <VideoCard
+              key={video.Id}
+              video={video}
+              titleHit={props.searchHits.VideoTitleHits[video.Id] !== undefined}
+              linkHits={[]}
+            />
+          );
         }
 
         return (
           <VideoCard
+            key={video.Id}
             video={video}
+            titleHit={
+              props.searchHits
+                ? props.searchHits.VideoTitleHits[video.Id] !== undefined
+                : false
+            }
             linkHits={props.searchHits && props.searchHits.LinkHits[video.Id]}
           />
         );
@@ -281,7 +294,11 @@ function SearchResults(props: {
   );
 }
 
-function VideoCard(props: {video: VideoUI; linkHits: string[]}) {
+function VideoCard(props: {
+  video: VideoUI;
+  titleHit: boolean;
+  linkHits: string[];
+}) {
   return (
     <div
       className="bg-theme-beige-1 grid grid-cols-4 gap-x-8 mt-4 p-4 rounded-lg shadow-sm"
@@ -289,15 +306,25 @@ function VideoCard(props: {video: VideoUI; linkHits: string[]}) {
     >
       <div className="col-span-1">
         <img src={props.video.ThumbnailUrl} />
-        <h1 className="font-black py-2">
-          <a
-            href={`https://youtube.com/watch?v=${props.video.Id}`}
-            target="_blank"
-          >
-            {props.video.Title}
-          </a>
-        </h1>
-
+        {props.titleHit ? (
+          <h1 className="font-black text-theme-yt-red py-2">
+            <a
+              href={`https://youtube.com/watch?v=${props.video.Id}`}
+              target="_blank"
+            >
+              {props.video.Title}
+            </a>
+          </h1>
+        ) : (
+          <h1 className="font-black py-2">
+            <a
+              href={`https://youtube.com/watch?v=${props.video.Id}`}
+              target="_blank"
+            >
+              {props.video.Title}
+            </a>
+          </h1>
+        )}
         <p>{props.video.PublishedAt}</p>
       </div>
 
@@ -308,6 +335,7 @@ function VideoCard(props: {video: VideoUI; linkHits: string[]}) {
               <LinkButton
                 link={link}
                 active={props.linkHits.includes(link.Id)}
+                key={link.Id}
               />
             );
           })}
@@ -339,15 +367,12 @@ function LinkButton(props: {link: Link; active: boolean}) {
   );
 }
 
-function HitCount(props: {
-  totalHits: number
-}) {
+function HitCount(props: {totalHits: number}) {
   return (
     <div className="flex flex-wrap place-content-start">
-         <div className="bg-theme-yt-red p-2 rounded  text-left text-white">
-           Total Results: {props.totalHits}
-          </div>
+      <div className="bg-theme-yt-red p-2 rounded  text-left text-white">
+        Total Results: {props.totalHits}
+      </div>
     </div>
-
-  )
+  );
 }

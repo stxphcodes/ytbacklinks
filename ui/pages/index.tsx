@@ -66,7 +66,7 @@ function HomePage(props: {channels: Channel[]}) {
       </h3>
       <div className="grid grid-cols-4 gap-4">
         {props.channels.map(channel => {
-          return <ChannelCard channel={channel} />;
+          return <ChannelCard channel={channel} key={channel.Id} />;
         })}
       </div>
     </div>
