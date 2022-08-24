@@ -139,7 +139,11 @@ function ChannelPage(props: {
     setSearchTerm(event.target.value);
   }
 
+  // Runs every time search response changes.
   useEffect(() => {
+    // SearchResponse is null at intial state and
+    // whenever search term is blank.
+    // Reset search related states to default.
     if (!searchResponse) {
       setVideosToShow(props.videos);
       setSearchHits(null);
@@ -230,6 +234,10 @@ function SearchResults(props: {
   searchHits: SearchChannelResponse | null;
 }) {
   if (props.error) {
+    if (props.error.Status === 404) {
+      return <HitCount totalHits={0} />
+    }
+
     return (
       <div>
         <p>
@@ -252,7 +260,7 @@ function SearchResults(props: {
 
   return (
     <>
-    <HitCount searchHits={props.searchHits} />
+    <HitCount totalHits={props.searchHits.HitCount} />
       {props.videos.map(video => {
         if (
           props.searchHits &&
@@ -332,13 +340,13 @@ function LinkButton(props: {link: Link; active: boolean}) {
 }
 
 function HitCount(props: {
-  searchHits: SearchChannelResponse
+  totalHits: number
 }) {
   return (
     <div className="flex flex-wrap place-content-start">
-         <button className="bg-theme-yt-red p-2 rounded  text-left text-white">
-           Total Results: {props.searchHits.HitCount}
-          </button>
+         <div className="bg-theme-yt-red p-2 rounded  text-left text-white">
+           Total Results: {props.totalHits}
+          </div>
     </div>
 
   )
