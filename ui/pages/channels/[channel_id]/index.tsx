@@ -153,6 +153,8 @@ function ChannelPage(props: {
 
     if (!searchResponse.Ok) {
       setSearchError(searchResponse);
+      setSearchHits(null);
+      setVideosToShow([]);
       return;
     }
 
@@ -166,6 +168,8 @@ function ChannelPage(props: {
           null
         ).Serialize()
       );
+      setSearchHits(null);
+      setVideosToShow([]);
       return;
     }
 
@@ -174,8 +178,8 @@ function ChannelPage(props: {
         searchResponse.Message.VideoIds.includes(video.Id)
       )
     );
-
     setSearchHits(searchResponse.Message);
+    setSearchError(null);
   }, [searchResponse]);
 
   return (
