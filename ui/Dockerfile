@@ -12,5 +12,3 @@ RUN \
   fi
 
 COPY . .
-
-CMD npm run dev
