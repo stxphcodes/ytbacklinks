@@ -18,7 +18,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./firebase-sa.json:/config/firebase-sa.json
+      - ../secrets/firebase-sa.json:/config/firebase-sa.json
     command:
       - "/app"
       - "--typesense.key=abcxyz"

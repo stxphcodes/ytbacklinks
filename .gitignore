@@ -1,4 +1,4 @@
 etl/etl
-firebase-sa.json
 server/server
-firebase-config.txt
+secrets/*
+!secrets/README.md
