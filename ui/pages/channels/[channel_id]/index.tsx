@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import ErrorPage from '../../../components/error';
 import SearchBar from '../../../components/searchbar';
+import Toggle from '../../../components/toggle';
 import { getChannel } from '../../../utils/getChannels';
 import { getFirestoreClient } from '../../../utils/getFirestoreClient';
 import { getTypesenseServerUrl } from '../../../utils/getTypesenseServer';
@@ -117,6 +118,15 @@ function ChannelPage(props: {
   const [searchHits, setSearchHits] = useState<SearchChannelResponse | null>(
     null
   );
+  const [resultType, setResultType] = useState('links');
+
+  function handleToggleClick(event: any) {
+    if (resultType === 'links') {
+      setResultType('descriptionBoxes');
+    } else {
+      setResultType('links');
+    }
+  }
 
   async function handleSearchSubmit(event: React.FormEvent<HTMLButtonElement>) {
     event.preventDefault();
@@ -195,12 +205,14 @@ function ChannelPage(props: {
             handleSubmit={handleSearchSubmit}
             handleInputChange={handleInputChange}
           />
+          <Toggle resultType={resultType} handleClick={handleToggleClick} />
         </div>
 
         <SearchResults
           error={searchError}
           videos={videosToShow}
           searchHits={searchHits}
+          resultType={resultType}
         />
       </div>
     </div>
@@ -236,6 +248,7 @@ function SearchResults(props: {
   videos: VideoUI[];
   error: TResponseWrapper | null;
   searchHits: SearchChannelResponse | null;
+  resultType: string;
 }) {
   if (props.error) {
     if (props.error.Status === 404) {
@@ -256,7 +269,15 @@ function SearchResults(props: {
     return (
       <>
         {props.videos.map(video => {
-          return <VideoCard video={video} titleHit={false} linkHits={[]} key={video.Id}/>;
+          return (
+            <VideoCard
+              video={video}
+              titleHit={false}
+              linkHits={[]}
+              key={video.Id}
+              resultType={props.resultType}
+            />
+          );
         })}
       </>
     );
@@ -277,6 +298,7 @@ function SearchResults(props: {
               video={video}
               titleHit={props.searchHits.VideoTitleHits[video.Id] !== undefined}
               linkHits={[]}
+              resultType={props.resultType}
             />
           );
         }
@@ -291,6 +313,7 @@ function SearchResults(props: {
                 : false
             }
             linkHits={props.searchHits && props.searchHits.LinkHits[video.Id]}
+            resultType={props.resultType}
           />
         );
       })}
@@ -302,6 +325,7 @@ function VideoCard(props: {
   video: VideoUI;
   titleHit: boolean;
   linkHits: string[];
+  resultType: string;
 }) {
   return (
     <div
@@ -334,19 +358,44 @@ function VideoCard(props: {
 
       <div className="col-span-3">
         <ul className="flex flex-wrap place-content-start">
-          {props.video.Links.map(link => {
-            return (
-              <LinkButton
-                link={link}
-                active={props.linkHits.includes(link.Id)}
-                key={link.Id}
+          {props.resultType === 'links' ? (
+            <>
+              {props.video.Links.map(link => {
+                return (
+                  <LinkButton
+                    link={link}
+                    active={props.linkHits.includes(link.Id)}
+                    key={link.Id}
+                  />
+                );
+              })}
+            </>
+          ) : (
+            <span className="whitespace-pre-line">
+              <p
+                dangerouslySetInnerHTML={{
+                  __html: findUrl(props.video.Description),
+                }}
               />
-            );
-          })}
+            </span>
+          )}
         </ul>
       </div>
     </div>
   );
+}
+
+function findUrl(text: string) {
+  var urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.replace(urlRegex, function (url: string) {
+    return (
+      '<a href="' +
+      url +
+      '" class="text-theme-yt-red" target="_blank">' +
+      url +
+      '</a>'
+    );
+  });
 }
 
 function LinkButton(props: {link: Link; active: boolean}) {
