@@ -19,21 +19,6 @@ func getFSLinkCount(ctx context.Context, fs *firestore.Client) (int, error) {
 	return len(docs), nil
 }
 
-type Link struct {
-	Id          string
-	Href        string
-	Brand       string
-	Description string
-	Category    string
-	PublishedAt string
-	VideoId     string
-	VideoTitle  string
-	ChannelId   string
-	LastUpdated string
-
-	PublishedAtInt int64
-}
-
 func extractLinksFromFirestore(ctx context.Context, fs *firestore.Client) ([]interface{}, error) {
 	docs, err := fs.CollectionGroup("links").
 		OrderBy("PublishedAt", firestore.Desc).
@@ -60,4 +45,36 @@ func extractLinksFromFirestore(ctx context.Context, fs *firestore.Client) ([]int
 	}
 
 	return links, nil
+}
+
+func extractVideosFromFirestore(ctx context.Context, fs *firestore.Client) ([]interface{}, error) {
+	channelRefs, err := fs.Collection("channels").DocumentRefs(ctx).GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	var videos []interface{}
+	for _, cref := range channelRefs {
+		videoRefs, err := fs.Collection(cref.ID).Documents(ctx).GetAll()
+		if err != nil {
+			return nil, err
+		}
+
+		for _, vref := range videoRefs {
+			var video Video
+			if err := vref.DataTo(&video); err != nil {
+				return nil, err
+			}
+
+			t, err := time.Parse(time.RFC3339, video.PublishedAt)
+			if err != nil {
+				return nil, err
+			}
+
+			video.PublishedAtInt = t.Unix()
+			videos = append(videos, video)
+		}
+	}
+
+	return videos, nil
 }

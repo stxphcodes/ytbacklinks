@@ -9,7 +9,14 @@ import (
 )
 
 const (
-	LINK_COLLECTION = "links"
+	LINK_COLLECTION  = "links"
+	VIDEO_COLLECTION = "videos"
+
+	TYPESENSE_AUTH_HEADER              = "X-TYPESENSE-API-KEY"
+	TYPESENSE_VIDEOS_SEARCH_URL_PATH   = "/collections/videos/documents/search"
+	TYPESENSE_DOCUMENT_SEARCH_URL_PATH = "/collections/links/documents/search"
+
+	PER_PAGE_RESULTS = 10
 )
 
 func getTSDocCount(ts *typesense.Client) (int, error) {
@@ -92,13 +99,62 @@ func createLinkCollection(ts *typesense.Client) error {
 	return err
 }
 
-func loadLinksToTypesense(ts *typesense.Client, links []interface{}) error {
+func createVideoCollection(ts *typesense.Client) error {
+	_, err := ts.Collection(VIDEO_COLLECTION).Delete()
+	if err != nil {
+		if !strings.Contains(err.Error(), "No collection with name") {
+			return err
+		}
+	}
+
+	schema := &api.CollectionSchema{
+		Name: "videos",
+		Fields: []api.Field{
+			{
+				Name:  "ChannelId",
+				Type:  "string",
+				Facet: typedBool(true),
+			},
+			{
+				Name:  "Description",
+				Type:  "string",
+				Infix: typedBool(true),
+				Facet: typedBool(true),
+			},
+			{
+				Name:  "Title",
+				Type:  "string",
+				Infix: typedBool(true),
+				Facet: typedBool(true),
+			},
+			{
+				Name: "Id",
+				Type: "string",
+			},
+			{
+				Name: "PublishedAt",
+				Type: "string",
+			},
+			{
+				Name: "PublishedAtInt",
+				Type: "int64",
+				Sort: typedBool(true),
+			},
+		},
+	}
+
+	_, err = ts.Collections().Create(schema)
+
+	return err
+}
+
+func loadToTypesense(ts *typesense.Client, collectionName string, docs []interface{}) error {
 	params := &api.ImportDocumentsParams{
 		Action:    typedString("create"),
 		BatchSize: typedInt(100),
 	}
 
-	resp, err := ts.Collection(LINK_COLLECTION).Documents().Import(links, params)
+	resp, err := ts.Collection(collectionName).Documents().Import(docs, params)
 	if err != nil {
 		return err
 	}
