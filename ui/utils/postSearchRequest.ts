@@ -5,7 +5,7 @@ import { SearchChannelResponse, SearchRequest } from '../utilsLibrary/searchType
 
 export async function postSearchRequest(typesenseUrl: string, request: SearchRequest) {
   let serverUrl = new URL(typesenseUrl);
-  serverUrl.pathname = `/search`;
+  serverUrl.pathname = `/links/search`;
 
   let r = new ResponseWrapper();
   await fetch(serverUrl.toString(), {
