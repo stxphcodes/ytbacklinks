@@ -80,6 +80,10 @@ func run() error {
 			return err
 		}
 		log.Printf("Recreated link collection in typesense.")
+		if err := recreateVideoCollection(ctx, &cfg, ts, fs); err != nil {
+			return err
+		}
+		log.Printf("Recreated video collection in typesense.")
 
 	case skipFirestore:
 		log.Printf("Skipped check to recreate link collection in typesense.")
@@ -92,7 +96,7 @@ func run() error {
 		}
 
 		if equal {
-			log.Printf("No need to recreat link collection in typesense.")
+			log.Printf("No need to recreate link collection in typesense.")
 		} else {
 			if err := recreateLinkCollection(ctx, &cfg, ts, fs); err != nil {
 				return err
@@ -109,7 +113,7 @@ func run() error {
 	cors.AllowOrigins = strings.Split(cfg.CORSOrigins, ",")
 	mux.Use(middleware.CORSWithConfig(cors))
 
-	mux.POST("/search", SearchHandler(ts, &cfg))
+	mux.POST("/links/search", LinkSearchHandler(ts, &cfg))
 
 	return mux.Start(cfg.HttpAddr)
 }
@@ -129,14 +133,27 @@ func compareDataCounts(ctx context.Context, ts *typesense.Client, fs *firestore.
 }
 
 func recreateLinkCollection(ctx context.Context, cfg *Config, ts *typesense.Client, fs *firestore.Client) error {
-	if err := createLinkCollection(ts); err != nil {
-		return err
-	}
-
 	links, err := extractLinksFromFirestore(ctx, fs)
 	if err != nil {
 		return err
 	}
 
-	return loadLinksToTypesense(ts, links)
+	if err := createLinkCollection(ts); err != nil {
+		return err
+	}
+
+	return loadToTypesense(ts, LINK_COLLECTION, links)
+}
+
+func recreateVideoCollection(ctx context.Context, cfg *Config, ts *typesense.Client, fs *firestore.Client) error {
+	videos, err := extractVideosFromFirestore(ctx, fs)
+	if err != nil {
+		return err
+	}
+
+	if err := createVideoCollection(ts); err != nil {
+		return err
+	}
+
+	return loadToTypesense(ts, VIDEO_COLLECTION, videos)
 }
