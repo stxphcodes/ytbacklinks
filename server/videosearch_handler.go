@@ -45,7 +45,7 @@ func VideoSearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 		result := &VideoSearchResult{
 			TypesenseCount:       *tsResult.Found,
 			VideoIds:             make(map[string]struct{}),
-			VideoDescriptionHits: make(map[string]int),
+			VideoDescriptionHits: make(map[string]struct{}),
 			VideoTitleHits:       make(map[string]struct{}),
 		}
 		result.transformTypesenseResult(tsResult)
@@ -72,7 +72,8 @@ func (r *VideoSearchResult) transformTypesenseResult(result *api.SearchResult) {
 			if *highlight.Field == "Title" {
 				r.VideoTitleHits[videoId] = struct{}{}
 			} else {
-				r.VideoDescriptionHits[videoId]++
+				// usually description hits don't get highlighted...
+				r.VideoDescriptionHits[videoId] = struct{}{}
 			}
 		}
 	}
@@ -85,14 +86,11 @@ func (r *VideoSearchResult) toResponse(term string) interface{} {
 		TypesenseCount:       r.TypesenseCount,
 		Term:                 term,
 		VideoIds:             mapToArray(r.VideoIds),
-		VideoTitleHits:       mapToArray(r.VideoTitleHits),
+		VideoTitleHits:       r.VideoTitleHits,
 		VideoDescriptionHits: r.VideoDescriptionHits,
 	}
 
-	response.HitCount = len(response.VideoTitleHits)
-	for _, descriptionHitCount := range response.VideoDescriptionHits {
-		response.HitCount += descriptionHitCount
-	}
+	response.HitCount = len(response.VideoTitleHits) + len(response.VideoIds)
 
 	return response
 }

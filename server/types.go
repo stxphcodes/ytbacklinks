@@ -38,10 +38,31 @@ type SearchRequest struct {
 	Term      string `json:"term"`
 }
 
-type TypesenseResult struct {
-	TypesenseCount int
+type MainSearchResponse struct {
+	LinkSearchResponse *LinkSearchResponse
+	VideoSeachResponse *VideoSearchResponse
 }
 
+type LinkSearchResponse struct {
+	HitCount       int
+	TypesenseCount int
+	Term           string
+	VideoIds       []string
+	VideoTitleHits map[string]struct{}
+	LinkHits       map[string][]string
+}
+
+type VideoSearchResponse struct {
+	HitCount             int
+	TypesenseCount       int
+	Term                 string
+	VideoIds             []string
+	VideoTitleHits       map[string]struct{}
+	VideoDescriptionHits map[string]struct{}
+}
+
+// SearchResult is the intermediary data type
+// that transforms typesense result into an API response type.
 type SearchResult interface {
 	transformTypesenseResult(result *api.SearchResult)
 	toResponse(term string) interface{}
@@ -51,30 +72,17 @@ type LinkSearchResult struct {
 	TypesenseCount int
 	VideoIds       map[string]struct{}
 	LinkHits       map[string]map[string]struct{}
-	VideoTitleHits map[string]map[string]struct{}
+	VideoTitleHits map[string]struct{}
 }
 
 type VideoSearchResult struct {
 	TypesenseCount       int
 	VideoIds             map[string]struct{}
 	VideoTitleHits       map[string]struct{}
-	VideoDescriptionHits map[string]int
+	VideoDescriptionHits map[string]struct{}
 }
 
-type LinkSearchResponse struct {
-	HitCount       int
-	TypesenseCount int
-	Term           string
-	LinkHits       map[string][]string
-	VideoIds       []string
-	VideoTitleHits map[string][]string
-}
-
-type VideoSearchResponse struct {
-	HitCount             int
-	TypesenseCount       int
-	Term                 string
-	VideoIds             []string
-	VideoTitleHits       []string
-	VideoDescriptionHits map[string]int
-}
+// Compile time check that LinkSearchResult and
+// VideoSearchResult implements SearchResult interface.
+var _ SearchResult = &LinkSearchResult{}
+var _ SearchResult = &VideoSearchResult{}

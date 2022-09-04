@@ -114,6 +114,7 @@ func run() error {
 	mux.Use(middleware.CORSWithConfig(cors))
 
 	mux.POST("/links/search", LinkSearchHandler(ts, &cfg))
+	mux.POST("/videos/search", VideoSearchHandler(ts, &cfg))
 
 	return mux.Start(cfg.HttpAddr)
 }

@@ -48,7 +48,7 @@ func LinkSearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 			TypesenseCount: *tsResult.Found,
 			VideoIds:       make(map[string]struct{}),
 			LinkHits:       make(map[string]map[string]struct{}),
-			VideoTitleHits: make(map[string]map[string]struct{}),
+			VideoTitleHits: make(map[string]struct{}),
 		}
 		result.transformTypesenseResult(tsResult)
 
@@ -67,16 +67,14 @@ func (r *LinkSearchResult) transformTypesenseResult(result *api.SearchResult) {
 		m := *(hit.Document)
 
 		videoId := m["VideoId"].(string)
-		videoTitle := m["VideoTitle"].(string)
 		linkId := m["Id"].(string)
 
 		r.VideoIds[videoId] = struct{}{}
 
-		titleMap := make(map[string]struct{})
 		linkMap := make(map[string]struct{})
 		for _, highlight := range *hit.Highlights {
 			if *highlight.Field == "VideoTitle" {
-				titleMap[videoTitle] = struct{}{}
+				r.VideoTitleHits[videoId] = struct{}{}
 			} else {
 				// matched on link field
 				linkMap[linkId] = struct{}{}
@@ -85,9 +83,6 @@ func (r *LinkSearchResult) transformTypesenseResult(result *api.SearchResult) {
 
 		if len(linkMap) > 0 {
 			r.LinkHits[videoId] = linkMap
-		}
-		if len(titleMap) > 0 {
-			r.VideoTitleHits[videoId] = titleMap
 		}
 	}
 
@@ -100,7 +95,7 @@ func (r *LinkSearchResult) toResponse(term string) interface{} {
 		Term:           term,
 		VideoIds:       mapToArray(r.VideoIds),
 		LinkHits:       nestedMapToMapArray(r.LinkHits),
-		VideoTitleHits: nestedMapToMapArray(r.VideoTitleHits),
+		VideoTitleHits: r.VideoTitleHits,
 	}
 	response.getHitCount()
 
@@ -112,9 +107,11 @@ func (response *LinkSearchResponse) getHitCount() {
 	for _, array := range response.LinkHits {
 		response.HitCount += len(array)
 	}
-	for _, array := range response.VideoTitleHits {
-		response.HitCount += len(array)
-	}
+
+	response.HitCount += len(response.VideoTitleHits)
+	// for _, array := range response.VideoTitleHits {
+	// 	response.HitCount += len(array)
+	// }
 
 	// Link or video title
 	if response.HitCount == 0 {
