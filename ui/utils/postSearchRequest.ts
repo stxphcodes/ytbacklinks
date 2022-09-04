@@ -1,9 +1,33 @@
 import {
     ErrNullResponse, ErrRequest, ErrUnknown, ResponseError, ResponseWrapper
 } from '../utilsLibrary/responseWrapper';
-import { SearchChannelResponse, SearchRequest } from '../utilsLibrary/searchTypes';
+import {
+    CombinedSearchResponse, LinkSearchResponse, SearchRequest, VideoSearchResponse
+} from '../utilsLibrary/searchTypes';
 
 export async function postSearchRequest(typesenseUrl: string, request: SearchRequest) {
+  let linkSearchResponse = await postLinkSearchRequest(typesenseUrl, request);
+  if (!linkSearchResponse.Ok) {
+    return linkSearchResponse;
+  }
+
+  let videoSearchResponse = await postVideoSearchRequest(typesenseUrl, request);
+  if (!videoSearchResponse.Ok) {
+    return videoSearchResponse;
+  }
+
+  let combinedResponse: CombinedSearchResponse = {
+    LinkSearchResponse: linkSearchResponse.Message,
+    VideoSearchResponse: videoSearchResponse.Message,
+  }
+
+  let r = new ResponseWrapper();
+  r.SetDefaultOk();
+  r.Message = combinedResponse
+  return r.Serialize();
+}
+
+async function postLinkSearchRequest(typesenseUrl: string, request: SearchRequest) {
   let serverUrl = new URL(typesenseUrl);
   serverUrl.pathname = `/links/search`;
 
@@ -21,7 +45,7 @@ export async function postSearchRequest(typesenseUrl: string, request: SearchReq
 
       return response.json();
     })
-    .then((data: SearchChannelResponse) => {
+    .then((data: LinkSearchResponse) => {
       if (!data) {
         throw new ResponseError(ErrNullResponse);
       }
@@ -32,7 +56,42 @@ export async function postSearchRequest(typesenseUrl: string, request: SearchReq
     .catch(error => {
       r.Ok && r.SetDefaultError();
       r.Message = error.Message || ErrUnknown;
-      r.RawMessage = error.RawMessage || `In ${postSearchRequest.name}`;
+      r.RawMessage = error.RawMessage || `In ${postLinkSearchRequest.name}`;
+    });
+
+  return r.Serialize();
+}
+
+async function postVideoSearchRequest(typesenseUrl: string, request: SearchRequest) {
+  let serverUrl = new URL(typesenseUrl);
+  serverUrl.pathname = `/videos/search`;
+
+  let r = new ResponseWrapper();
+  await fetch(serverUrl.toString(), {
+    method: 'POST',
+    body: JSON.stringify(request),
+    headers: {'content-type': 'application/json'},
+  })
+    .then(response => {
+      r.UpdateWithResponse(response);
+      if (!r.Ok) {
+        throw new ResponseError(`${ErrRequest}: ${serverUrl.toString()}`);
+      }
+
+      return response.json();
+    })
+    .then((data: VideoSearchResponse) => {
+      if (!data) {
+        throw new ResponseError(ErrNullResponse);
+      }
+
+      r.RawMessage = data;
+      r.Message = data;
+    })
+    .catch(error => {
+      r.Ok && r.SetDefaultError();
+      r.Message = error.Message || ErrUnknown;
+      r.RawMessage = error.RawMessage || `In ${postVideoSearchRequest.name}`;
     });
 
   return r.Serialize();
