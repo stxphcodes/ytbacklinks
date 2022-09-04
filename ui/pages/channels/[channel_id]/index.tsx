@@ -130,10 +130,12 @@ function ChannelPage(props: {
   const [searchError, setSearchError] = useState<TResponseWrapper | null>(null);
 
   // linkSearchResponse is updated if searchResponse is successful.
+  // linkSearchResponse contains matched links from the search request.
   const [linkSearchResponse, setLinkSearchResponse] =
     useState<LinkSearchResponse | null>(null);
   
-    // videoSearchResponse is udpated if searchRespnose is successful.
+  // videoSearchResponse is udpated if searchResponse is successful.
+  // videoSearchResponse contains matched video descriptions from the search request.
   const [videoSearchResponse, setVideoSearchResponse] =
     useState<VideoSearchResponse | null>(null);
 
@@ -170,8 +172,8 @@ function ChannelPage(props: {
   // searchResponse.message is the type CombinedSearchResponse.
   useEffect(() => {
     // SearchResponse is null at intial state and
-    // whenever search term is blank.
-    // Reset search related states to default.
+    // whenever search term is blank. Reset search
+    // response states to default.
     if (!searchResponse) {
       setVideosToShow(props.videos);
       setLinkSearchResponse(null);
@@ -180,6 +182,7 @@ function ChannelPage(props: {
       return;
     }
 
+    // searchResponse returned error.
     if (!searchResponse.Ok) {
       setSearchError(searchResponse);
       setLinkSearchResponse(null);
@@ -193,6 +196,7 @@ function ChannelPage(props: {
     let videoSearchResponse: VideoSearchResponse =
       searchResponse.Message.VideoSearchResponse;
 
+    // searchResponse returned 0 results for both display options.
     if (!linkSearchResponse.HitCount && !videoSearchResponse.HitCount) {
       setSearchError(
         new ResponseWrapper(
@@ -209,35 +213,11 @@ function ChannelPage(props: {
       return;
     }
 
-    if (displayOption === 'linksOnly') {
-      if (!linkSearchResponse.HitCount) {
-        setSearchError(
-          new ResponseWrapper(
-            false,
-            405,
-            'Not found',
-            'No results found for in this view. Toggle switch to change view.',
-            null
-          ).Serialize()
-        );
-        setLinkSearchResponse(null);
-        setVideoSearchResponse(null);
-        setVideosToShow([]);
-        return;
-      }
-
-      setVideosToShow(
-        props.videos.filter(video =>
-          linkSearchResponse.VideoIds.includes(video.Id)
-        )
-      );
-      setLinkSearchResponse(linkSearchResponse);
-      setVideoSearchResponse(videoSearchResponse);
-      setSearchError(null);
-      return;
-    }
-
-    if (!videoSearchResponse.HitCount) {
+    // If the display option chosen returned 0 results, set error telling user
+    // to switch to the other display option.
+    if ( (displayOption === "linksOnly" && !linkSearchResponse.HitCount) || 
+    (displayOption === "fullDescriptionBoxes" && !videoSearchResponse.HitCount)
+    ) {
       setSearchError(
         new ResponseWrapper(
           false,
@@ -253,14 +233,21 @@ function ChannelPage(props: {
       return;
     }
 
+    // Show matched results.
     setVideosToShow(
-      props.videos.filter(video =>
-        videoSearchResponse.VideoIds.includes(video.Id)
+      props.videos.filter(video => {
+        if (displayOption === "linksonly") {
+          return linkSearchResponse.VideoIds.includes(video.Id)
+        } else {
+          return videoSearchResponse.VideoIds.includes(video.Id)
+        }
+      }
       )
     );
     setLinkSearchResponse(linkSearchResponse);
     setVideoSearchResponse(videoSearchResponse);
     setSearchError(null);
+    return;
   }, [searchResponse, displayOption]);
 
   return (
