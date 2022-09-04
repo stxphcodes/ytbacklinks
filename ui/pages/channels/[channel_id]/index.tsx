@@ -519,12 +519,12 @@ function LinkButton(props: {link: Link; active: boolean}) {
 
 function HitCount(props: {totalLinkHits: number; totalVideoHits: number}) {
   return (
-    <div className="flex flex-wrap place-content-start gap-x-2">
+    <div className="flex flex-wrap place-content-start gap-x-2 text-sm">
       <div className="bg-theme-yt-red p-2 rounded  text-left text-white">
         Link Results: {props.totalLinkHits}
       </div>
       <div className="bg-theme-yt-red p-2 rounded  text-left text-white">
-        Video Description Results: {props.totalVideoHits}
+       Full Description Box Results: {props.totalVideoHits}
       </div>
     </div>
   );
