@@ -11,4 +11,8 @@ services:
       NODE_ENV: development
       FIREBASE_CONFIG: $FIREBASE_CONFIG
       TYPESENSE_SERVER_URL: http://localhost:8000
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - /app/.next
     command: 'npm run dev'

@@ -6,6 +6,10 @@ Server accepts search requests from the frontend to query typesense (search engi
 
 1. docker-compose up --build
 
+## API
+
+`curl -H "Content-type: application/json" -X POST "http://localhost:8000/links/search" -d '{"ChannelId": "UCt7fwAhXDy3oNFTAzF2o8Pw", "Term": "udon"}'`
+
 ## Typesense API
 
 Example search request:

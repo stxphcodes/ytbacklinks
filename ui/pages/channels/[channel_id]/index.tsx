@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import ErrorPage from '../../../components/error';
 import SearchBar from '../../../components/searchbar';
+import Toggle from '../../../components/toggle';
 import { getChannel } from '../../../utils/getChannels';
 import { getFirestoreClient } from '../../../utils/getFirestoreClient';
 import { getTypesenseServerUrl } from '../../../utils/getTypesenseServer';
@@ -12,7 +13,9 @@ import { Channel, Link, VideoUI } from '../../../utilsLibrary/firestoreTypes';
 import {
     ErrUrlParam, ResponseWrapper, TResponseWrapper
 } from '../../../utilsLibrary/responseWrapper';
-import { SearchChannelResponse, SearchRequest } from '../../../utilsLibrary/searchTypes';
+import {
+    LinkSearchResponse, SearchRequest, VideoSearchResponse
+} from '../../../utilsLibrary/searchTypes';
 
 type Props = {
   channel: Channel | null;
@@ -108,15 +111,41 @@ function ChannelPage(props: {
   videos: VideoUI[];
   typesenseUrl: string;
 }) {
+  // search term user entered in the search bar.
+  const [searchTerm, setSearchTerm] = useState(''); 
+  
+  // display option user selects in the toggle switch.
+  const [displayOption, setDisplayOption] = useState('linksOnly');
+  
+  // videos to show. Defaults to all videos if no search term is entered. 
+  // Updated when search is entered.
+  const [videosToShow, setVideosToShow] = useState(props.videos);
+
+  // searchResponse returned in postSearchRequest.
   const [searchResponse, setSearchResponse] = useState<TResponseWrapper | null>(
     null
   );
-  const [searchTerm, setSearchTerm] = useState('');
-  const [videosToShow, setVideosToShow] = useState(props.videos);
+
+  // searchError is updated if !searchResponse.Ok
   const [searchError, setSearchError] = useState<TResponseWrapper | null>(null);
-  const [searchHits, setSearchHits] = useState<SearchChannelResponse | null>(
-    null
-  );
+
+  // linkSearchResponse is updated if searchResponse is successful.
+  // linkSearchResponse contains matched links from the search request.
+  const [linkSearchResponse, setLinkSearchResponse] =
+    useState<LinkSearchResponse | null>(null);
+  
+  // videoSearchResponse is udpated if searchResponse is successful.
+  // videoSearchResponse contains matched video descriptions from the search request.
+  const [videoSearchResponse, setVideoSearchResponse] =
+    useState<VideoSearchResponse | null>(null);
+
+  function handleToggleClick(event: any) {
+    if (displayOption === 'linksOnly') {
+      setDisplayOption('descriptionBoxes');
+    } else {
+      setDisplayOption('linksOnly');
+    }
+  }
 
   async function handleSearchSubmit(event: React.FormEvent<HTMLButtonElement>) {
     event.preventDefault();
@@ -140,25 +169,35 @@ function ChannelPage(props: {
   }
 
   // Runs every time search response changes.
+  // searchResponse.message is the type CombinedSearchResponse.
   useEffect(() => {
     // SearchResponse is null at intial state and
-    // whenever search term is blank.
-    // Reset search related states to default.
+    // whenever search term is blank. Reset search
+    // response states to default.
     if (!searchResponse) {
       setVideosToShow(props.videos);
-      setSearchHits(null);
+      setLinkSearchResponse(null);
+      setVideoSearchResponse(null);
       setSearchError(null);
       return;
     }
 
+    // searchResponse returned error.
     if (!searchResponse.Ok) {
       setSearchError(searchResponse);
-      setSearchHits(null);
+      setLinkSearchResponse(null);
+      setVideoSearchResponse(null);
       setVideosToShow([]);
       return;
     }
 
-    if (!searchResponse.Message.HitCount) {
+    let linkSearchResponse: LinkSearchResponse =
+      searchResponse.Message.LinkSearchResponse;
+    let videoSearchResponse: VideoSearchResponse =
+      searchResponse.Message.VideoSearchResponse;
+
+    // searchResponse returned 0 results for both display options.
+    if (!linkSearchResponse.HitCount && !videoSearchResponse.HitCount) {
       setSearchError(
         new ResponseWrapper(
           false,
@@ -168,19 +207,48 @@ function ChannelPage(props: {
           null
         ).Serialize()
       );
-      setSearchHits(null);
+      setLinkSearchResponse(null);
+      setVideoSearchResponse(null);
       setVideosToShow([]);
       return;
     }
 
+    // If the display option chosen returned 0 results, set error telling user
+    // to switch to the other display option.
+    if ( (displayOption === "linksOnly" && !linkSearchResponse.HitCount) || 
+    (displayOption === "fullDescriptionBoxes" && !videoSearchResponse.HitCount)
+    ) {
+      setSearchError(
+        new ResponseWrapper(
+          false,
+          405,
+          'Not found',
+          'No results found for in this view. Toggle switch to change view.',
+          null
+        ).Serialize()
+      );
+      setLinkSearchResponse(null);
+      setVideoSearchResponse(null);
+      setVideosToShow([]);
+      return;
+    }
+
+    // Show matched results.
     setVideosToShow(
-      props.videos.filter(video =>
-        searchResponse.Message.VideoIds.includes(video.Id)
+      props.videos.filter(video => {
+        if (displayOption === "linksonly") {
+          return linkSearchResponse.VideoIds.includes(video.Id)
+        } else {
+          return videoSearchResponse.VideoIds.includes(video.Id)
+        }
+      }
       )
     );
-    setSearchHits(searchResponse.Message);
+    setLinkSearchResponse(linkSearchResponse);
+    setVideoSearchResponse(videoSearchResponse);
     setSearchError(null);
-  }, [searchResponse]);
+    return;
+  }, [searchResponse, displayOption]);
 
   return (
     <div className="grid grid-cols-5">
@@ -195,12 +263,15 @@ function ChannelPage(props: {
             handleSubmit={handleSearchSubmit}
             handleInputChange={handleInputChange}
           />
+          <Toggle displayOption={displayOption} handleClick={handleToggleClick} />
         </div>
 
         <SearchResults
           error={searchError}
           videos={videosToShow}
-          searchHits={searchHits}
+          linkSearchResponse={linkSearchResponse}
+          videoSearchResponse={videoSearchResponse}
+          displayOption={displayOption}
         />
       </div>
     </div>
@@ -235,11 +306,17 @@ function ChannelSidebar(props: {channel: Channel}) {
 function SearchResults(props: {
   videos: VideoUI[];
   error: TResponseWrapper | null;
-  searchHits: SearchChannelResponse | null;
+  linkSearchResponse: LinkSearchResponse | null;
+  videoSearchResponse: VideoSearchResponse | null;
+  displayOption: string;
 }) {
   if (props.error) {
     if (props.error.Status === 404) {
-      return <HitCount totalHits={0} />;
+      return (
+        <>
+          <HitCount totalLinkHits={0} totalVideoHits={0} />
+        </>
+      );
     }
 
     return (
@@ -252,11 +329,20 @@ function SearchResults(props: {
     );
   }
 
-  if (!props.searchHits) {
+  // this only happens when search is empty (default state so show all videos)
+  if (!props.linkSearchResponse && !props.videoSearchResponse) {
     return (
       <>
         {props.videos.map(video => {
-          return <VideoCard video={video} titleHit={false} linkHits={[]} key={video.Id}/>;
+          return (
+            <VideoCard
+              video={video}
+              titleHit={false}
+              linkHits={[]}
+              key={video.Id}
+              displayOption={props.displayOption}
+            />
+          );
         })}
       </>
     );
@@ -264,36 +350,70 @@ function SearchResults(props: {
 
   return (
     <>
-      <HitCount totalHits={props.searchHits.HitCount} />
-      {props.videos.map(video => {
-        if (
-          props.searchHits &&
-          (!props.searchHits.LinkHits[video.Id] ||
-            !props.searchHits.LinkHits[video.Id].length)
-        ) {
-          return (
-            <VideoCard
-              key={video.Id}
-              video={video}
-              titleHit={props.searchHits.VideoTitleHits[video.Id] !== undefined}
-              linkHits={[]}
-            />
-          );
-        }
-
-        return (
-          <VideoCard
-            key={video.Id}
-            video={video}
-            titleHit={
-              props.searchHits
-                ? props.searchHits.VideoTitleHits[video.Id] !== undefined
-                : false
+      <HitCount
+        totalLinkHits={props.linkSearchResponse ? props.linkSearchResponse.HitCount : 0}
+        totalVideoHits={props.videoSearchResponse ? props.videoSearchResponse.HitCount: 0}
+      />
+      {props.displayOption === 'linksOnly' ? (
+        <>
+          {props.videos.map(video => {
+            if (
+              props.linkSearchResponse &&
+              (!props.linkSearchResponse.LinkHits[video.Id] ||
+                !props.linkSearchResponse.LinkHits[video.Id].length)
+            ) {
+              return (
+                <VideoCard
+                  key={video.Id}
+                  video={video}
+                  titleHit={
+                    props.linkSearchResponse.VideoTitleHits[video.Id] !== undefined
+                  }
+                  linkHits={[]}
+                  displayOption={props.displayOption}
+                />
+              );
             }
-            linkHits={props.searchHits && props.searchHits.LinkHits[video.Id]}
-          />
-        );
-      })}
+
+            return (
+              <VideoCard
+                key={video.Id}
+                video={video}
+                titleHit={
+                  props.linkSearchResponse
+                    ? props.linkSearchResponse.VideoTitleHits[video.Id] !==
+                      undefined
+                    : false
+                }
+                linkHits={
+                  props.linkSearchResponse &&
+                  props.linkSearchResponse.LinkHits[video.Id]
+                }
+                displayOption={props.displayOption}
+              />
+            );
+          })}
+        </>
+      ) : (
+        <>
+          {props.videos.map(video => {
+            return (
+              <VideoCard
+                key={video.Id}
+                video={video}
+                titleHit={
+                  props.videoSearchResponse
+                    ? props.videoSearchResponse.VideoTitleHits[video.Id] !==
+                      undefined
+                    : false
+                }
+                linkHits={[]}
+                displayOption={props.displayOption}
+              />
+            );
+          })}
+        </>
+      )}
     </>
   );
 }
@@ -302,6 +422,7 @@ function VideoCard(props: {
   video: VideoUI;
   titleHit: boolean;
   linkHits: string[];
+  displayOption: string;
 }) {
   return (
     <div
@@ -334,19 +455,44 @@ function VideoCard(props: {
 
       <div className="col-span-3">
         <ul className="flex flex-wrap place-content-start">
-          {props.video.Links.map(link => {
-            return (
-              <LinkButton
-                link={link}
-                active={props.linkHits.includes(link.Id)}
-                key={link.Id}
+          {props.displayOption === 'linksOnly' ? (
+            <>
+              {props.video.Links.map(link => {
+                return (
+                  <LinkButton
+                    link={link}
+                    active={props.linkHits.includes(link.Id)}
+                    key={link.Id}
+                  />
+                );
+              })}
+            </>
+          ) : (
+            <span className="whitespace-pre-line">
+              <p
+                dangerouslySetInnerHTML={{
+                  __html: findUrl(props.video.Description),
+                }}
               />
-            );
-          })}
+            </span>
+          )}
         </ul>
       </div>
     </div>
   );
+}
+
+function findUrl(text: string) {
+  var urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.replace(urlRegex, function (url: string) {
+    return (
+      '<a href="' +
+      url +
+      '" class="text-theme-yt-red" target="_blank">' +
+      url +
+      '</a>'
+    );
+  });
 }
 
 function LinkButton(props: {link: Link; active: boolean}) {
@@ -371,11 +517,14 @@ function LinkButton(props: {link: Link; active: boolean}) {
   );
 }
 
-function HitCount(props: {totalHits: number}) {
+function HitCount(props: {totalLinkHits: number; totalVideoHits: number}) {
   return (
-    <div className="flex flex-wrap place-content-start">
+    <div className="flex flex-wrap place-content-start gap-x-2 text-sm">
       <div className="bg-theme-yt-red p-2 rounded  text-left text-white">
-        Total Results: {props.totalHits}
+        Link Results: {props.totalLinkHits}
+      </div>
+      <div className="bg-theme-yt-red p-2 rounded  text-left text-white">
+       Full Description Box Results: {props.totalVideoHits}
       </div>
     </div>
   );
