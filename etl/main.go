@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"google.golang.org/api/option"
@@ -147,21 +148,43 @@ func getNumberOfLinks(linksByVideo map[string]map[string]*Link) int {
 }
 
 func runETL(ctx context.Context, firestoreClient *firestore.Client, httpClient *http.Client, youtubeApiKey string, channels []string, dryRun bool) error {
-	lastUpdated, err := queryLastUpdated(ctx, firestoreClient)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("This is last update date: %s", lastUpdated)
+	currentDate := time.Now()
+	eightMonthsAgo := currentDate.AddDate(0, -8, 0)
 
 	for _, channelTitle := range channels {
+		log.Println("Running ETL for: ", channelTitle)
+		// extract channel data from youtube.
 		channelResponse, err := extractChannel(httpClient, youtubeApiKey, channelTitle)
 		if err != nil {
 			return err
 		}
 		channel := channelResponse.toChannel()
 
-		videoResponse, err := extractVideosByLastUpdated(httpClient, youtubeApiKey, channel.Id, lastUpdated)
+		// check when channel was last updated in firestore.
+		lastUpdated, err := queryChannelLastUpdatedById(ctx, firestoreClient, channel.Id)
+		if err != nil {
+			return err
+		}
+
+		extractVideosDate := ""
+		// new channel - extract videos starting from eight months ago.
+		if lastUpdated == nil {
+			log.Println("New channel detected.")
+			extractVideosDate = eightMonthsAgo.Format(time.RFC3339)
+		} else {
+			// more than 7 days since channel was updated.
+			if lastUpdated.AddDate(0, 0, 7).Before(currentDate) {
+				extractVideosDate = lastUpdated.Format(time.RFC3339)
+			}
+		}
+
+		if extractVideosDate == "" {
+			log.Printf("Skipped updating %s since it's been updated in the past week. \n\n", channelTitle)
+			continue
+		}
+
+		log.Println("Gathering video data starting from ", extractVideosDate)
+		videoResponse, err := extractVideosByDate(httpClient, youtubeApiKey, channel.Id, extractVideosDate)
 		if err != nil {
 			return err
 		}
@@ -184,7 +207,6 @@ func runETL(ctx context.Context, firestoreClient *firestore.Client, httpClient *
 		channel.VideoCount += len(videos)
 		channel.LinkCount += getNumberOfLinks(links)
 
-		log.Println("Channel: ", channelTitle)
 		log.Println("Number of new videos: ", len(videos))
 		log.Println("Number of new links: ", getNumberOfLinks(links))
 
@@ -192,21 +214,29 @@ func runETL(ctx context.Context, firestoreClient *firestore.Client, httpClient *
 			log.Print("Skip uploading data.\n\n")
 			continue
 		} else {
-			if err := loadChannel(ctx, firestoreClient, channel); err != nil {
-				return err
-			}
-
 			if err := loadVideosbyChannelId(ctx, firestoreClient, channel.Id, videos); err != nil {
 				return err
 			}
+			log.Println("Loaded video data.")
 
 			if err := loadLinksByChannelAndVideoIds(ctx, firestoreClient, channel.Id, links); err != nil {
 				return err
 			}
+			log.Println("Loaded link data.")
+
+			if err := loadChannel(ctx, firestoreClient, channel); err != nil {
+				return err
+			}
+			log.Println("Loaded channel data.")
 
 			log.Print("Successfully updated database.\n\n")
 		}
 	}
 
-	return updateLastUpdated(ctx, firestoreClient)
+	if !dryRun {
+		log.Println("Updating etl metadata.")
+		return updateLastUpdated(ctx, firestoreClient)
+	}
+
+	return nil
 }
