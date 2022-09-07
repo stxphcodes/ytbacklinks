@@ -172,7 +172,7 @@ func runETL(ctx context.Context, firestoreClient *firestore.Client, httpClient *
 			log.Println("New channel detected.")
 			extractVideosDate = eightMonthsAgo.Format(time.RFC3339)
 		} else {
-			// more than 7 days since channel was updated.
+			// update if it's been more than 7 days since channel was updated.
 			if lastUpdated.AddDate(0, 0, 7).Before(currentDate) {
 				extractVideosDate = lastUpdated.Format(time.RFC3339)
 			}
