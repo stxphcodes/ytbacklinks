@@ -29,8 +29,8 @@ func extractChannel(client *http.Client, apiKey, channelTitle string) (*ChannelR
 	return getChannelById(client, apiKey, channelId)
 }
 
-func extractVideosByLastUpdated(client *http.Client, apiKey, channelId string, lastUpdated string) (*VideoResponse, error) {
-	videoIds, err := searchVideoIdsAfterPublishedDate(client, apiKey, channelId, lastUpdated, "")
+func extractVideosByDate(client *http.Client, apiKey, channelId string, date string) (*VideoResponse, error) {
+	videoIds, err := searchVideoIdsAfterPublishedDate(client, apiKey, channelId, date, "")
 	if err != nil {
 		return nil, err
 	}
