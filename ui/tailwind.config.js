@@ -13,6 +13,7 @@ module.exports = {
         'theme-beige-1': '#F2F1F0',
         'theme-beige-2': '#e3e2e0',
         'theme-beige-3': '#A6A5A4',
+        'theme-yellow': '#f9eb21',
       },
     },
   },
