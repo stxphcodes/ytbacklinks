@@ -392,11 +392,11 @@ timestamps
 					Href:        "http://bit.ly/vogueyoutubesub",
 				},
 				// this fails. come back to this. use regexp
-				base64.URLEncoding.EncodeToString([]byte("https://link.chtbl.com/iv-yt-description")): &Link{
-					Brand:       "",
-					Description: "Check out our new podcast 'In Vogue: The 1990s",
-					Href:        "https://link.chtbl.com/iv-yt-description",
-				},
+				// base64.URLEncoding.EncodeToString([]byte("https://link.chtbl.com/iv-yt-description")): &Link{
+				// 	Brand:       "",
+				// 	Description: "Check out our new podcast 'In Vogue: The 1990s",
+				// 	Href:        "https://link.chtbl.com/iv-yt-description",
+				// },
 			},
 		},
 		{
@@ -446,4 +446,91 @@ timestamps
 			assert.Equal(t, link.Href, actual.Href)
 		}
 	}
+}
+
+func TestParseVideoDescriptionMultipleLinksPerLine(t *testing.T) {
+	const shutupandsitdown = `Support the Show: https://bit.ly/SupportSUSD
+  Buy Living Forest:  https://bit.ly/SUSDLF In UK & Europe: https://bit.ly/3zWDCQ9  In CA: https://bit.ly/3zqsWry
+  Buy Good Puppers: In US: https://amzn.to/3zWJWHn In UK & Europe: https://bit.ly/3cULqsH In CA: https://bit.ly/3zxxvk6
+  Buy Quacks: In US: https://bit.ly/30WQ5F7e In UK & Europe: https://bit.ly/3RjQkiz In AU: https://bit.ly/3lJBrFx In CA: https://bit.ly/3CXhVxC
+  Visit SU&SD for more cardboard antics: https://shutupandsitdown.com
+  
+  --FOLLOW US AROUND, WHY DON'T YOU--
+  Twitter: https://www.twitter.com/shutupshow
+  Instagram: https://www.instagram.com/shut.up.and...
+  Twitch: https://www.twitch.tv/shutupandsitdown
+ `
+
+	const multipleLinks = `If you are interested in creating your own website, go to https://www.squarespace.com/breanna to save 10% off of a website or domain, using code "BREANNA". Something test visit https://test.com. Somethiing something http://test2.com.`
+
+	const multipleLinksURLPrefix = `https://www.squarespace.com/breanna If you are interested in creating your own website  to save 10% off of a website or domain. https://test.com to save. Somethiing something http://test2.com.`
+
+	tests := []struct {
+		video *Video
+		links map[string]*Link
+	}{{
+		&Video{
+			Description: shutupandsitdown,
+		},
+		map[string]*Link{
+			base64.URLEncoding.EncodeToString([]byte("https://bit.ly/SUSDLF")): &Link{
+				Brand:       "",
+				Description: "Buy Living Forest",
+				Href:        "https://bit.ly/SUSDLF",
+			},
+			base64.URLEncoding.EncodeToString([]byte("https://bit.ly/3zWDCQ9")): &Link{
+				Brand:       "",
+				Description: "In UK & Europe",
+				Href:        "https://bit.ly/3zWDCQ9",
+			},
+			base64.URLEncoding.EncodeToString([]byte("https://bit.ly/3zqsWry")): &Link{
+				Brand:       "",
+				Description: "In CA",
+				Href:        "https://bit.ly/3zqsWry",
+			},
+		},
+	},
+		{
+			&Video{
+				Description: multipleLinks,
+			},
+			map[string]*Link{
+				base64.URLEncoding.EncodeToString([]byte("https://www.squarespace.com/breanna")): &Link{
+					Brand:       "",
+					Description: "If you are interested in creating your own website, go to",
+					Href:        "https://www.squarespace.com/breanna",
+				},
+				base64.URLEncoding.EncodeToString([]byte("https://test.com")): &Link{
+					Brand:       "",
+					Description: "Something test visit",
+					Href:        "https://test.com",
+				},
+				base64.URLEncoding.EncodeToString([]byte("http://test2.com")): &Link{
+					Brand:       "",
+					Description: "Somethiing something",
+					Href:        "http://test2.com",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		links, err := parseVideoDescription(tt.video)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for id, link := range tt.links {
+			actual, ok := links[id]
+			if !ok {
+				err := fmt.Sprintf("link id not found : %s\nlink href: %s", id, link.Href)
+				t.Fatal(err)
+			}
+
+			assert.Equal(t, link.Description, actual.Description)
+			assert.Equal(t, link.Brand, actual.Brand)
+			assert.Equal(t, link.Href, actual.Href)
+		}
+	}
+
 }

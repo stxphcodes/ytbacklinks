@@ -21,29 +21,80 @@ func parseVideoDescription(video *Video) (map[string]*Link, error) {
 	for sc.Scan() {
 		line := sc.Text()
 
-		rawUrl, ok := getLinkUrl(line)
+		rawUrls, ok := getUrls(line)
 		if !ok {
 			previousLine = line
 			continue
 		}
 
-		description, brand := getLinkDescriptionAndBrand(previousLine, line, rawUrl)
-		encodedUrl := base64.URLEncoding.EncodeToString([]byte(rawUrl))
+		// If line is more than 192 chars,
+		// use the entire line as description.
+		if len(line) > 192 {
+			encodedUrl := base64.URLEncoding.EncodeToString([]byte(rawUrls[0]))
+			link := &Link{
+				Id:          encodedUrl,
+				Category:    getLinkCategory(rawUrls[0]),
+				ChannelId:   video.ChannelId,
+				VideoId:     video.Id,
+				VideoTitle:  video.Title,
+				PublishedAt: video.PublishedAt,
+				Href:        rawUrls[0],
+				Description: line,
+				Brand:       "",
+				LastUpdated: time.Now().Format(time.RFC3339),
+			}
 
-		link := &Link{
-			Id:          encodedUrl,
-			Category:    getLinkCategory(rawUrl),
-			ChannelId:   video.ChannelId,
-			VideoId:     video.Id,
-			VideoTitle:  video.Title,
-			PublishedAt: video.PublishedAt,
-			Href:        rawUrl,
-			Description: description,
-			Brand:       brand,
-			LastUpdated: time.Now().Format(time.RFC3339),
+			links[link.Id] = link
+			previousLine = line
+			continue
 		}
 
-		links[link.Id] = link
+		for index, url := range rawUrls {
+			encodedUrl := base64.URLEncoding.EncodeToString([]byte(url))
+
+			description := ""
+			brand := ""
+			// Only 1 URL detected in line.
+			if len(rawUrls) == 1 {
+				description, brand = getLinkDescriptionAndBrand(previousLine, line, url)
+				// Multiple URLS detected in line
+			} else {
+				urlIndex := strings.Index(line, url)
+				switch index {
+				// First url: set description to the string before for the url index.
+				case 0:
+					if urlIndex == 0 {
+						break
+					}
+					description = trimSpecialChars(line[0:urlIndex])
+
+				// Set description to be the string between the previous url
+				// and the current url.
+				default:
+					urlBefore := rawUrls[index-1]
+					s := strings.Index(line, urlBefore)
+					s += len(urlBefore)
+					e := strings.Index(line, url)
+					description = trimSpecialChars(line[s:e])
+				}
+			}
+
+			link := &Link{
+				Id:          encodedUrl,
+				Category:    getLinkCategory(url),
+				ChannelId:   video.ChannelId,
+				VideoId:     video.Id,
+				VideoTitle:  video.Title,
+				PublishedAt: video.PublishedAt,
+				Href:        url,
+				Description: description,
+				Brand:       brand,
+				LastUpdated: time.Now().Format(time.RFC3339),
+			}
+
+			links[link.Id] = link
+		}
+
 		previousLine = line
 	}
 
@@ -117,13 +168,12 @@ func getLinkDescriptionAndBrand(previousLine, line, url string) (description str
 	return description, ""
 }
 
-func getLinkUrl(line string) (string, bool) {
-	rawUrl := xurls.Strict.FindString(line)
-	if rawUrl == "" {
-		return "", false
+func getUrls(line string) ([]string, bool) {
+	urls := xurls.Strict.FindAllString(line, -1)
+	if urls == nil {
+		return nil, false
 	}
-
-	return rawUrl, true
+	return urls, true
 }
 
 func getLinkCategory(url string) string {

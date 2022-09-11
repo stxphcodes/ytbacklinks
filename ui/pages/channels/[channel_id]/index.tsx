@@ -112,12 +112,12 @@ function ChannelPage(props: {
   typesenseUrl: string;
 }) {
   // search term user entered in the search bar.
-  const [searchTerm, setSearchTerm] = useState(''); 
-  
+  const [searchTerm, setSearchTerm] = useState('');
+
   // display option user selects in the toggle switch.
   const [displayOption, setDisplayOption] = useState('linksOnly');
-  
-  // videos to show. Defaults to all videos if no search term is entered. 
+
+  // videos to show. Defaults to all videos if no search term is entered.
   // Updated when search is entered.
   const [videosToShow, setVideosToShow] = useState(props.videos);
 
@@ -133,7 +133,7 @@ function ChannelPage(props: {
   // linkSearchResponse contains matched links from the search request.
   const [linkSearchResponse, setLinkSearchResponse] =
     useState<LinkSearchResponse | null>(null);
-  
+
   // videoSearchResponse is udpated if searchResponse is successful.
   // videoSearchResponse contains matched video descriptions from the search request.
   const [videoSearchResponse, setVideoSearchResponse] =
@@ -215,8 +215,10 @@ function ChannelPage(props: {
 
     // If the display option chosen returned 0 results, set error telling user
     // to switch to the other display option.
-    if ( (displayOption === "linksOnly" && !linkSearchResponse.HitCount) || 
-    (displayOption === "fullDescriptionBoxes" && !videoSearchResponse.HitCount)
+    if (
+      (displayOption === 'linksOnly' && !linkSearchResponse.HitCount) ||
+      (displayOption === 'fullDescriptionBoxes' &&
+        !videoSearchResponse.HitCount)
     ) {
       setSearchError(
         new ResponseWrapper(
@@ -236,13 +238,12 @@ function ChannelPage(props: {
     // Show matched results.
     setVideosToShow(
       props.videos.filter(video => {
-        if (displayOption === "linksonly") {
-          return linkSearchResponse.VideoIds.includes(video.Id)
+        if (displayOption === 'linksonly') {
+          return linkSearchResponse.VideoIds.includes(video.Id);
         } else {
-          return videoSearchResponse.VideoIds.includes(video.Id)
+          return videoSearchResponse.VideoIds.includes(video.Id);
         }
-      }
-      )
+      })
     );
     setLinkSearchResponse(linkSearchResponse);
     setVideoSearchResponse(videoSearchResponse);
@@ -263,7 +264,10 @@ function ChannelPage(props: {
             handleSubmit={handleSearchSubmit}
             handleInputChange={handleInputChange}
           />
-          <Toggle displayOption={displayOption} handleClick={handleToggleClick} />
+          <Toggle
+            displayOption={displayOption}
+            handleClick={handleToggleClick}
+          />
         </div>
 
         <SearchResults
@@ -272,6 +276,7 @@ function ChannelPage(props: {
           linkSearchResponse={linkSearchResponse}
           videoSearchResponse={videoSearchResponse}
           displayOption={displayOption}
+          searchTerm={searchTerm}
         />
       </div>
     </div>
@@ -309,6 +314,7 @@ function SearchResults(props: {
   linkSearchResponse: LinkSearchResponse | null;
   videoSearchResponse: VideoSearchResponse | null;
   displayOption: string;
+  searchTerm?: string;
 }) {
   if (props.error) {
     if (props.error.Status === 404) {
@@ -341,6 +347,7 @@ function SearchResults(props: {
               linkHits={[]}
               key={video.Id}
               displayOption={props.displayOption}
+              searchTerm={''}
             />
           );
         })}
@@ -351,8 +358,12 @@ function SearchResults(props: {
   return (
     <>
       <HitCount
-        totalLinkHits={props.linkSearchResponse ? props.linkSearchResponse.HitCount : 0}
-        totalVideoHits={props.videoSearchResponse ? props.videoSearchResponse.HitCount: 0}
+        totalLinkHits={
+          props.linkSearchResponse ? props.linkSearchResponse.HitCount : 0
+        }
+        totalVideoHits={
+          props.videoSearchResponse ? props.videoSearchResponse.HitCount : 0
+        }
       />
       {props.displayOption === 'linksOnly' ? (
         <>
@@ -367,10 +378,12 @@ function SearchResults(props: {
                   key={video.Id}
                   video={video}
                   titleHit={
-                    props.linkSearchResponse.VideoTitleHits[video.Id] !== undefined
+                    props.linkSearchResponse.VideoTitleHits[video.Id] !==
+                    undefined
                   }
                   linkHits={[]}
                   displayOption={props.displayOption}
+                  searchTerm={props.searchTerm || ''}
                 />
               );
             }
@@ -390,6 +403,7 @@ function SearchResults(props: {
                   props.linkSearchResponse.LinkHits[video.Id]
                 }
                 displayOption={props.displayOption}
+                searchTerm={props.searchTerm || ''}
               />
             );
           })}
@@ -409,6 +423,7 @@ function SearchResults(props: {
                 }
                 linkHits={[]}
                 displayOption={props.displayOption}
+                searchTerm={props.searchTerm || ''}
               />
             );
           })}
@@ -423,6 +438,7 @@ function VideoCard(props: {
   titleHit: boolean;
   linkHits: string[];
   displayOption: string;
+  searchTerm: string;
 }) {
   return (
     <div
@@ -463,17 +479,28 @@ function VideoCard(props: {
                     link={link}
                     active={props.linkHits.includes(link.Id)}
                     key={link.Id}
+                    term={props.searchTerm}
                   />
                 );
               })}
             </>
           ) : (
             <span className="whitespace-pre-line">
-              <p
-                dangerouslySetInnerHTML={{
-                  __html: findUrl(props.video.Description),
-                }}
-              />
+              {props.searchTerm == '' ? (
+                <p
+                  dangerouslySetInnerHTML={{
+                    __html: findUrl(props.video.Description),
+                  }}
+                />
+              ) : (
+                <p
+                  dangerouslySetInnerHTML={{
+                    __html: findUrl(
+                      highlightTerm(props.video.Description, props.searchTerm)
+                    ),
+                  }}
+                />
+              )}
             </span>
           )}
         </ul>
@@ -495,21 +522,49 @@ function findUrl(text: string) {
   });
 }
 
-function LinkButton(props: {link: Link; active: boolean}) {
+function highlightTerm(text: string, term: string) {
+  let textSplit = text.split(' ');
+  textSplit.forEach((word, index) => {
+    if (word.includes(term)) {
+      if (!word.includes('https')) {
+        textSplit[index] = word.replace(
+          term,
+          '<span class="bg-theme-yellow" >' + term + '</span>'
+        );
+      }
+    }
+  });
+
+  return textSplit.join(' ');
+}
+
+function LinkButton(props: {link: Link; active: boolean; term: string}) {
+  let buttonText =
+    props.link.Brand !== ''
+      ? `${props.link.Brand} - ${props.link.Description}`
+      : props.link.Description;
+  if (props.term != '') {
+    buttonText = highlightTerm(buttonText, props.term);
+  }
+
   return (
     <li key={props.link.Id} className="p-2">
       <a href={props.link.Href} target="_blank">
         {props.active ? (
           <button className="bg-theme-beige border-2 border-theme-yt-red hover:bg-theme-beige-2 hover:border-none hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left ">
-            {props.link.Brand !== ''
-              ? `${props.link.Brand} - ${props.link.Description}`
-              : props.link.Description}
+            <p
+              dangerouslySetInnerHTML={{
+                __html: buttonText,
+              }}
+            />
           </button>
         ) : (
           <button className="bg-theme-beige hover:bg-theme-beige-2 hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left">
-            {props.link.Brand !== ''
-              ? `${props.link.Brand} - ${props.link.Description}`
-              : props.link.Description}
+            <p
+              dangerouslySetInnerHTML={{
+                __html: buttonText,
+              }}
+            />
           </button>
         )}
       </a>
@@ -524,7 +579,7 @@ function HitCount(props: {totalLinkHits: number; totalVideoHits: number}) {
         Link Results: {props.totalLinkHits}
       </div>
       <div className="bg-theme-yt-red p-2 rounded  text-left text-white">
-       Full Description Box Results: {props.totalVideoHits}
+        Full Description Box Results: {props.totalVideoHits}
       </div>
     </div>
   );
