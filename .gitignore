@@ -1,4 +1,4 @@
 etl/etl
 server/server
-secrets/*
+**/secrets/*
 !secrets/README.md
