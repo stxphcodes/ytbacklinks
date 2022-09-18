@@ -1,6 +1,6 @@
 FROM node:18-alpine
 
-WORKDIR /app
+WORKDIR /opt/app
 
 # Install dependencies based on the preferred package manager
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
@@ -12,3 +12,7 @@ RUN \
   fi
 
 COPY . .
+
+RUN npm run build
+
+RUN cp -r .next /opt/.next
