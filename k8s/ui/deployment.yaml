@@ -1,0 +1,71 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: ui
+  labels:
+    service: ui
+    app: ui
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: ui
+      app: ui
+  template:
+    metadata:
+      labels:
+        service: ui
+        app: ui
+    spec:
+      volumes:
+        - name: secret
+          secret:
+            secretName: ui
+
+      containers:
+        - image: us-east4-docker.pkg.dev/backlinks-81c44/ui/ui:20220912-2
+          name: ui
+          imagePullPolicy: Always
+
+          env:
+            - name: SERVER_URL
+              value: "server.default.svc.cluster.local:8000"
+
+          volumeMounts:
+            - name: secret
+              mountPath: /secret
+
+          command: ["sh"]
+          args:
+            [
+              "-c",
+              "export FIREBASE_CONFIG=$(cat /secret/firebase-config.txt); npm start",
+            ]
+
+          # resources:
+          #   limits:
+          #     cpu: 500m
+          #     memory: 5Gi
+          #   requests:
+          #     cpu: 500m
+          #     memory: 5Gi
+
+          ports:
+            - containerPort: 3000
+
+          # livenessProbe:
+          #   httpGet:
+          #     scheme: HTTP
+          #     path: /live
+          #     port: 8001
+          #   initialDelaySeconds: 3
+          #   periodSeconds: 5
+
+          # readinessProbe:
+          #   httpGet:
+          #     scheme: HTTP
+          #     path: /ready
+          #     port: 8001
+          #   periodSeconds: 5

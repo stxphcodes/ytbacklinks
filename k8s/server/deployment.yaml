@@ -1,0 +1,77 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: server
+  labels:
+    service: server
+    app: server
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: server
+      app: server
+  template:
+    metadata:
+      labels:
+        service: server
+        app: server
+    spec:
+      volumes:
+        - name: secret
+          secret:
+            secretName: server
+
+      containers:
+        - image: us-east4-docker.pkg.dev/backlinks-81c44/server/server:20220912
+          name: service
+          imagePullPolicy: Always
+
+          # Load config values as environment variables.
+          envFrom:
+            - configMapRef:
+                name: server
+
+          volumeMounts:
+            - name: secret
+              mountPath: /secret
+
+          command: ["/app"]
+
+          args:
+            [
+              "--typesense.key=$(TYPESENSE_KEY)",
+              "--typesense.url=$(TYPESENSE_URL)",
+              "--firestore.projectid=$(FIRESTORE_PROJECT_ID)",
+              "--firestore.creds=/secret/firebase-sa.json",
+              "--force.recreate=true",
+            ]
+
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+            requests:
+              cpu: 500m
+              memory: 256Mi
+
+          ports:
+            - containerPort: 8000
+            - containerPort: 8001
+
+          # livenessProbe:
+          #   httpGet:
+          #     scheme: HTTP
+          #     path: /live
+          #     port: 8001
+          #   initialDelaySeconds: 3
+          #   periodSeconds: 5
+
+          # readinessProbe:
+          #   httpGet:
+          #     scheme: HTTP
+          #     path: /ready
+          #     port: 8001
+          #   periodSeconds: 5
