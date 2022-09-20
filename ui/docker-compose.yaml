@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   ui:
@@ -6,13 +6,13 @@ services:
       context: ./
       dockerfile: Dockerfile
     ports:
-      - '3000:3000'
+      - "3000:3000"
     environment:
       NODE_ENV: development
       FIREBASE_CONFIG: $FIREBASE_CONFIG
-      TYPESENSE_SERVER_URL: http://localhost:8000
+      SERVER_URL: http://localhost:8000
     volumes:
       - ./:/app
       - /app/node_modules
       - /app/.next
-    command: 'npm run dev'
+    # command: "npm start"
