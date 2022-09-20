@@ -25,13 +25,13 @@ spec:
             secretName: ui
 
       containers:
-        - image: us-east4-docker.pkg.dev/backlinks-81c44/ui/ui:20220912-2
+        - image: us-east4-docker.pkg.dev/backlinks-81c44/ui/ui:20220919
           name: ui
           imagePullPolicy: Always
 
           env:
             - name: SERVER_URL
-              value: "server.default.svc.cluster.local:8000"
+              value: "http://server:8000"
 
           volumeMounts:
             - name: secret
