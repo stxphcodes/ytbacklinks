@@ -4,15 +4,18 @@ services:
   ui:
     build:
       context: ./
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: development
       FIREBASE_CONFIG: $FIREBASE_CONFIG
       SERVER_URL: http://localhost:8000
+    # uncomment from here
     volumes:
-      - ./:/app
-      - /app/node_modules
-      - /app/.next
-    # command: "npm start"
+      - ./:/opt/app
+      - /opt/app/node_modules
+      - /opt/app/.next
+    command: "npm run dev"
+    # to here to test prod build.
+    #command: "npm start"
