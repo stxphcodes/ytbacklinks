@@ -12,7 +12,3 @@ RUN \
   fi
 
 COPY . .
-
-RUN npm run build
-
-RUN cp -r .next /opt/.next

@@ -1,0 +1,16 @@
+---
+resources:
+  # - service.yaml
+  - deployment.yaml
+
+secretGenerator:
+  - name: server
+    files:
+      - secrets/firebase-sa.json
+
+configMapGenerator:
+  - name: server
+    literals:
+      - TYPESENSE_KEY=abcxyz
+      - FIRESTORE_PROJECT_ID=backlinks-81c44
+      - TYPESENSE_URL=http://ts:8108

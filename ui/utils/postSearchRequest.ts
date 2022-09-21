@@ -6,12 +6,19 @@ import {
 } from '../utilsLibrary/searchTypes';
 
 export async function postSearchRequest(typesenseUrl: string, request: SearchRequest) {
-  let linkSearchResponse = await postLinkSearchRequest(typesenseUrl, request);
+  let serverUrl = ""
+  if (process.env.NODE_ENV === "development") {
+    serverUrl = typesenseUrl
+  } else {
+    serverUrl = new URL(window.location.href).toString()
+  }
+
+  let linkSearchResponse = await postLinkSearchRequest(serverUrl, request);
   if (!linkSearchResponse.Ok) {
     return linkSearchResponse;
   }
 
-  let videoSearchResponse = await postVideoSearchRequest(typesenseUrl, request);
+  let videoSearchResponse = await postVideoSearchRequest(serverUrl, request);
   if (!videoSearchResponse.Ok) {
     return videoSearchResponse;
   }

@@ -5,10 +5,12 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
 	"cloud.google.com/go/firestore"
+	"github.com/heptiolabs/healthcheck"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/typesense/typesense-go/typesense"
@@ -17,6 +19,7 @@ import (
 
 type Config struct {
 	HttpAddr    string
+	HealthAddr  string
 	CORSOrigins string
 	Typesense   struct {
 		ApiKey string
@@ -41,6 +44,7 @@ func run() error {
 		skipFirestore bool
 	)
 	flag.StringVar(&cfg.HttpAddr, "http.addr", "0.0.0.0:8000", "HTTP bind address.")
+	flag.StringVar(&cfg.HealthAddr, "health.addr", "0.0.0.0:8001", "HTTP health address.")
 	flag.StringVar(&cfg.CORSOrigins, "cors.origin", "*", "CORS origins, separated by ,")
 	flag.StringVar(&cfg.Typesense.ApiKey, "typesense.key", "", "API Key to use for Typesense.")
 	flag.StringVar(&cfg.Typesense.URL, "typesense.url", "http://typesense:8108", "URL to Typesense server.")
@@ -80,6 +84,15 @@ func run() error {
 			return err
 		}
 		log.Printf("Recreated link collection in typesense.")
+
+		tsLinkCount, err := getTSDocCount(ts)
+		if err != nil {
+			return err
+		}
+
+		log.Println("this is ts link count")
+		log.Println(tsLinkCount)
+
 		if err := recreateVideoCollection(ctx, &cfg, ts, fs); err != nil {
 			return err
 		}
@@ -105,6 +118,12 @@ func run() error {
 		}
 	}
 
+	// Configure and start /live and /ready check handling.
+	health := healthcheck.NewHandler()
+	// Check for resource leaks (also indicates basic responsiveness).
+	health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(100))
+	go http.ListenAndServe(cfg.HealthAddr, health)
+
 	// Setup HTTP server.
 	mux := echo.New()
 	mux.Pre(middleware.RemoveTrailingSlash())
@@ -113,6 +132,10 @@ func run() error {
 	cors.AllowOrigins = strings.Split(cfg.CORSOrigins, ",")
 	mux.Use(middleware.CORSWithConfig(cors))
 
+	// For gke ingress health check
+	mux.GET("/", func(ctx echo.Context) error {
+		return ctx.JSON(200, nil)
+	})
 	mux.POST("/links/search", LinkSearchHandler(ts, &cfg))
 	mux.POST("/videos/search", VideoSearchHandler(ts, &cfg))
 

@@ -1,0 +1,15 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: ui
+  labels:
+    app: ui
+
+spec:
+  type: NodePort
+  selector:
+    app: ui
+  ports:
+    - port: 3000
+      targetPort: 3000

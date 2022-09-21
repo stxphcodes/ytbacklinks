@@ -1,0 +1,10 @@
+resources:
+  - service.yaml
+  - statefulset.yaml
+
+configMapGenerator:
+  - name: typesense
+    literals:
+      - TYPESENSE_API_KEY=abcxyz
+      - TYPESENSE_DATA_DIR=/usr/share/typesense/data
+      - TYPESENSE_ENABLE_CORS=true

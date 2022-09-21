@@ -1,0 +1,12 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: server
+
+spec:
+  type: NodePort
+  selector:
+    app: server
+  ports:
+    - port: 8000
