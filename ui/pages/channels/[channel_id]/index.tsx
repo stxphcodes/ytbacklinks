@@ -24,15 +24,15 @@ type Props = {
   typesenseUrl: string | null;
 };
 
-export const getServerSideProps: GetServerSideProps = async context => {
+export const getServerSideProps: GetServerSideProps = async (context) => {
   const channel_id = context.params?.channel_id;
-  if (typeof channel_id !== 'string') {
+  if (typeof channel_id !== "string") {
     return {
       props: {
         error: new ResponseWrapper(
           false,
           400,
-          'Bad Request',
+          "Bad Request",
           `${ErrUrlParam} ${channel_id}`
         ).Serialize(),
       },
@@ -42,7 +42,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
   let firestoreResponse = getFirestoreClient();
   if (!firestoreResponse.Ok) {
     return {
-      props: {error: firestoreResponse},
+      props: { error: firestoreResponse },
     };
   }
   let firestoreClient = firestoreResponse.Message;
@@ -50,7 +50,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
   let typesenseUrlResponse = getTypesenseServerUrl();
   if (!typesenseUrlResponse.Ok) {
     return {
-      props: {error: typesenseUrlResponse},
+      props: { error: typesenseUrlResponse },
     };
   }
   let typesenseUrl = typesenseUrlResponse.Message;
@@ -58,14 +58,14 @@ export const getServerSideProps: GetServerSideProps = async context => {
   let channelResponse = await getChannel(firestoreClient, channel_id);
   if (!channelResponse.Ok) {
     return {
-      props: {error: channelResponse},
+      props: { error: channelResponse },
     };
   }
 
   let videoResponse = await getVideos(firestoreClient, channel_id);
   if (!videoResponse.Ok) {
     return {
-      props: {error: videoResponse},
+      props: { error: videoResponse },
     };
   }
 
@@ -79,7 +79,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
   };
 };
 
-export default function Index({videos, channel, typesenseUrl, error}: Props) {
+export default function Index({ videos, channel, typesenseUrl, error }: Props) {
   if (error) {
     return <ErrorPage response={error} />;
   }
@@ -90,8 +90,8 @@ export default function Index({videos, channel, typesenseUrl, error}: Props) {
         response={new ResponseWrapper(
           false,
           500,
-          'Server Error',
-          'Unable to get channel info and videos.'
+          "Server Error",
+          "Unable to get channel info and videos."
         ).Serialize()}
       />
     );
@@ -112,10 +112,10 @@ function ChannelPage(props: {
   typesenseUrl: string;
 }) {
   // search term user entered in the search bar.
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   // display option user selects in the toggle switch.
-  const [displayOption, setDisplayOption] = useState('linksOnly');
+  const [displayOption, setDisplayOption] = useState("linksOnly");
 
   // videos to show. Defaults to all videos if no search term is entered.
   // Updated when search is entered.
@@ -140,10 +140,10 @@ function ChannelPage(props: {
     useState<VideoSearchResponse | null>(null);
 
   function handleToggleClick(event: any) {
-    if (displayOption === 'linksOnly') {
-      setDisplayOption('descriptionBoxes');
+    if (displayOption === "linksOnly") {
+      setDisplayOption("descriptionBoxes");
     } else {
-      setDisplayOption('linksOnly');
+      setDisplayOption("linksOnly");
     }
   }
 
@@ -155,7 +155,7 @@ function ChannelPage(props: {
       term: searchTerm,
     };
 
-    if (request.term === '') {
+    if (request.term === "") {
       setSearchResponse(null);
       return;
     }
@@ -202,30 +202,8 @@ function ChannelPage(props: {
         new ResponseWrapper(
           false,
           404,
-          'Not found',
-          'No results found for search term.',
-          null
-        ).Serialize()
-      );
-      setLinkSearchResponse(null);
-      setVideoSearchResponse(null);
-      setVideosToShow([]);
-      return;
-    }
-
-    // If the display option chosen returned 0 results, set error telling user
-    // to switch to the other display option.
-    if (
-      (displayOption === 'linksOnly' && !linkSearchResponse.HitCount) ||
-      (displayOption === 'fullDescriptionBoxes' &&
-        !videoSearchResponse.HitCount)
-    ) {
-      setSearchError(
-        new ResponseWrapper(
-          false,
-          405,
-          'Not found',
-          'No results found for in this view. Toggle switch to change view.',
+          "Not found",
+          "No results found for search term.",
           null
         ).Serialize()
       );
@@ -237,8 +215,8 @@ function ChannelPage(props: {
 
     // Show matched results.
     setVideosToShow(
-      props.videos.filter(video => {
-        if (displayOption === 'linksonly') {
+      props.videos.filter((video) => {
+        if (displayOption === "linksonly") {
           return linkSearchResponse.VideoIds.includes(video.Id);
         } else {
           return videoSearchResponse.VideoIds.includes(video.Id);
@@ -248,6 +226,25 @@ function ChannelPage(props: {
     setLinkSearchResponse(linkSearchResponse);
     setVideoSearchResponse(videoSearchResponse);
     setSearchError(null);
+
+    // If the display option chosen returned 0 results, set error telling user
+    // to switch to the other display option.
+    if (
+      (displayOption === "linksOnly" && !linkSearchResponse.HitCount) ||
+      (displayOption === "fullDescriptionBoxes" &&
+        !videoSearchResponse.HitCount)
+    ) {
+      setSearchError(
+        new ResponseWrapper(
+          false,
+          405,
+          "Not found",
+          "No results found for in this view. Toggle switch to change view.",
+          null
+        ).Serialize()
+      );
+    }
+
     return;
   }, [searchResponse, displayOption]);
 
@@ -268,6 +265,16 @@ function ChannelPage(props: {
             displayOption={displayOption}
             handleClick={handleToggleClick}
           />
+          {searchResponse && (
+            <HitCounts
+              totalLinkHits={
+                linkSearchResponse ? linkSearchResponse.HitCount : 0
+              }
+              totalVideoHits={
+                videoSearchResponse ? videoSearchResponse.HitCount : 0
+              }
+            />
+          )}
         </div>
 
         <SearchResults
@@ -283,7 +290,7 @@ function ChannelPage(props: {
   );
 }
 
-function ChannelSidebar(props: {channel: Channel}) {
+function ChannelSidebar(props: { channel: Channel }) {
   return (
     <div className="rounded-lg sticky top-14 py-2">
       <img src={props.channel.ThumbnailUrl} referrerPolicy="no-referrer"></img>
@@ -317,14 +324,6 @@ function SearchResults(props: {
   searchTerm?: string;
 }) {
   if (props.error) {
-    if (props.error.Status === 404) {
-      return (
-        <>
-          <HitCount totalLinkHits={0} totalVideoHits={0} />
-        </>
-      );
-    }
-
     return (
       <div>
         <p>
@@ -339,7 +338,7 @@ function SearchResults(props: {
   if (!props.linkSearchResponse && !props.videoSearchResponse) {
     return (
       <>
-        {props.videos.map(video => {
+        {props.videos.map((video) => {
           return (
             <VideoCard
               video={video}
@@ -347,7 +346,7 @@ function SearchResults(props: {
               linkHits={[]}
               key={video.Id}
               displayOption={props.displayOption}
-              searchTerm={''}
+              searchTerm={""}
             />
           );
         })}
@@ -357,17 +356,17 @@ function SearchResults(props: {
 
   return (
     <>
-      <HitCount
+      {/* <HitCounts
         totalLinkHits={
           props.linkSearchResponse ? props.linkSearchResponse.HitCount : 0
         }
         totalVideoHits={
           props.videoSearchResponse ? props.videoSearchResponse.HitCount : 0
         }
-      />
-      {props.displayOption === 'linksOnly' ? (
+      /> */}
+      {props.displayOption === "linksOnly" ? (
         <>
-          {props.videos.map(video => {
+          {props.videos.map((video) => {
             if (
               props.linkSearchResponse &&
               (!props.linkSearchResponse.LinkHits[video.Id] ||
@@ -383,7 +382,7 @@ function SearchResults(props: {
                   }
                   linkHits={[]}
                   displayOption={props.displayOption}
-                  searchTerm={props.searchTerm || ''}
+                  searchTerm={props.searchTerm || ""}
                 />
               );
             }
@@ -403,14 +402,14 @@ function SearchResults(props: {
                   props.linkSearchResponse.LinkHits[video.Id]
                 }
                 displayOption={props.displayOption}
-                searchTerm={props.searchTerm || ''}
+                searchTerm={props.searchTerm || ""}
               />
             );
           })}
         </>
       ) : (
         <>
-          {props.videos.map(video => {
+          {props.videos.map((video) => {
             return (
               <VideoCard
                 key={video.Id}
@@ -423,7 +422,7 @@ function SearchResults(props: {
                 }
                 linkHits={[]}
                 displayOption={props.displayOption}
-                searchTerm={props.searchTerm || ''}
+                searchTerm={props.searchTerm || ""}
               />
             );
           })}
@@ -446,34 +445,33 @@ function VideoCard(props: {
       key={props.video.Id}
     >
       <div className="col-span-1">
-        <img src={props.video.ThumbnailUrl} />
+        <a
+          href={`https://youtube.com/watch?v=${props.video.Id}`}
+          target="_blank"
+        >
+          <img src={props.video.ThumbnailUrl} />
+        </a>
+
         {props.titleHit ? (
-          <h1 className="font-black text-theme-yt-red py-2">
-            <a
-              href={`https://youtube.com/watch?v=${props.video.Id}`}
-              target="_blank"
-            >
-              {props.video.Title}
-            </a>
-          </h1>
+          <h1
+            className="font-black py-2"
+            dangerouslySetInnerHTML={{
+              __html: findUrl(
+                highlightTerm(props.video.Title, props.searchTerm)
+              ),
+            }}
+          ></h1>
         ) : (
-          <h1 className="font-black py-2">
-            <a
-              href={`https://youtube.com/watch?v=${props.video.Id}`}
-              target="_blank"
-            >
-              {props.video.Title}
-            </a>
-          </h1>
+          <h1 className="font-black py-2">{props.video.Title}</h1>
         )}
         <p>{props.video.PublishedAt}</p>
       </div>
 
       <div className="col-span-3">
         <ul className="flex flex-wrap place-content-start">
-          {props.displayOption === 'linksOnly' ? (
+          {props.displayOption === "linksOnly" ? (
             <>
-              {props.video.Links.map(link => {
+              {props.video.Links.map((link) => {
                 return (
                   <LinkButton
                     link={link}
@@ -486,7 +484,7 @@ function VideoCard(props: {
             </>
           ) : (
             <span className="whitespace-pre-line">
-              {props.searchTerm == '' ? (
+              {props.searchTerm == "" ? (
                 <p
                   dangerouslySetInnerHTML={{
                     __html: findUrl(props.video.Description),
@@ -517,33 +515,40 @@ function findUrl(text: string) {
       url +
       '" class="text-theme-yt-red" target="_blank">' +
       url +
-      '</a>'
+      "</a>"
     );
   });
 }
 
 function highlightTerm(text: string, term: string) {
-  let textSplit = text.split(' ');
-  textSplit.forEach((word, index) => {
-    if (word.includes(term)) {
-      if (!word.includes('https')) {
-        textSplit[index] = word.replace(
-          term,
-          '<span class="bg-theme-yellow" >' + term + '</span>'
-        );
-      }
+  let textSplit = text.split(" ");
+  let termSplit = term.split(" ");
+
+  termSplit.forEach((termWord) => {
+    if (!termWord) {
+      return;
     }
+
+    textSplit.forEach((word, index) => {
+      let lowercaseWord = word.toLowerCase();
+      if (lowercaseWord.includes(termWord.toLowerCase())) {
+        if (!word.includes("https")) {
+          textSplit[index] =
+            '<span class="bg-theme-yellow" >' + word + "</span>";
+        }
+      }
+    });
   });
 
-  return textSplit.join(' ');
+  return textSplit.join(" ");
 }
 
-function LinkButton(props: {link: Link; active: boolean; term: string}) {
+function LinkButton(props: { link: Link; active: boolean; term: string }) {
   let buttonText =
-    props.link.Brand !== ''
+    props.link.Brand !== ""
       ? `${props.link.Brand} - ${props.link.Description}`
       : props.link.Description;
-  if (props.term != '') {
+  if (props.term != "") {
     buttonText = highlightTerm(buttonText, props.term);
   }
 
@@ -572,9 +577,9 @@ function LinkButton(props: {link: Link; active: boolean; term: string}) {
   );
 }
 
-function HitCount(props: {totalLinkHits: number; totalVideoHits: number}) {
+function HitCounts(props: { totalLinkHits: number; totalVideoHits: number }) {
   return (
-    <div className="flex flex-wrap place-content-start gap-x-2 text-sm">
+    <div className="flex flex-wrap place-content-start gap-x-2 text-sm mt-4">
       <div className="bg-theme-yt-red p-2 rounded  text-left text-white">
         Link Results: {props.totalLinkHits}
       </div>
