@@ -3,7 +3,7 @@ export default function Toggle(props: {
   handleClick: any;
 }) {
   return (
-    <div className="flex items-center mt-4 bg-theme-yt-red-1 w-fit p-2 rounded-full text-white">
+    <div className="flex items-center mt-4 bg-theme-yt-red w-fit p-2 rounded-full text-white">
       <span className="mr-1 text-sm font-medium ">Links only</span>
 
       <label className="inline-flex relative items-center  cursor-pointer -">
