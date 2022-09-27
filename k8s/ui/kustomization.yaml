@@ -1,14 +1,8 @@
 ---
 resources:
-  # - service.yaml
   - deployment.yaml
-  # - ingress.yaml
 
 secretGenerator:
   - name: ui
     files:
       - secrets/firebase-config.txt
-# configMapGenerator:
-#   - name: ui
-#     literals:
-#       - SERVER_URL=http://server:8000
