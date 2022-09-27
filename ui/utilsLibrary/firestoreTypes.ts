@@ -2,6 +2,7 @@ export type Channel = {
   Id: string;
   Title: string;
   Description: string;
+  Categories: string[];
   CustomUrl: string;
   UploadPlaylistId: string;
   ThumbnailUrl: string;

@@ -20,6 +20,7 @@ export async function getChannels(
         Id: data.Id,
         Title: data.Title,
         Description: data.Description,
+        Categories: data.Categories,
         CustomUrl: data.CustomUrl,
         UploadPlaylistId: data.UploadPlaylistId,
         ThumbnailUrl: data.ThumbnailUrl,
@@ -60,6 +61,7 @@ export async function getChannel(
       Id: data.Id,
       Title: data.Title,
       Description: data.Description,
+      Categories: data.Categories,
       CustomUrl: data.CustomUrl,
       UploadPlaylistId: data.UploadPlaylistId,
       ThumbnailUrl: data.ThumbnailUrl,
@@ -76,3 +78,27 @@ export async function getChannel(
 
   return r.Serialize();
 }
+
+export async function getChannelCategories(firestore: Firestore): Promise<TResponseWrapper> {
+  let r = new ResponseWrapper();
+
+  try {
+    const docRef = doc(firestore, 'etl-metadata/channel-categories');
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      throw new ResponseError(`Document etl-metadata/channel-categories doesn't exist`);
+    }
+
+    let data = docSnap.data();
+
+    r.Message = data.categories
+    r.SetDefaultOk();
+  } catch (error: any) {
+    r.Ok && r.SetDefaultError();
+    r.Message = error.message || error.Message || ErrUnknown;
+    r.RawMessage = error.cause || error.RawMessage || `In ${getChannelCategories.name}`;
+  }
+
+  return r.Serialize();
+}
+
