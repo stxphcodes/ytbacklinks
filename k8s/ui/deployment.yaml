@@ -25,7 +25,7 @@ spec:
             secretName: ui
 
       containers:
-        - image: us-east4-docker.pkg.dev/backlinks-81c44/ui/ui:20220919
+        - image: us-east4-docker.pkg.dev/backlinks-81c44/ui/ui:20220921
           name: ui
           imagePullPolicy: Always
 
