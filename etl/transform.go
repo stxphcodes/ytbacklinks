@@ -8,6 +8,7 @@ type Channel struct {
 	Id               string
 	Title            string
 	Description      string
+	Categories       []string
 	CustomUrl        string
 	UploadPlaylistId string
 	ThumbnailUrl     string
@@ -16,11 +17,12 @@ type Channel struct {
 	LinkCount        int
 }
 
-func (r *ChannelResponse) toChannel() *Channel {
+func (r *ChannelResponse) toChannel(categories []string) *Channel {
 	c := &Channel{
 		Id:               r.Items[0].Id,
 		Title:            r.Items[0].Snippet.Title,
 		Description:      r.Items[0].Snippet.Description,
+		Categories:       categories,
 		CustomUrl:        r.Items[0].Snippet.CustomUrl,
 		ThumbnailUrl:     r.Items[0].Snippet.Thumbnails.High.Url,
 		UploadPlaylistId: r.Items[0].ContentDetails.RelatedPlaylists.Uploads,
