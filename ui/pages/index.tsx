@@ -1,13 +1,18 @@
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
+import { CategoryCheckboxes } from '../components/checkboxes';
 import ErrorPage from '../components/error';
-import { getChannels } from '../utils/getChannels';
+import { ChevronDownIcon, ChevronUpIcon } from '../components/icons/chevron';
+import { CogIcon } from '../components/icons/cog';
+import { getChannelCategories, getChannels } from '../utils/getChannels';
 import { getFirestoreClient } from '../utils/getFirestoreClient';
 import { Channel } from '../utilsLibrary/firestoreTypes';
 import { ResponseWrapper, TResponseWrapper } from '../utilsLibrary/responseWrapper';
 
 type Props = {
   channels: Channel[] | null;
+  channelCategories: string[] | null;
   error: TResponseWrapper | null;
 };
 
@@ -15,57 +20,131 @@ export async function getServerSideProps() {
   let firestoreResponse = getFirestoreClient();
   if (!firestoreResponse.Ok) {
     return {
-      props: {channels: null, error: firestoreResponse},
+      props: {
+        channels: null,
+        channelCategories: null,
+        error: firestoreResponse,
+      },
     };
   }
   let firestoreClient = firestoreResponse.Message;
+
+  let categoriesResponse = await getChannelCategories(firestoreClient);
+  if (!categoriesResponse.Ok) {
+    return {
+      props: {
+        channels: null,
+        channelCategories: null,
+        error: categoriesResponse,
+      },
+    };
+  }
 
   let response = await getChannels(firestoreClient);
   if (response.Ok) {
     return {
       props: {
         channels: response.Message,
+        channelCategories: categoriesResponse.Message,
         error: null,
       },
     };
   }
 
   return {
-    props: {channels: null, error: response},
+    props: { channels: null, channelCategories: null, error: response },
   };
 }
 
-export default function Index({channels, error}: Props) {
+export default function Index({ channels, channelCategories, error }: Props) {
   if (error) {
     return <ErrorPage response={error} />;
   }
 
-  if (!channels) {
+  if (!channels || !channelCategories) {
     return (
       <ErrorPage
         response={new ResponseWrapper(
           false,
           500,
-          'Server Error',
-          'Unable to load channels.'
+          "Server Error",
+          "Unable to load channels."
         ).Serialize()}
       />
     );
   }
 
-  return <HomePage channels={channels} />;
+  return <HomePage channels={channels} channelCategories={channelCategories} />;
 }
 
-function HomePage(props: {channels: Channel[]}) {
+function HomePage(props: { channels: Channel[]; channelCategories: string[] }) {
+  const [showCategories, setShowCategories] = useState(false);
+
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+  const [channelsToDisplay, setChannelsToDisplay] = useState<Channel[]>(
+    props.channels
+  );
+
+  function handleCogButtonClick(event: any) {
+    setShowCategories(!showCategories);
+  }
+
+  function handleCategoryCheck(event: any) {
+    let newArray = [...selectedCategories];
+
+    let index = newArray.indexOf(event.target.value);
+    if (index > -1) {
+      newArray.splice(index, 1);
+    } else {
+      newArray.push(event.target.value);
+    }
+
+    setSelectedCategories(newArray);
+  }
+
+  useEffect(() => {
+    if (selectedCategories.length === 0) {
+      setChannelsToDisplay(props.channels);
+      return;
+    }
+
+    let channelsFiltered: Channel[] = props.channels
+      .map((channel) => {
+        let display = false;
+        selectedCategories.forEach((category) => {
+          if (channel.Categories && channel.Categories.includes(category)) {
+            display = true;
+            return;
+          }
+        });
+
+        if (display) {
+          return channel;
+        }
+      })
+      // typescript hack - "user defined type guard"
+      .filter((elem): elem is Channel => !!elem);
+
+    setChannelsToDisplay(channelsFiltered);
+  }, [selectedCategories]);
+
   return (
     <div className="p-12 bg-theme-beige">
       <Header />
+      <FeaturedChannels
+        showCategories={showCategories}
+        handleCogButtonClick={handleCogButtonClick}
+      />
+      <div className={showCategories ? "block" : "hidden"}>
+        <CategoryCheckboxes
+          channelCategories={props.channelCategories}
+          handleCategoryCheck={handleCategoryCheck}
+        />
+      </div>
 
-      <h3 className="font-black text-center text-theme-yt-red text-3xl">
-        Featured Channels
-      </h3>
-      <div className="grid grid-cols-4 gap-4">
-        {props.channels.map(channel => {
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {channelsToDisplay.map((channel) => {
           return <ChannelCard channel={channel} key={channel.Id} />;
         })}
       </div>
@@ -76,21 +155,44 @@ function HomePage(props: {channels: Channel[]}) {
 function Header() {
   return (
     <div className="my-12 text-center">
-      <h1 className="text-6xl mb-8 font-black">
+      <h1 className="text-3xl md:text-5xl lg:text-6xl font-black">
         <span className="text-theme-yt-red">Youtube</span> BackLinks
       </h1>
       <h3>
-        <span className="font-black">back·link</span>{' '}
-        <span className="text-theme-beige-3">(noun)</span>{' '}
+        <span className="font-black">back·link</span>{" "}
+        <span className="text-theme-beige-3">(noun)</span>{" "}
         <span className="italic">
-          an incoming hyperlink from one web page to another website{' '}
+          an incoming hyperlink from one web page to another website{" "}
         </span>
       </h3>
     </div>
   );
 }
 
-function ChannelCard(props: {channel: Channel}) {
+function FeaturedChannels(props: {
+  showCategories: boolean;
+  handleCogButtonClick: any;
+}) {
+  return (
+    <div className="flex items-center justify-center my-4">
+      <h3 className="flex-none font-black text-theme-yt-red text-xl sm:text-3xl">
+        Featured Channels
+      </h3>
+
+      <button
+        onClick={props.handleCogButtonClick}
+        className="flex rounded-lg text-white bg-theme-yt-red p-1 md:p-2 shadow-lg ml-2 hover:bg-theme-yt-red-1 hover:cursor-pointer"
+      >
+        <CogIcon />
+        <span>
+          {props.showCategories ? <ChevronUpIcon /> : <ChevronDownIcon />}
+        </span>
+      </button>
+    </div>
+  );
+}
+
+function ChannelCard(props: { channel: Channel }) {
   return (
     <Link href={`/channels/${props.channel.Id}`} key={props.channel.Id}>
       <button className="bg-white shadow-lg text-center p-2 hover:scale-105">
@@ -102,7 +204,7 @@ function ChannelCard(props: {channel: Channel}) {
           referrerPolicy="no-referrer"
         />
 
-        <h1 className="font-black text-xl py-2">
+        <h1 className="font-black md:text-l lg:text-xl py-2 break-words">
           {props.channel.Title}
         </h1>
 

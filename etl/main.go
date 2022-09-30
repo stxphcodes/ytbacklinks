@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
+	"os"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -20,8 +21,12 @@ type Config struct {
 		Creds     string
 		ProjectId string
 	}
-	ChannelTitles string
-	ChannelsInput string
+	ChannelsPath string
+}
+
+type ChannelInput struct {
+	Title      string   `json:"title"`
+	Categories []string `json:"categories"`
 }
 
 func main() {
@@ -40,8 +45,7 @@ func run() error {
 	flag.StringVar(&cfg.YoutubeApiKey, "youtube.key", "", "API Key to use for Youtube API.")
 	flag.StringVar(&cfg.Firestore.Creds, "firestore.creds", "", "Path to service account for firestore.")
 	flag.StringVar(&cfg.Firestore.ProjectId, "firestore.projectid", "", "Firestore project id.")
-	flag.StringVar(&cfg.ChannelTitles, "channel.titles", "", "List of channel titles (separated by ,) to include in ETL.")
-	flag.StringVar(&cfg.ChannelsInput, "channels.input", "", "Path to file containing channel titles.")
+	flag.StringVar(&cfg.ChannelsPath, "channels.path", "", "Path to JSON file containing channel titles.")
 	flag.BoolVar(&dryRun, "dry.run", true, "Dry run - does not upload data to database.")
 	flag.BoolVar(&renewLinks, "renew.links", false, "Renew existing links in database without fetching for new channels, videos or links.")
 
@@ -56,6 +60,9 @@ func run() error {
 
 	case cfg.Firestore.ProjectId:
 		return fmt.Errorf("Missing firestore project id.")
+
+	case cfg.ChannelsPath:
+		return fmt.Errorf("Missing path to channels json file.")
 	}
 
 	// Connect to firestore database.
@@ -86,7 +93,6 @@ func run() error {
 	}
 
 	return runETL(ctx, firestoreClient, httpClient, cfg.YoutubeApiKey, channels, dryRun)
-
 }
 
 func updateLinks(ctx context.Context, firestoreClient *firestore.Client, dryRun bool) error {
@@ -121,21 +127,24 @@ func updateLinks(ctx context.Context, firestoreClient *firestore.Client, dryRun 
 	return nil
 }
 
-func getChannels(cfg *Config) ([]string, error) {
-	if cfg.ChannelTitles == "" && cfg.ChannelsInput == "" {
-		return nil, fmt.Errorf("Missing channel titles or channels input file.")
+func getChannels(cfg *Config) ([]ChannelInput, error) {
+	f, err := os.Open(cfg.ChannelsPath)
+	if err != nil {
+		return nil, err
 	}
+	defer f.Close()
 
-	if cfg.ChannelTitles != "" {
-		return strings.Split(cfg.ChannelTitles, ","), nil
-	}
-
-	f, err := ioutil.ReadFile(cfg.ChannelsInput)
+	bytes, err := ioutil.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
 
-	return strings.Split(string(f), ","), nil
+	var c []ChannelInput
+	if err := json.Unmarshal(bytes, &c); err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 func getNumberOfLinks(linksByVideo map[string]map[string]*Link) int {
@@ -147,18 +156,18 @@ func getNumberOfLinks(linksByVideo map[string]map[string]*Link) int {
 	return total
 }
 
-func runETL(ctx context.Context, firestoreClient *firestore.Client, httpClient *http.Client, youtubeApiKey string, channels []string, dryRun bool) error {
+func runETL(ctx context.Context, firestoreClient *firestore.Client, httpClient *http.Client, youtubeApiKey string, channels []ChannelInput, dryRun bool) error {
 	currentDate := time.Now()
 	eightMonthsAgo := currentDate.AddDate(0, -8, 0)
 
-	for _, channelTitle := range channels {
-		log.Println("Running ETL for: ", channelTitle)
+	for _, channelInput := range channels {
+		log.Println("Running ETL for: ", channelInput.Title)
 		// extract channel data from youtube.
-		channelResponse, err := extractChannel(httpClient, youtubeApiKey, channelTitle)
+		channelResponse, err := extractChannel(httpClient, youtubeApiKey, channelInput.Title)
 		if err != nil {
 			return err
 		}
-		channel := channelResponse.toChannel()
+		channel := channelResponse.toChannel(channelInput.Categories)
 
 		// check when channel was last updated in firestore.
 		lastUpdated, err := queryChannelLastUpdatedById(ctx, firestoreClient, channel.Id)
@@ -179,7 +188,7 @@ func runETL(ctx context.Context, firestoreClient *firestore.Client, httpClient *
 		}
 
 		if extractVideosDate == "" {
-			log.Printf("Skipped updating %s since it's been updated in the past week. \n\n", channelTitle)
+			log.Printf("Skipped updating %s since it's been updated in the past week. \n\n", channelInput.Title)
 			continue
 		}
 
