@@ -12,7 +12,10 @@ export default function Index() {
         <div className="text-md">
           ** The site is still under development and acts more like a "proof of
           concept". If you'd like to add other channels, please email me at
-          sitesbystephanie@gmail.com. I'm also considering doing something similar with other platforms like Instagram. If you have thoughts about this or any other suggestions to improve this site, I'd love to hear from you! **
+          sitesbystephanie@gmail.com. I'm also considering doing something
+          similar with other platforms like Instagram. If you have thoughts
+          about this or any other suggestions to improve this site, I'd love to
+          hear from you! **
         </div>
       </div>
 
@@ -22,7 +25,11 @@ export default function Index() {
           <div>
             <h2 className="font-black mb-4">The Short</h2>
             I'm Steph! I'm a programmer, dog mom and wine enthusiast.
-            <img className="w-80 my-4" src="/static/profile.jpg"></img>
+            <img
+              className="w-80 my-4"
+              src="/static/profile.jpg"
+              alt="Programmer with her dog at a winery."
+            />
           </div>
           <div>
             <h2 className="font-black mb-4">The Long</h2>
@@ -37,10 +44,10 @@ export default function Index() {
             The youtubers I watch often review or mention products in their
             videos, and will link the product (often with a discount code or
             affiliate link) in the description box. However, finding the link
-            when I needed it hours or days later was always an arduous
-            process. I would have to sift through multiple videos in my history
-            before getting the right one since the youtube search box doesn't
-            search through description box text.
+            when I needed it hours or days later was always an arduous process.
+            I would have to sift through multiple videos in my history before
+            getting the right one since the youtube search box doesn't search
+            through description box text.
             <br />
             <br /> So I created this site as a way to easily and quickly search
             for terms that appear in description boxes of some of my favorite
