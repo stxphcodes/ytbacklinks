@@ -6,7 +6,7 @@ export default function Navbar() {
       <div> YT Backlinks</div>
       <div className="space-x-8">
         <Link href="/">Home</Link>
-        <Link href="/">About</Link>
+        <Link href="/about">About</Link>
       </div>
     </nav>
   );
