@@ -24,8 +24,8 @@ services:
       - "--typesense.key=abcxyz"
       - "--firestore.projectid=backlinks-81c44"
       - "--firestore.creds=/config/firebase-sa.json"
-      - "--force.recreate=true"
-      #- "--skip.firestore=true"
+      # - "--force.recreate=true"
+      - "--skip.firestore=true"
     depends_on:
       - typesense
 
