@@ -11,7 +11,7 @@ export default function Banner() {
             </span>
             <p className="ml-3 text-white">
               <span>
-                This website is still in beta phase and may have bugs. If you experience errors or have suggestions for improvement, please email sitesbystephanie@gmail.com.
+                This website is still in beta phase and may have bugs. If you experience errors, have suggestions for improvement, or want to add a channel please email sitesbystephanie@gmail.com.
               </span>
             </p>
           </div>
