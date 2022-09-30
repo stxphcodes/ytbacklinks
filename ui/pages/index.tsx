@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { CategoryCheckboxes } from '../components/checkboxes';
 import ErrorPage from '../components/error';
+import { ChevronDownIcon, ChevronUpIcon } from '../components/icons/chevron';
 import { CogIcon } from '../components/icons/cog';
 import { getChannelCategories, getChannels } from '../utils/getChannels';
 import { getFirestoreClient } from '../utils/getFirestoreClient';
@@ -180,11 +181,12 @@ function FeaturedChannels(props: {
 
       <button
         onClick={props.handleCogButtonClick}
-        className={`flex-none rounded-lg ${
-          props.showCategories ? "bg-theme-yt-red-2" : "bg-theme-yt-red"
-        } p-1 md:p-2 shadow-lg ml-2 hover:bg-theme-yt-red-1 hover:cursor-pointer`}
+        className="flex rounded-lg text-white bg-theme-yt-red p-1 md:p-2 shadow-lg ml-2 hover:bg-theme-yt-red-1 hover:cursor-pointer"
       >
-        <CogIcon/>
+        <CogIcon />
+        <span>
+          {props.showCategories ? <ChevronUpIcon /> : <ChevronDownIcon />}
+        </span>
       </button>
     </div>
   );
