@@ -249,14 +249,17 @@ function ChannelPage(props: {
   }, [searchResponse, displayOption]);
 
   return (
-    <div className="-m-12">
-      <div className="grid grid-cols-5">
-        <div className="col-span-1 bg-theme-beige p-8">
+    <div className="-m-10 sm:-m-12 border-x border-theme-beige-1">
+      <div className="grid grid-cols-1 lg:grid-cols-5">
+        <div className="hidden lg:block col-span-1 bg-theme-beige p-8">
           <ChannelSidebar channel={props.channel} />
         </div>
+        <div className="col-span-4 bg-theme-beige-2 px-8 py-4">
+          <div className="flex lg:hidden p-2">
+            <ChannelHeader channel={props.channel} />
+          </div>
 
-        <div className="col-span-4 bg-theme-beige-2 p-8">
-          <div className="bg-theme-beige-2  py-2 sticky top-16">
+          <div className="bg-theme-beige-2  py-2 sticky top-14 sm:top-16">
             <SearchBar
               inputValue={searchTerm}
               handleSubmit={handleSearchSubmit}
@@ -296,24 +299,44 @@ function ChannelSidebar(props: { channel: Channel }) {
   return (
     <div className="rounded-lg sticky top-14 py-2">
       <img src={props.channel.ThumbnailUrl} referrerPolicy="no-referrer"></img>
-
-      <h1 className="py-4 font-black text-theme-yt-red text-4xl">
+      <h1 className="py-4 font-black text-2xl lg:text-3xl ">
         {props.channel.Title}
       </h1>
-      <table className="table-auto text-theme-yt-red">
-        <tbody>
-          <tr>
-            <td className="font-black">Link Count</td>
-            <td>{props.channel.LinkCount}</td>
-          </tr>
-          <tr>
-            <td className="font-black">Video Count</td>
-            <td>{props.channel.VideoCount}</td>
-          </tr>
-        </tbody>
-      </table>
-      <p>{props.channel.Description}</p>
+      <div className="flex justify-between">
+        <span className="font-black">Link Count</span>
+        {props.channel.LinkCount}
+      </div>
+      <div className="flex justify-between">
+        <span className="font-black">Video Count</span>
+        {props.channel.VideoCount}
+      </div>
+      <p className="text-tiny xl:text-md pt-4">{props.channel.Description}</p>
     </div>
+  );
+}
+
+function ChannelHeader(props: { channel: Channel }) {
+  return (
+    <>
+      <img
+        className="object-scale-down w-20"
+        src={props.channel.ThumbnailUrl}
+        referrerPolicy="no-referrer"
+      />
+      <div className="ml-8">
+        <h1 className="font-black text-2xl md:text-3xl">
+          {props.channel.Title}
+        </h1>
+        <div>
+          <span className="text-sm font-black">Link Count</span>{" "}
+          {props.channel.LinkCount}
+        </div>
+        <div>
+          <span className="text-sm font-black">Video Count</span>{" "}
+          {props.channel.VideoCount}
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -358,14 +381,6 @@ function SearchResults(props: {
 
   return (
     <>
-      {/* <HitCounts
-        totalLinkHits={
-          props.linkSearchResponse ? props.linkSearchResponse.HitCount : 0
-        }
-        totalVideoHits={
-          props.videoSearchResponse ? props.videoSearchResponse.HitCount : 0
-        }
-      /> */}
       {props.displayOption === "linksOnly" ? (
         <>
           {props.videos.map((video) => {
@@ -443,20 +458,23 @@ function VideoCard(props: {
 }) {
   return (
     <div
-      className="bg-theme-beige-1 grid grid-cols-4 gap-x-8 mt-4 p-4 rounded-lg shadow-sm"
+      className="bg-theme-beige-1 grid grid-cols-1 md:grid-cols-4 md:gap-x-8 mt-4 p-4 rounded-lg shadow-sm"
       key={props.video.Id}
     >
-      <div className="col-span-1">
+      <div className="col-span-1 ">
         <a
           href={`https://youtube.com/watch?v=${props.video.Id}`}
           target="_blank"
         >
-          <img src={props.video.ThumbnailUrl} />
+          <img
+            className="w-24 md:w-auto md:h-auto "
+            src={props.video.ThumbnailUrl}
+          />
         </a>
 
         {props.titleHit ? (
           <h1
-            className="font-black py-2"
+            className="font-black py-2 text-sm md:text-md"
             dangerouslySetInnerHTML={{
               __html: findUrl(
                 highlightTerm(props.video.Title, props.searchTerm)
@@ -464,46 +482,48 @@ function VideoCard(props: {
             }}
           ></h1>
         ) : (
-          <h1 className="font-black py-2">{props.video.Title}</h1>
+          <h1 className="font-black py-2 text-sm md:text-md">
+            {props.video.Title}
+          </h1>
         )}
         <p>{props.video.PublishedAt}</p>
       </div>
 
       <div className="col-span-3">
-        <ul className="flex flex-wrap place-content-start">
-          {props.displayOption === "linksOnly" ? (
-            <>
-              {props.video.Links.map((link) => {
-                return (
-                  <LinkButton
-                    link={link}
-                    active={props.linkHits.includes(link.Id)}
-                    key={link.Id}
-                    term={props.searchTerm}
-                  />
-                );
-              })}
-            </>
-          ) : (
-            <span className="whitespace-pre-line">
-              {props.searchTerm == "" ? (
-                <p
-                  dangerouslySetInnerHTML={{
-                    __html: findUrl(props.video.Description),
-                  }}
+        {props.displayOption === "linksOnly" ? (
+          <ul className="flex flex-wrap md:place-content-start">
+            {props.video.Links.map((link) => {
+              return (
+                <LinkButton
+                  link={link}
+                  active={props.linkHits.includes(link.Id)}
+                  key={link.Id}
+                  term={props.searchTerm}
                 />
-              ) : (
-                <p
-                  dangerouslySetInnerHTML={{
-                    __html: findUrl(
-                      highlightTerm(props.video.Description, props.searchTerm)
-                    ),
-                  }}
-                />
-              )}
-            </span>
-          )}
-        </ul>
+              );
+            })}
+          </ul>
+        ) : (
+          <span className="whitespace-pre-line">
+            {props.searchTerm == "" ? (
+              <p
+                className="text-tiny md:text-md break-words"
+                dangerouslySetInnerHTML={{
+                  __html: findUrl(props.video.Description),
+                }}
+              />
+            ) : (
+              <p
+                className="text-tiny md:text-md break-words"
+                dangerouslySetInnerHTML={{
+                  __html: findUrl(
+                    highlightTerm(props.video.Description, props.searchTerm)
+                  ),
+                }}
+              />
+            )}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -558,7 +578,7 @@ function LinkButton(props: { link: Link; active: boolean; term: string }) {
     <li key={props.link.Id} className="p-2">
       <a href={props.link.Href} target="_blank">
         {props.active ? (
-          <button className="bg-theme-beige border-2 border-theme-yt-red hover:bg-theme-beige-2 hover:border-none hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left ">
+          <button className="bg-theme-beige border-2 border-theme-yt-red hover:bg-theme-beige-2 hover:border-none hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left text-sm md-text-md">
             <p
               dangerouslySetInnerHTML={{
                 __html: buttonText,
@@ -566,7 +586,7 @@ function LinkButton(props: { link: Link; active: boolean; term: string }) {
             />
           </button>
         ) : (
-          <button className="bg-theme-beige hover:bg-theme-beige-2 hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left">
+          <button className="bg-theme-beige hover:bg-theme-beige-2 hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left text-sm md:text-md">
             <p
               dangerouslySetInnerHTML={{
                 __html: buttonText,
