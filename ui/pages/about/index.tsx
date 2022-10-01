@@ -1,15 +1,15 @@
 export default function Index() {
   return (
-    <div className="max-w-screen-lg m-auto">
-      <div className="px-12 pb-4 text-center">
-        <h1 className="text-2xl font-black pb-8">
+    <>
+      <div className="pb-4 text-center">
+        <h1 className="text-md sm:text-2xl font-black pb-8">
           {" "}
           Youtube Backlinks is an archive of youtube video description boxes
           with a focus on making the links/products found within them easily
           searchable.
         </h1>
 
-        <div className="text-md">
+        <div className="text-tiny sm:text-md">
           ** The site is still under development and acts more like a "proof of
           concept". If you'd like to add other channels, please email me at
           sitesbystephanie@gmail.com. I'm also considering doing something
@@ -58,11 +58,11 @@ export default function Index() {
           <div>
             <h2 className="font-black mb-4">The Technical</h2>
             If you're here because I mentioned this in my resume or a job
-            application, here's the tech stack I used to create the site:
+            application, the tech stack that I used to create the site:
             <ul className="list-disc list-outside pl-4 pt-4 space-y-4 ">
               <li>
                 Wrote an ETL pipeline in GoLang that extracts data from the
-                Youtube API and loads it into a Firestore, GraphQL database
+                Youtube API and loads it into Firestore, a GraphQL database
               </li>
               <li>
                 Backend is a RESTful service written in Golang that creates a
@@ -70,7 +70,7 @@ export default function Index() {
               </li>
               <li>
                 Frontend is a NextJS React app written in Typescript with
-                TailwindCSS for styling{" "}
+                TailwindCSS for styling
               </li>
               <li>
                 The site is deployed to Google Kubernetes Eninge using kustomize
@@ -80,6 +80,6 @@ export default function Index() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -154,7 +154,7 @@ function HomePage(props: { channels: Channel[]; channelCategories: string[] }) {
 
 function Header() {
   return (
-    <div className="my-12 text-center">
+    <div className=" text-center">
       <h1 className="text-3xl md:text-5xl lg:text-6xl font-black">
         <span className="text-theme-yt-red">Youtube</span> BackLinks
       </h1>
