@@ -6,7 +6,7 @@ type Props = {
 
 export default function ErrorPage({response}: Props) {
   return (
-    <div className="p-12">
+    <>
       <h1 className="text-center my-12 font-black tracking-tight text-6xl">
         {response.Status} {response.StatusText} Error
       </h1>
@@ -15,6 +15,6 @@ export default function ErrorPage({response}: Props) {
         <br />
         {response.RawMessage}
       </h3>
-    </div>
+    </>
   );
 }

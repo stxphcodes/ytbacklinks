@@ -9,9 +9,9 @@ export default function Banner() {
             <span className="flex rounded-lg bg-theme-yt-red p-2">
               <AnnouncementIcon />
             </span>
-            <p className="ml-3 text-white">
+            <p className="ml-3 text-white text-xs sm:text-tiny">
               <span>
-                This website is still in beta phase and may have bugs. If you experience errors or have suggestions for improvement, please email sitesbystephanie@gmail.com.
+                This website is still in beta phase and may have bugs. If you experience errors, have suggestions for improvement, or want to add a channel please email sitesbystephanie@gmail.com.
               </span>
             </p>
           </div>

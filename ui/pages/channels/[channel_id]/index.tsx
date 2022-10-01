@@ -249,42 +249,44 @@ function ChannelPage(props: {
   }, [searchResponse, displayOption]);
 
   return (
-    <div className="grid grid-cols-5">
-      <div className="col-span-1 bg-theme-beige p-8">
-        <ChannelSidebar channel={props.channel} />
-      </div>
-
-      <div className="col-span-4 bg-theme-beige-2 p-8">
-        <div className="bg-theme-beige-2  py-2 sticky top-14">
-          <SearchBar
-            inputValue={searchTerm}
-            handleSubmit={handleSearchSubmit}
-            handleInputChange={handleInputChange}
-          />
-          <Toggle
-            displayOption={displayOption}
-            handleClick={handleToggleClick}
-          />
-          {searchResponse && (
-            <HitCounts
-              totalLinkHits={
-                linkSearchResponse ? linkSearchResponse.HitCount : 0
-              }
-              totalVideoHits={
-                videoSearchResponse ? videoSearchResponse.HitCount : 0
-              }
-            />
-          )}
+    <div className="-m-12">
+      <div className="grid grid-cols-5">
+        <div className="col-span-1 bg-theme-beige p-8">
+          <ChannelSidebar channel={props.channel} />
         </div>
 
-        <SearchResults
-          error={searchError}
-          videos={videosToShow}
-          linkSearchResponse={linkSearchResponse}
-          videoSearchResponse={videoSearchResponse}
-          displayOption={displayOption}
-          searchTerm={searchTerm}
-        />
+        <div className="col-span-4 bg-theme-beige-2 p-8">
+          <div className="bg-theme-beige-2  py-2 sticky top-16">
+            <SearchBar
+              inputValue={searchTerm}
+              handleSubmit={handleSearchSubmit}
+              handleInputChange={handleInputChange}
+            />
+            <Toggle
+              displayOption={displayOption}
+              handleClick={handleToggleClick}
+            />
+            {searchResponse && (
+              <HitCounts
+                totalLinkHits={
+                  linkSearchResponse ? linkSearchResponse.HitCount : 0
+                }
+                totalVideoHits={
+                  videoSearchResponse ? videoSearchResponse.HitCount : 0
+                }
+              />
+            )}
+          </div>
+
+          <SearchResults
+            error={searchError}
+            videos={videosToShow}
+            linkSearchResponse={linkSearchResponse}
+            videoSearchResponse={videoSearchResponse}
+            displayOption={displayOption}
+            searchTerm={searchTerm}
+          />
+        </div>
       </div>
     </div>
   );
