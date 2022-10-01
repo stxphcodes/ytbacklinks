@@ -62,14 +62,15 @@ export default function Index() {
             <ul className="list-disc list-outside pl-4 pt-4 space-y-4 ">
               <li>
                 Wrote an ETL pipeline in GoLang that extracts data from the
-                Youtube API and loads it into Firestore, a GraphQL database
+                Youtube API and loads it into Firestore, a document-oriented
+                database
               </li>
               <li>
-                Backend is a RESTful service written in Golang that creates a
-                Typesense search engine to send queries to
+                The backend is a RESTful service written in Golang that creates
+                and loads data to a Typesense search engine to send queries to
               </li>
               <li>
-                Frontend is a NextJS React app written in Typescript with
+                The frontend is a NextJS React app written in Typescript with
                 TailwindCSS for styling
               </li>
               <li>
