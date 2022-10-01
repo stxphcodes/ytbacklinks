@@ -12,10 +12,8 @@ export default function Index() {
         <div className="text-tiny sm:text-md">
           ** The site is still under development and acts more like a "proof of
           concept". If you'd like to add other channels, please email me at
-          sitesbystephanie@gmail.com. I'm also considering doing something
-          similar with other platforms like Instagram. If you have thoughts
-          about this or any other suggestions to improve this site, I'd love to
-          hear from you! **
+          sitesbystephanie@gmail.com. If you have any suggestions on how the
+          site could be more useful, I'd love to hear it! **
         </div>
       </div>
 
