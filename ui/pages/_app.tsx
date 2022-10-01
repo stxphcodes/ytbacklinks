@@ -3,6 +3,7 @@ import '../styles/base.css';
 import Head from 'next/head';
 
 import Banner from '../components/banner';
+import Footer from '../components/footer';
 import Navbar from '../components/navbar';
 
 import type { AppProps } from "next/app";
@@ -20,6 +21,7 @@ function MyApp({ Component, pageProps }: AppProps) {
       <div className="p-12 bg-theme-beige max-w-screen-xl m-auto">
         <Component {...pageProps} />
       </div>
+      <Footer />
     </>
   );
 }
