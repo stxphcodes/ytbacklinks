@@ -14,9 +14,12 @@ function MyApp({ Component, pageProps }: AppProps) {
         <title>Youtube Backlinks</title>
         <link rel="icon" type="image/x-icon" href="/static/favicon.png"></link>
       </Head>
+
       <Navbar />
       <Banner />
-      <Component {...pageProps} />
+      <div className="p-12 bg-theme-beige max-w-screen-xl m-auto">
+        <Component {...pageProps} />
+      </div>
     </>
   );
 }

@@ -130,7 +130,7 @@ function HomePage(props: { channels: Channel[]; channelCategories: string[] }) {
   }, [selectedCategories]);
 
   return (
-    <div className="p-12 bg-theme-beige">
+    <>
       <Header />
       <FeaturedChannels
         showCategories={showCategories}
@@ -148,7 +148,7 @@ function HomePage(props: { channels: Channel[]; channelCategories: string[] }) {
           return <ChannelCard channel={channel} key={channel.Id} />;
         })}
       </div>
-    </div>
+    </>
   );
 }
 
@@ -166,7 +166,6 @@ function Header() {
         </span>
       </h3>
       <p className="text-xs sm:text-tiny">
-
         This site is an archive of youtube video description boxes with a focus on making the links/products found within them easily searchable. <br />
          Click on a channel and search for any
         term - from brand or product name to key phrases - to find video

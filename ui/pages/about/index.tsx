@@ -1,6 +1,6 @@
 export default function Index() {
   return (
-    <div className="p-12">
+    <div className="max-w-screen-lg m-auto">
       <div className="px-12 pb-4 text-center">
         <h1 className="text-2xl font-black pb-8">
           {" "}
@@ -20,7 +20,7 @@ export default function Index() {
       </div>
 
       <div>
-        <h2 className="text-center text-3xl font-black my-8">Backstory</h2>
+        <h2 className="text-center text-3xl font-black my-8 ">Backstory</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
           <div>
             <h2 className="font-black mb-4">The Short</h2>
