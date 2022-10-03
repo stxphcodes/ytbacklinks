@@ -18,7 +18,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
       <Navbar />
       <Banner />
-      <div className="p-12 bg-theme-beige max-w-screen-xl m-auto">
+      <div className="p-8 sm:p-12 bg-theme-beige max-w-screen-xl m-auto">
         <Component {...pageProps} />
       </div>
       <Footer />

@@ -17,8 +17,8 @@ export default function Index() {
         </div>
       </div>
 
-      <div>
-        <h2 className="text-center text-3xl font-black my-8 ">Backstory</h2>
+      <div className="md:px-20">
+        <h2 className="text-center text-3xl font-black my-8">Backstory</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
           <div>
             <h2 className="font-black mb-4">The Short</h2>
