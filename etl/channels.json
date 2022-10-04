@@ -1,4 +1,12 @@
 [
+  { "title": "uravgconsumer", "categories": ["technology"]},
+  { "title": "LinusTechTips", "categories": ["technology"]},
+  { "title": "HanaLee93", "categories": ["lifestyle", "beauty", "fashion"]},
+  { "title": "freddymylove", "categories": ["fashion"]},
+  { "title": "cocobeautea", "categories": ["fashion"]},
+  { "title": "listed", "categories": ["home"]},
+  { "title": "lonefox", "categories": ["home"]},
+  { "title": "CatCreature", "categories": ["lifestyle", "home", "fashion"]},
   { "title": "theneedledrop", "categories": ["music"] },
   { "title": "Jenn Im", "categories": ["beauty", "fashion", "lifestyle"] },
   { "title": "Freesia Park", "categories": ["beauty", "home", "lifestyle"] },
@@ -10,6 +18,5 @@
   { "title": "HarpersBazaar", "categories": ["beauty", "fashion"] },
   { "title": "cookingwithdog", "categories": ["food"] },
   { "title": "Food52", "categories": ["food"] },
-  { "title": "Claire Saffitz x Dessert Person", "categories": ["food"] },
-  { "title": "Freakinreviews", "categories": [""]}
+  { "title": "Claire Saffitz x Dessert Person", "categories": ["food"] }
 ]
