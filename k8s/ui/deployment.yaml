@@ -63,9 +63,11 @@ spec:
           #   initialDelaySeconds: 3
           #   periodSeconds: 5
 
-          # readinessProbe:
-          #   httpGet:
-          #     scheme: HTTP
-          #     path: /ready
-          #     port: 8001
-          #   periodSeconds: 5
+          # readinessProbe params should be used in GKE ingress health check
+          readinessProbe:
+            httpGet:
+              scheme: HTTP
+              path: /about
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 60
