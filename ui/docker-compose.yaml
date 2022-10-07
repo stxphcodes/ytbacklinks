@@ -6,14 +6,13 @@ services:
       context: ./
       # change to Dockerfile for prod build.
       dockerfile: Dockerfile.dev
-      #dockerfile: Dockerfile
+      # dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
       # uncomment NODE_ENV to test prod build.
       NODE_ENV: development
-      FIREBASE_CONFIG: $FIREBASE_CONFIG
-      SERVER_URL: http://localhost:8000
+      SERVER_URL: http://server:8000
     # uncomment from here
     volumes:
       - ./:/opt/app
@@ -22,3 +21,8 @@ services:
     command: "npm run dev"
     # to here to test prod build.
     # command: "npm start"
+    networks:
+      - server_common_network
+networks:
+  server_common_network:
+    external: true
