@@ -6,7 +6,7 @@ import ErrorPage from '../components/error';
 import { ChevronDownIcon, ChevronUpIcon } from '../components/icons/chevron';
 import { CogIcon } from '../components/icons/cog';
 import { getChannelCategories, getChannels } from '../utils/getChannels';
-import { getFirestoreClient } from '../utils/getFirestoreClient';
+import { getServerUrl } from '../utils/getServer';
 import { Channel } from '../utilsLibrary/firestoreTypes';
 import { ResponseWrapper, TResponseWrapper } from '../utilsLibrary/responseWrapper';
 
@@ -17,35 +17,23 @@ type Props = {
 };
 
 export async function getServerSideProps() {
-  let firestoreResponse = getFirestoreClient();
-  if (!firestoreResponse.Ok) {
+  let categories = getChannelCategories();
+  
+  let serverUrlResponse = getServerUrl();
+  if (!serverUrlResponse.Ok) {
     return {
-      props: {
-        channels: null,
-        channelCategories: null,
-        error: firestoreResponse,
-      },
+      props: { error: serverUrlResponse },
     };
   }
-  let firestoreClient = firestoreResponse.Message;
+  let serverUrl = serverUrlResponse.Message;
 
-  let categoriesResponse = await getChannelCategories(firestoreClient);
-  if (!categoriesResponse.Ok) {
-    return {
-      props: {
-        channels: null,
-        channelCategories: null,
-        error: categoriesResponse,
-      },
-    };
-  }
 
-  let response = await getChannels(firestoreClient);
+  let response = await getChannels(serverUrl);
   if (response.Ok) {
     return {
       props: {
         channels: response.Message,
-        channelCategories: categoriesResponse.Message,
+        channelCategories: categories,
         error: null,
       },
     };

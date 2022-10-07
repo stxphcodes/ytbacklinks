@@ -5,9 +5,7 @@ import ErrorPage from '../../../components/error';
 import SearchBar from '../../../components/searchbar';
 import Toggle from '../../../components/toggle';
 import { getChannel } from '../../../utils/getChannels';
-import { getFirestoreClient } from '../../../utils/getFirestoreClient';
-import { getTypesenseServerUrl } from '../../../utils/getTypesenseServer';
-import { getVideos } from '../../../utils/getVideos';
+import { getServerUrl } from '../../../utils/getServer';
 import { postSearchRequest } from '../../../utils/postSearchRequest';
 import { Channel, Link, VideoUI } from '../../../utilsLibrary/firestoreTypes';
 import {
@@ -21,7 +19,7 @@ type Props = {
   channel: Channel | null;
   videos: VideoUI[] | null;
   error: TResponseWrapper | null;
-  typesenseUrl: string | null;
+  serverUrl: string | null;
 };
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
@@ -39,52 +37,37 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
   }
 
-  let firestoreResponse = getFirestoreClient();
-  if (!firestoreResponse.Ok) {
+  let serverUrlResponse = getServerUrl();
+  if (!serverUrlResponse.Ok) {
     return {
-      props: { error: firestoreResponse },
+      props: { error: serverUrlResponse },
     };
   }
-  let firestoreClient = firestoreResponse.Message;
+  let serverUrl = serverUrlResponse.Message;
 
-  let typesenseUrlResponse = getTypesenseServerUrl();
-  if (!typesenseUrlResponse.Ok) {
-    return {
-      props: { error: typesenseUrlResponse },
-    };
-  }
-  let typesenseUrl = typesenseUrlResponse.Message;
-
-  let channelResponse = await getChannel(firestoreClient, channel_id);
+  let channelResponse = await getChannel(serverUrl, channel_id);
   if (!channelResponse.Ok) {
     return {
       props: { error: channelResponse },
     };
   }
 
-  let videoResponse = await getVideos(firestoreClient, channel_id);
-  if (!videoResponse.Ok) {
-    return {
-      props: { error: videoResponse },
-    };
-  }
-
   return {
     props: {
-      channel: channelResponse.Message,
-      videos: videoResponse.Message,
-      typesenseUrl: typesenseUrl,
+      channel: channelResponse.Message.Channel,
+      videos: channelResponse.Message.Videos,
+      serverUrl: serverUrl,
       error: null,
     },
   };
 };
 
-export default function Index({ videos, channel, typesenseUrl, error }: Props) {
+export default function Index({ videos, channel, serverUrl, error }: Props) {
   if (error) {
     return <ErrorPage response={error} />;
   }
 
-  if (!channel || !videos || !typesenseUrl) {
+  if (!channel || !videos || !serverUrl) {
     return (
       <ErrorPage
         response={new ResponseWrapper(
@@ -101,7 +84,7 @@ export default function Index({ videos, channel, typesenseUrl, error }: Props) {
     <ChannelPage
       channel={channel}
       videos={videos}
-      typesenseUrl={typesenseUrl}
+      serverUrl={serverUrl}
     />
   );
 }
@@ -109,7 +92,7 @@ export default function Index({ videos, channel, typesenseUrl, error }: Props) {
 function ChannelPage(props: {
   channel: Channel;
   videos: VideoUI[];
-  typesenseUrl: string;
+  serverUrl: string;
 }) {
   // search term user entered in the search bar.
   const [searchTerm, setSearchTerm] = useState("");
@@ -160,7 +143,7 @@ function ChannelPage(props: {
       return;
     }
 
-    let response = await postSearchRequest(props.typesenseUrl, request);
+    let response = await postSearchRequest(props.serverUrl, request);
     setSearchResponse(response);
   }
 
