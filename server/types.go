@@ -32,6 +32,23 @@ type Link struct {
 	PublishedAtInt int64
 }
 
+type Channel struct {
+	Id               string
+	Title            string
+	Description      string
+	Categories       []string
+	CustomUrl        string
+	UploadPlaylistId string
+	ThumbnailUrl     string
+	LastUpdated      string
+	VideoCount       int
+	LinkCount        int
+
+	LastUpdatedInt int64
+	VideoCountInt  int64
+	LinkCountInt   int64
+}
+
 // API search request and responses
 type SearchRequest struct {
 	ChannelId string `json:"channelId"`
@@ -61,6 +78,16 @@ type VideoSearchResponse struct {
 	VideoDescriptionHits map[string]struct{}
 }
 
+type ChannelsResponse struct {
+	Count    int
+	Channels []interface{}
+}
+
+type ChannelResponse struct {
+	Channel interface{} // contains fields of the channel struct
+	Videos  interface{} // []{Video: {video object}, Links: { link object }}
+}
+
 // SearchResult is the intermediary data type
 // that transforms typesense result into an API response type.
 type SearchResult interface {
@@ -80,6 +107,19 @@ type VideoSearchResult struct {
 	VideoIds             map[string]struct{}
 	VideoTitleHits       map[string]struct{}
 	VideoDescriptionHits map[string]struct{}
+}
+
+type ChannelsResult struct {
+	TypesenseCount int
+	Channels       []interface{}
+}
+
+type ChannelResult struct {
+	AppendToLinks bool
+
+	Channel interface{}
+	Videos  []interface{}
+	Links   []interface{}
 }
 
 // Compile time check that LinkSearchResult and
