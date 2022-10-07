@@ -9,7 +9,4 @@ spec:
   selector:
     app: server
   ports:
-    - name: app
-      port: 8000
-    - name: healthchecks
-      port: 8001
+    - port: 8000
