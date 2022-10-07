@@ -561,16 +561,18 @@ function LinkButton(props: { link: Link; active: boolean; term: string }) {
     <li key={props.link.Id} className="p-2">
       <a href={props.link.Href} target="_blank">
         {props.active ? (
-          <button className="bg-theme-beige border-2 border-theme-yt-red hover:bg-theme-beige-2 hover:border-none hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left text-sm md-text-md">
+          <button className="break-words bg-theme-beige border-2 border-theme-yt-red hover:bg-theme-beige-2 hover:border-none hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left text-sm md-text-md">
             <p
+              className="break-all"
               dangerouslySetInnerHTML={{
                 __html: buttonText,
               }}
             />
           </button>
         ) : (
-          <button className="bg-theme-beige hover:bg-theme-beige-2 hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left text-sm md:text-md">
+          <button className="break-words bg-theme-beige hover:bg-theme-beige-2 hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left text-sm md:text-md">
             <p
+              className="break-all"
               dangerouslySetInnerHTML={{
                 __html: buttonText,
               }}
