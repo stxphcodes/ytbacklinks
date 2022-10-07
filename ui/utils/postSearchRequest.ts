@@ -39,9 +39,6 @@ async function postLinkSearchRequest(serverUrl: string, request: SearchRequest) 
   let url = new URL(serverUrl);
   url.pathname = `/links/search`;
 
-  console.log("post link search request")
-  console.log(url.toString())
-
   let r = new ResponseWrapper();
   await fetch(url.toString(), {
     method: 'POST',
