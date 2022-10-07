@@ -17,23 +17,20 @@ func LinkSearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 			return echo.NewHTTPError(400, "Bad request. Expected SearchRequest type.")
 		}
 
-		// Create custom http request to send to typesense server because
-		// typesense-go library doesn't support infix in search requests.
-		req, err := http.NewRequest("GET", cfg.Typesense.URL, nil)
+		req, err := createTypesenseRequest(
+			cfg,
+			LINKS_SEARCH_URL_PATH,
+			map[string]string{
+				"q":         r.Term,
+				"query_by":  "Brand,Description,Href,VideoTitle",
+				"infix":     "always,always,always,always",
+				"sort_by":   "PublishedAtInt:desc",
+				"filter_by": "ChannelId:" + r.ChannelId,
+			},
+		)
 		if err != nil {
-			return err
+			return echo.NewHTTPError(400, "Problem creating request: "+err.Error())
 		}
-		req.Header.Add(TYPESENSE_AUTH_HEADER, cfg.Typesense.ApiKey)
-		req.URL.Path = TYPESENSE_DOCUMENT_SEARCH_URL_PATH
-
-		q := req.URL.Query()
-		q.Add("q", r.Term)
-		q.Add("query_by", "Brand,Description,Href,VideoTitle")
-		q.Add("infix", "always,always,always,always")
-		q.Add("sort_by", "PublishedAtInt:desc")
-		q.Add("filter_by", "ChannelId:"+r.ChannelId)
-
-		req.URL.RawQuery = q.Encode()
 
 		httpClient := &http.Client{}
 
@@ -41,8 +38,6 @@ func LinkSearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 		if httpError != nil {
 			return err
 		}
-
-		printLog("Result from typesense", tsResult)
 
 		result := &LinkSearchResult{
 			TypesenseCount: *tsResult.Found,
