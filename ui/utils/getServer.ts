@@ -1,6 +1,6 @@
 import { TResponseWrapper } from '../utilsLibrary/responseWrapper';
 
-export function getTypesenseServerUrl(): TResponseWrapper {
+export function getServerUrl(): TResponseWrapper {
   if (
     !process.env.SERVER_URL ||
     process.env.SERVER_URL == ''
@@ -10,7 +10,7 @@ export function getTypesenseServerUrl(): TResponseWrapper {
       Status: 500,
       StatusText: 'Internal Server',
       Message: 'SERVER_URL env not set.',
-      RawMessage: 'In getTypesenseServer.',
+      RawMessage: 'In getServerUrl.',
     };
   }
 
