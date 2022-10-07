@@ -10,6 +10,8 @@ services:
       - "8108:8108"
     volumes:
       - typesense-data:/data
+    networks:
+      - common_network
 
   server:
     build:
@@ -28,7 +30,12 @@ services:
       - "--skip.firestore=true"
     depends_on:
       - typesense
+    networks:
+      - common_network
 
 volumes:
   typesense-data:
     driver: local
+
+networks:
+  common_network:
