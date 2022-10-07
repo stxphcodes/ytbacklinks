@@ -5,12 +5,13 @@ import {
     CombinedSearchResponse, LinkSearchResponse, SearchRequest, VideoSearchResponse
 } from '../utilsLibrary/searchTypes';
 
-export async function postSearchRequest(typesenseUrl: string, request: SearchRequest) {
-  let serverUrl = ""
-  if (process.env.NODE_ENV === "development") {
-    serverUrl = typesenseUrl
+export async function postSearchRequest(serverUrl: string, request: SearchRequest) {
+  if (process.env.NODE_ENV !== "development") {
+    serverUrl = window.location.href
   } else {
-    serverUrl = new URL(window.location.href).toString()
+    // postSearchRequest is executed at the client level
+    // and doesn't have access to server container.
+    serverUrl = "http://localhost:8000"
   }
 
   let linkSearchResponse = await postLinkSearchRequest(serverUrl, request);
@@ -34,12 +35,12 @@ export async function postSearchRequest(typesenseUrl: string, request: SearchReq
   return r.Serialize();
 }
 
-async function postLinkSearchRequest(typesenseUrl: string, request: SearchRequest) {
-  let serverUrl = new URL(typesenseUrl);
-  serverUrl.pathname = `/links/search`;
+async function postLinkSearchRequest(serverUrl: string, request: SearchRequest) {
+  let url = new URL(serverUrl);
+  url.pathname = `/links/search`;
 
   let r = new ResponseWrapper();
-  await fetch(serverUrl.toString(), {
+  await fetch(url.toString(), {
     method: 'POST',
     body: JSON.stringify(request),
     headers: {'content-type': 'application/json'},
@@ -47,7 +48,7 @@ async function postLinkSearchRequest(typesenseUrl: string, request: SearchReques
     .then(response => {
       r.UpdateWithResponse(response);
       if (!r.Ok) {
-        throw new ResponseError(`${ErrRequest}: ${serverUrl.toString()}`);
+        throw new ResponseError(`${ErrRequest}: ${url.toString()}`);
       }
 
       return response.json();
@@ -69,12 +70,12 @@ async function postLinkSearchRequest(typesenseUrl: string, request: SearchReques
   return r.Serialize();
 }
 
-async function postVideoSearchRequest(typesenseUrl: string, request: SearchRequest) {
-  let serverUrl = new URL(typesenseUrl);
-  serverUrl.pathname = `/videos/search`;
+async function postVideoSearchRequest(serverUrl: string, request: SearchRequest) {
+  let url = new URL(serverUrl);
+  url.pathname = `/videos/search`;
 
   let r = new ResponseWrapper();
-  await fetch(serverUrl.toString(), {
+  await fetch(url.toString(), {
     method: 'POST',
     body: JSON.stringify(request),
     headers: {'content-type': 'application/json'},
@@ -82,7 +83,7 @@ async function postVideoSearchRequest(typesenseUrl: string, request: SearchReque
     .then(response => {
       r.UpdateWithResponse(response);
       if (!r.Ok) {
-        throw new ResponseError(`${ErrRequest}: ${serverUrl.toString()}`);
+        throw new ResponseError(`${ErrRequest}: ${url.toString()}`);
       }
 
       return response.json();

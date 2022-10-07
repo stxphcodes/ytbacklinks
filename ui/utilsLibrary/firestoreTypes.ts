@@ -11,16 +11,6 @@ export type Channel = {
   VideoCount: number;
 };
 
-export type Video = {
-  Id: string;
-  Title: string;
-  ChannelId: string;
-  Description: string;
-  PublishedAt: string;
-  ThumbnailUrl: string;
-  LastUpdated: string;
-};
-
 export type VideoUI = {
   Id: string;
   Title: string;

@@ -19,13 +19,8 @@ spec:
         service: ui
         app: ui
     spec:
-      volumes:
-        - name: secret
-          secret:
-            secretName: ui
-
       containers:
-        - image: us-east4-docker.pkg.dev/backlinks-81c44/ui/ui:20221001-2
+        - image: us-east4-docker.pkg.dev/backlinks-81c44/ui/ui:20221006-2
           name: ui
           imagePullPolicy: Always
 
@@ -33,16 +28,8 @@ spec:
             - name: SERVER_URL
               value: "http://server:8000"
 
-          volumeMounts:
-            - name: secret
-              mountPath: /secret
-
           command: ["sh"]
-          args:
-            [
-              "-c",
-              "export FIREBASE_CONFIG=$(cat /secret/firebase-config.txt); npm start",
-            ]
+          args: ["-c", "npm start"]
 
           # resources:
           #   limits:
@@ -63,9 +50,11 @@ spec:
           #   initialDelaySeconds: 3
           #   periodSeconds: 5
 
-          # readinessProbe:
-          #   httpGet:
-          #     scheme: HTTP
-          #     path: /ready
-          #     port: 8001
-          #   periodSeconds: 5
+          # readinessProbe params should be used in GKE ingress health check
+          readinessProbe:
+            httpGet:
+              scheme: HTTP
+              path: /about
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 60

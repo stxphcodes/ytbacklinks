@@ -11,6 +11,15 @@ import (
 	"github.com/typesense/typesense-go/typesense/api"
 )
 
+const (
+	TYPESENSE_AUTH_HEADER    = "X-TYPESENSE-API-KEY"
+	CHANNELS_SEARCH_URL_PATH = "/collections/channels/documents/search"
+	VIDEOS_SEARCH_URL_PATH   = "/collections/videos/documents/search"
+	LINKS_SEARCH_URL_PATH    = "/collections/links/documents/search"
+
+	PER_PAGE_RESULTS = 200
+)
+
 func printLog(s string, data interface{}) {
 	bytes, _ := json.Marshal(data)
 	log.Println("%s: %s", s, string(bytes))
@@ -66,6 +75,26 @@ func getAllPages(httpClient *http.Client, req *http.Request, r SearchResult, typ
 	}
 
 	return nil
+}
+
+// Create custom http request to send to typesense server because
+// typesense-go library doesn't support infix in search requests.
+func createTypesenseRequest(cfg *Config, urlPathname string, queries map[string]string) (*http.Request, error) {
+	req, err := http.NewRequest("GET", cfg.Typesense.URL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add(TYPESENSE_AUTH_HEADER, cfg.Typesense.ApiKey)
+	req.URL.Path = urlPathname
+
+	q := req.URL.Query()
+	for k, v := range queries {
+		q.Add(k, v)
+	}
+	q.Add("per_page", strconv.Itoa(PER_PAGE_RESULTS))
+	req.URL.RawQuery = q.Encode()
+
+	return req, nil
 }
 
 func mapToArray(m map[string]struct{}) []string {

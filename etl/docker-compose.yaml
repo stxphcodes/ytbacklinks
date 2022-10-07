@@ -1,0 +1,16 @@
+version: "3"
+services:
+  etl:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    volumes:
+      - ../secrets/firebase-sa.json:/config/firebase-sa.json
+      - ./channels.json:/config/channels.json
+    command:
+      - "/app"
+      - "--youtube.key=$YOUTUBE_KEY"
+      - "--firestore.projectid=$FIRESTORE_PROJECTID"
+      - "--firestore.creds=/config/firebase-sa.json"
+      - "--channels.path=/config/channels.json"
+      # - "--dry.run=false"

@@ -1,3 +1,5 @@
+import { Channel } from './firestoreTypes';
+
 export type SearchRequest = {
     channelId: string;
     term: string;
@@ -22,5 +24,10 @@ export type VideoSearchResponse = {
 export type CombinedSearchResponse = {
     LinkSearchResponse: LinkSearchResponse;
     VideoSearchResponse: VideoSearchResponse;
+}
+
+export type Channels = {
+    Count: number;
+    Channels: Channel[];
 }
 

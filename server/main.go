@@ -80,6 +80,16 @@ func run() error {
 
 	switch true {
 	case forceRecreate:
+		if err := recreateChannelCollection(ctx, &cfg, ts, fs); err != nil {
+			return err
+		}
+		log.Printf("Recreated channels collection in typesense.")
+
+		if err := recreateVideoCollection(ctx, &cfg, ts, fs); err != nil {
+			return err
+		}
+		log.Printf("Recreated video collection in typesense.")
+
 		if err := recreateLinkCollection(ctx, &cfg, ts, fs); err != nil {
 			return err
 		}
@@ -93,13 +103,8 @@ func run() error {
 		log.Println("this is ts link count")
 		log.Println(tsLinkCount)
 
-		if err := recreateVideoCollection(ctx, &cfg, ts, fs); err != nil {
-			return err
-		}
-		log.Printf("Recreated video collection in typesense.")
-
 	case skipFirestore:
-		log.Printf("Skipped check to recreate link collection in typesense.")
+		log.Printf("Skipped recreating all collections in typesense.")
 		break
 
 	default:
@@ -136,6 +141,8 @@ func run() error {
 	mux.GET("/", func(ctx echo.Context) error {
 		return ctx.JSON(200, nil)
 	})
+	mux.GET("/channels", ChannelsHandler(ts, &cfg))
+	mux.GET("/channel/:channelId", ChannelHandler(ts, &cfg))
 	mux.POST("/links/search", LinkSearchHandler(ts, &cfg))
 	mux.POST("/videos/search", VideoSearchHandler(ts, &cfg))
 
@@ -180,4 +187,17 @@ func recreateVideoCollection(ctx context.Context, cfg *Config, ts *typesense.Cli
 	}
 
 	return loadToTypesense(ts, VIDEO_COLLECTION, videos)
+}
+
+func recreateChannelCollection(ctx context.Context, cfg *Config, ts *typesense.Client, fs *firestore.Client) error {
+	channels, err := extractChannelsFromFirestore(ctx, fs)
+	if err != nil {
+		return err
+	}
+
+	if err := createChannelCollection(ts); err != nil {
+		return err
+	}
+
+	return loadToTypesense(ts, CHANNEL_COLLECTION, channels)
 }

@@ -78,3 +78,31 @@ func extractVideosFromFirestore(ctx context.Context, fs *firestore.Client) ([]in
 
 	return videos, nil
 }
+
+func extractChannelsFromFirestore(ctx context.Context, fs *firestore.Client) ([]interface{}, error) {
+	channelRefs, err := fs.Collection("channels").Documents(ctx).GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	var channels []interface{}
+	for _, cref := range channelRefs {
+		var channel Channel
+		if err := cref.DataTo(&channel); err != nil {
+			return nil, err
+		}
+
+		t, err := time.Parse(time.RFC3339, channel.LastUpdated)
+		if err != nil {
+			return nil, err
+		}
+
+		channel.LastUpdatedInt = t.Unix()
+		channel.VideoCountInt = int64(channel.VideoCount)
+		channel.LinkCountInt = int64(channel.LinkCount)
+
+		channels = append(channels, channel)
+	}
+
+	return channels, nil
+}

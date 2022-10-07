@@ -9,14 +9,9 @@ import (
 )
 
 const (
-	LINK_COLLECTION  = "links"
-	VIDEO_COLLECTION = "videos"
-
-	TYPESENSE_AUTH_HEADER              = "X-TYPESENSE-API-KEY"
-	TYPESENSE_VIDEOS_SEARCH_URL_PATH   = "/collections/videos/documents/search"
-	TYPESENSE_DOCUMENT_SEARCH_URL_PATH = "/collections/links/documents/search"
-
-	PER_PAGE_RESULTS = 10
+	LINK_COLLECTION    = "links"
+	VIDEO_COLLECTION   = "videos"
+	CHANNEL_COLLECTION = "channels"
 )
 
 func getTSDocCount(ts *typesense.Client) (int, error) {
@@ -139,6 +134,75 @@ func createVideoCollection(ts *typesense.Client) error {
 				Name: "PublishedAtInt",
 				Type: "int64",
 				Sort: typedBool(true),
+			},
+		},
+	}
+
+	_, err = ts.Collections().Create(schema)
+
+	return err
+}
+
+func createChannelCollection(ts *typesense.Client) error {
+	_, err := ts.Collection(CHANNEL_COLLECTION).Delete()
+	if err != nil {
+		if !strings.Contains(err.Error(), "No collection with name") {
+			return err
+		}
+	}
+
+	schema := &api.CollectionSchema{
+		Name: "channels",
+		Fields: []api.Field{
+			{
+				Name:  "Id",
+				Type:  "string",
+				Facet: typedBool(true),
+			},
+			{
+				Name:  "Description",
+				Type:  "string",
+				Infix: typedBool(true),
+				Facet: typedBool(true),
+			},
+			{
+				Name:  "Title",
+				Type:  "string",
+				Infix: typedBool(true),
+				Facet: typedBool(true),
+			},
+			{
+				Name: "Categories",
+				Type: "string*",
+			},
+			{
+				Name: "CustomUrl",
+				Type: "string",
+			},
+			{
+				Name: "UploadPlaylistId",
+				Type: "string",
+			},
+			{
+				Name: "ThumbnailUrl",
+				Type: "string",
+			},
+			{
+				Name: "LastUpdated",
+				Type: "string",
+			},
+			{
+				Name: "LastUpdatedInt",
+				Type: "int64",
+				Sort: typedBool(true),
+			},
+			{
+				Name: "VideoCountInt",
+				Type: "int64",
+			},
+			{
+				Name: "LinkCountInt",
+				Type: "int64",
 			},
 		},
 	}
