@@ -11,9 +11,8 @@ export default function Index() {
 
         <div className="text-tiny sm:text-md">
           ** The site is still under development and acts more like a "proof of
-          concept". If you'd like to add other channels, please email me at
-          sitesbystephanie@gmail.com. If you have any suggestions on how the
-          site could be more useful, I'd love to hear it! **
+          concept". If you have any suggestions on how the
+          site could be more useful, I'd love to hear it! Please email sitesbystephanie@gmail.com.  **
         </div>
       </div>
 
