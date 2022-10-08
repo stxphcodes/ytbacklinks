@@ -242,7 +242,7 @@ function ChannelPage(props: {
             <ChannelHeader channel={props.channel} />
           </div>
 
-          <div className="bg-theme-beige-2  py-2 sticky top-14 sm:top-16">
+          <div className="bg-theme-beige-2  py-2 sticky top-12 sm:top-16">
             <SearchBar
               inputValue={searchTerm}
               handleSubmit={handleSearchSubmit}

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import { CategoryCheckboxes } from '../components/checkboxes';
+import { CategoryCheckboxes } from '../components/categoryCheckboxes';
 import ErrorPage from '../components/error';
 import { ChevronDownIcon, ChevronUpIcon } from '../components/icons/chevron';
 import { CogIcon } from '../components/icons/cog';
