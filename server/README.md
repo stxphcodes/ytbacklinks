@@ -4,7 +4,8 @@ Server accepts search requests from the frontend to query typesense (search engi
 
 ## Local development
 
-1. docker-compose up --build
+1. `export GITHUB_PAT=$(cat ../secrets/github.personal.token)`
+2. docker-compose up --build
 
 ## API
 
