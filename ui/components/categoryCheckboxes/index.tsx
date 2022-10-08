@@ -1,9 +1,10 @@
 export function CategoryCheckboxes(props: {
   channelCategories: string[];
   handleCategoryCheck: any;
+  styles?: string;
 }) {
   return (
-    <ul className="px-3 rounded-lg border border-gray-200 my-4 grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8">
+    <ul className={`px-3 rounded-lg border border-gray-200 my-4 grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 ${props.styles}`}>
       {props.channelCategories.map((category) => {
         return (
           <li key={category}>
