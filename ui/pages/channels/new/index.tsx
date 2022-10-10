@@ -15,7 +15,7 @@ type Props = {
   channelCategories: string[] | null;
 };
 
-export async function getStaticProps() {
+export async function getServerSideProps() {
   let categories = getChannelCategories();
 
   let serverUrlResponse = getServerUrl();
@@ -197,8 +197,8 @@ function AddNewChannelPage(props: {
           <CategoryCheckboxes
             channelCategories={[...props.channelCategories, "other"]}
             handleCategoryCheck={handleCategoryCheck}
-            styles={`md:grid-cols-3 lg:grid-cols-3 border ${
-              categories.length === 0 ? "border-red-500" : "border-gray"
+            styles={`md:!grid-cols-3 lg:!grid-cols-3 border ${
+              categories.length === 0 ? "!border-red-500" : "!border-gray"
             }`}
           />
         </FormField>
