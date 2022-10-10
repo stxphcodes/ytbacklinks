@@ -81,11 +81,7 @@ export default function Index({ videos, channel, serverUrl, error }: Props) {
   }
 
   return (
-    <ChannelPage
-      channel={channel}
-      videos={videos}
-      serverUrl={serverUrl}
-    />
+    <ChannelPage channel={channel} videos={videos} serverUrl={serverUrl} />
   );
 }
 
@@ -233,6 +229,11 @@ function ChannelPage(props: {
 
   return (
     <div className="-m-10 sm:-m-12 border-x border-theme-beige-1">
+      <div className="w-full text-center bg-theme-beige-1 p-4 text-sm">
+        {" "}
+        YoutubeBacklinks currently only catalogs videos from 2022. We update the
+        catalog weekly for new videos.
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-5">
         <div className="hidden lg:block col-span-1 bg-theme-beige p-8">
           <ChannelSidebar channel={props.channel} />
