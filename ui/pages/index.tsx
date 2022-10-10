@@ -18,7 +18,7 @@ type Props = {
 
 export async function getServerSideProps() {
   let categories = getChannelCategories();
-  
+
   let serverUrlResponse = getServerUrl();
   if (!serverUrlResponse.Ok) {
     return {
@@ -26,7 +26,6 @@ export async function getServerSideProps() {
     };
   }
   let serverUrl = serverUrlResponse.Message;
-
 
   let response = await getChannels(serverUrl);
   if (response.Ok) {
@@ -154,10 +153,11 @@ function Header() {
         </span>
       </h3>
       <p className="text-xs sm:text-tiny">
-        This site is an archive of youtube video description boxes with a focus on making the links/products found within them easily searchable. <br />
-         Click on a channel and search for any
-        term - from brand or product name to key phrases - to find video
-        descriptions that contain the term!
+        This site catalogs video description boxes for Youtube channels with a
+        focus on making the links/products found within them easily searchable.{" "}
+        <br />
+        Click on a channel and search for any term - from brand or product name
+        to key phrases - to find video descriptions that contain the term!
       </p>
     </div>
   );

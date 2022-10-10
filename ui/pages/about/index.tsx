@@ -1,18 +1,21 @@
+import Link from 'next/link';
+
 export default function Index() {
   return (
     <>
       <div className="pb-4 text-center">
         <h1 className="text-md sm:text-2xl font-black pb-8">
           {" "}
-          Youtube Backlinks is an archive of youtube video description boxes
-          with a focus on making the links/products found within them easily
-          searchable.
+          Youtube Backlinks catalogs video description box text for Youtube
+          channels with a focus on making the links/products found within them
+          easily searchable.
         </h1>
 
         <div className="text-tiny sm:text-md">
           ** The site is still under development and acts more like a "proof of
-          concept". If you have any suggestions on how the
-          site could be more useful, I'd love to hear it! Please email sitesbystephanie@gmail.com.  **
+          concept". If you have any suggestions on how the site could be more
+          useful, I'd love to hear it! Please email sitesbystephanie@gmail.com.
+          **
         </div>
       </div>
 
@@ -39,17 +42,23 @@ export default function Index() {
             <br />
             <br />
             The youtubers I watch often review or mention products in their
-            videos, and will link the product (often with a discount code or
+            videos, and will link the product (usually with a discount code or
             affiliate link) in the description box. However, finding the link
-            when I needed it hours or days later was always an arduous process.
+            when I needed it days or weeks later was always an arduous process.
             I would have to sift through multiple videos in my history before
-            getting the right one since the youtube search box doesn't search
-            through description box text.
+            getting the right one since the native Youtube search box doesn't
+            search through all of the description box text.
             <br />
-            <br /> So I created this site as a way to easily and quickly search
-            for terms that appear in description boxes of some of my favorite
-            youtubers. It's been pretty useful to me so far, I hope you find it
-            useful too!
+            <br /> That's the main reason I created this web app. The search
+            engine behind YoutubeBacklinks prioritizes description box text, and
+            it also displays description boxes for multiple videos in one screen
+            so it makes it easier to sift through and find what you're looking
+            for. <br /> <br />I hope this site can be as useful to you as it is
+            to me! Feel free to add a new channel by filling out{" "}
+            <Link href="/channels/new">
+              <a className="text-theme-yt-red">this form</a>
+            </Link>
+            .
           </div>
 
           <div>
