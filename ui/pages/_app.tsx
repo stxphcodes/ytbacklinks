@@ -17,7 +17,11 @@ function MyApp({ Component, pageProps }: AppProps) {
       </Head>
 
       <Navbar />
-      <Banner />
+      <Banner bgcolor="theme-yt-red" textcolor="white" icon={true}>
+        This website is still in beta phase and may have bugs. If you experience
+        errors or have suggestions for improvement please email
+        sitesbystephanie@gmail.com.
+      </Banner>
       <div className="p-8 sm:p-12 bg-theme-beige max-w-screen-xl m-auto">
         <Component {...pageProps} />
       </div>
