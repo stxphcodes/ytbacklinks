@@ -1,4 +1,6 @@
 [
+  {"title": "TimDessaint", "categories":["fashion"]},
+  {"title": "fashionbyally", "categories": ["fashion"]},
   { "title": "uravgconsumer", "categories": ["technology"]},
   { "title": "LinusTechTips", "categories": ["technology"]},
   { "title": "HanaLee93", "categories": ["lifestyle", "beauty", "fashion"]},
@@ -20,3 +22,4 @@
   { "title": "Food52", "categories": ["food"] },
   { "title": "Claire Saffitz x Dessert Person", "categories": ["food"] }
 ]
+
