@@ -34,3 +34,10 @@ spec:
                 name: server
                 port:
                   number: 8000
+          - path: "/channel/new"
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: server
+                port:
+                  number: 8000

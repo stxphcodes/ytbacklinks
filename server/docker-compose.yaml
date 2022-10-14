@@ -26,6 +26,7 @@ services:
       - "--typesense.key=abcxyz"
       - "--firestore.projectid=backlinks-81c44"
       - "--firestore.creds=/config/firebase-sa.json"
+      - "--github.pat=$GITHUB_PAT"
       # - "--force.recreate=true"
       - "--skip.firestore=true"
     depends_on:

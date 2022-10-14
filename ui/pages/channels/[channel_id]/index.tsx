@@ -81,11 +81,7 @@ export default function Index({ videos, channel, serverUrl, error }: Props) {
   }
 
   return (
-    <ChannelPage
-      channel={channel}
-      videos={videos}
-      serverUrl={serverUrl}
-    />
+    <ChannelPage channel={channel} videos={videos} serverUrl={serverUrl} />
   );
 }
 
@@ -233,6 +229,11 @@ function ChannelPage(props: {
 
   return (
     <div className="-m-10 sm:-m-12 border-x border-theme-beige-1">
+      <div className="w-full text-center bg-theme-beige-1 p-4 text-sm">
+        {" "}
+        YoutubeBacklinks currently only catalogs videos from 2022. We update the
+        catalog weekly for new videos.
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-5">
         <div className="hidden lg:block col-span-1 bg-theme-beige p-8">
           <ChannelSidebar channel={props.channel} />
@@ -242,7 +243,7 @@ function ChannelPage(props: {
             <ChannelHeader channel={props.channel} />
           </div>
 
-          <div className="bg-theme-beige-2  py-2 sticky top-14 sm:top-16">
+          <div className="bg-theme-beige-2  py-2 sticky top-12 sm:top-16">
             <SearchBar
               inputValue={searchTerm}
               handleSubmit={handleSearchSubmit}
@@ -561,16 +562,18 @@ function LinkButton(props: { link: Link; active: boolean; term: string }) {
     <li key={props.link.Id} className="p-2">
       <a href={props.link.Href} target="_blank">
         {props.active ? (
-          <button className="bg-theme-beige border-2 border-theme-yt-red hover:bg-theme-beige-2 hover:border-none hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left text-sm md-text-md">
+          <button className="break-words bg-theme-beige border-2 border-theme-yt-red hover:bg-theme-beige-2 hover:border-none hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left text-sm md-text-md">
             <p
+              className="break-all"
               dangerouslySetInnerHTML={{
                 __html: buttonText,
               }}
             />
           </button>
         ) : (
-          <button className="bg-theme-beige hover:bg-theme-beige-2 hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left text-sm md:text-md">
+          <button className="break-words bg-theme-beige hover:bg-theme-beige-2 hover:text-theme-yt-red hover:shadow-inner p-2 rounded shadow-lg text-left text-sm md:text-md">
             <p
+              className="break-all"
               dangerouslySetInnerHTML={{
                 __html: buttonText,
               }}

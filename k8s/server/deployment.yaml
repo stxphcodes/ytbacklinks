@@ -25,7 +25,7 @@ spec:
             secretName: server
 
       containers:
-        - image: us-east4-docker.pkg.dev/backlinks-81c44/server/server:20221006-1
+        - image: us-east4-docker.pkg.dev/backlinks-81c44/server/server:20221008
           name: service
           imagePullPolicy: Always
 
@@ -38,16 +38,23 @@ spec:
             - name: secret
               mountPath: /secret
 
-          command: ["/app"]
+          command: ["sh"]
 
           args:
             [
-              "--typesense.key=$(TYPESENSE_KEY)",
-              "--typesense.url=$(TYPESENSE_URL)",
-              "--firestore.projectid=$(FIRESTORE_PROJECT_ID)",
-              "--firestore.creds=/secret/firebase-sa.json",
-              "--force.recreate=true",
+              "-c",
+              "/app --typesense.key=$(TYPESENSE_KEY) --typesense.url=$(TYPESENSE_URL) --firestore.projectid=$(FIRESTORE_PROJECT_ID) --firestore.creds=/secret/firebase-sa.json --github.pat=$(cat /secret/github.personal.token) --force.recreate=true",
             ]
+
+          # args:
+          #   [
+          #     "--typesense.key=$(TYPESENSE_KEY)",
+          #     "--typesense.url=$(TYPESENSE_URL)",
+          #     "--firestore.projectid=$(FIRESTORE_PROJECT_ID)",
+          #     "--firestore.creds=/secret/firebase-sa.json",
+          #     "--github.pat=$(cat /secret/github.personal.token)",
+          #     "--force.recreate=true",
+          #   ]
 
           resources:
             limits:

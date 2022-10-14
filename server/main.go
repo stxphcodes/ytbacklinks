@@ -10,10 +10,12 @@ import (
 	"time"
 
 	"cloud.google.com/go/firestore"
+	"github.com/google/go-github/v47/github"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/typesense/typesense-go/typesense"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 )
 
@@ -28,6 +30,9 @@ type Config struct {
 	Firestore struct {
 		CredsPath string
 		ProjectId string
+	}
+	Github struct {
+		PersonalAccessToken string
 	}
 }
 
@@ -50,6 +55,7 @@ func run() error {
 	flag.StringVar(&cfg.Typesense.URL, "typesense.url", "http://typesense:8108", "URL to Typesense server.")
 	flag.StringVar(&cfg.Firestore.CredsPath, "firestore.creds", "", "Path to service account for firestore.")
 	flag.StringVar(&cfg.Firestore.ProjectId, "firestore.projectid", "", "Firestore project id.")
+	flag.StringVar(&cfg.Github.PersonalAccessToken, "github.pat", "", "Github personal access token.")
 	flag.BoolVar(&forceRecreate, "force.recreate", false, "Force recreate typesense collection.")
 	flag.BoolVar(&skipFirestore, "skip.firestore", false, "Skip checking firestore for new docs.")
 
@@ -77,6 +83,12 @@ func run() error {
 	if err != nil || !b {
 		return fmt.Errorf("error initializing typesense client %s", err.Error())
 	}
+
+	// Initialize github client.
+	auth := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: cfg.Github.PersonalAccessToken},
+	)
+	gh := github.NewClient(oauth2.NewClient(ctx, auth))
 
 	switch true {
 	case forceRecreate:
@@ -145,6 +157,7 @@ func run() error {
 	mux.GET("/channel/:channelId", ChannelHandler(ts, &cfg))
 	mux.POST("/links/search", LinkSearchHandler(ts, &cfg))
 	mux.POST("/videos/search", VideoSearchHandler(ts, &cfg))
+	mux.POST("/channel/new", NewChannelHandler(gh, &cfg))
 
 	return mux.Start(cfg.HttpAddr)
 }
