@@ -197,8 +197,8 @@ function AddNewChannelPage(props: {
           <CategoryCheckboxes
             channelCategories={[...props.channelCategories, "other"]}
             handleCategoryCheck={handleCategoryCheck}
-            styles={`md:!grid-cols-3 lg:!grid-cols-3 border ${
-              categories.length === 0 ? "!border-red-500" : "!border-gray"
+            styles={`px-3 rounded-lg my-4 grid grid-cols-1 sm:grid-cols-3 border ${
+              categories.length === 0 ? "border-red-500" : "border-gray"
             }`}
           />
         </FormField>

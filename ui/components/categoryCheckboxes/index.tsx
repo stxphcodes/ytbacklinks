@@ -3,8 +3,14 @@ export function CategoryCheckboxes(props: {
   handleCategoryCheck: any;
   styles?: string;
 }) {
+  let style: string = "px-3 rounded-lg border border-gray-200 my-4 grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8"
+
+  if (props.styles) {
+    style = props.styles
+  }
+
   return (
-    <ul className={`px-3 rounded-lg border border-gray-200 my-4 grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 ${props.styles}`}>
+    <ul className={style}>
       {props.channelCategories.map((category) => {
         return (
           <li key={category}>
