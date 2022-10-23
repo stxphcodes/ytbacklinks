@@ -222,24 +222,30 @@ func runETL(ctx context.Context, firestoreClient *firestore.Client, httpClient *
 		if dryRun {
 			log.Print("Skip uploading data.\n\n")
 			continue
-		} else {
-			if err := loadVideosbyChannelId(ctx, firestoreClient, channel.Id, videos); err != nil {
-				return err
-			}
-			log.Println("Loaded video data.")
-
-			if err := loadLinksByChannelAndVideoIds(ctx, firestoreClient, channel.Id, links); err != nil {
-				return err
-			}
-			log.Println("Loaded link data.")
-
-			if err := loadChannel(ctx, firestoreClient, channel); err != nil {
-				return err
-			}
-			log.Println("Loaded channel data.")
-
-			log.Print("Successfully updated database.\n\n")
 		}
+
+		if len(videos) == 0 || getNumberOfLinks(links) == 0 {
+			log.Print("No new videos or links to upload.\n\n")
+			continue
+		}
+
+		if err := loadVideosbyChannelId(ctx, firestoreClient, channel.Id, videos); err != nil {
+			return err
+		}
+		log.Println("Loaded video data.")
+
+		if err := loadLinksByChannelAndVideoIds(ctx, firestoreClient, channel.Id, links); err != nil {
+			return err
+		}
+		log.Println("Loaded link data.")
+
+		if err := loadChannel(ctx, firestoreClient, channel); err != nil {
+			return err
+		}
+		log.Println("Loaded channel data.")
+
+		log.Print("Successfully updated database.\n\n")
+
 	}
 
 	if !dryRun {
