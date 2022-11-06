@@ -158,7 +158,7 @@ func getNumberOfLinks(linksByVideo map[string]map[string]*Link) int {
 
 func runETL(ctx context.Context, firestoreClient *firestore.Client, httpClient *http.Client, youtubeApiKey string, channels []ChannelInput, dryRun bool) error {
 	currentDate := time.Now()
-	eightMonthsAgo := currentDate.AddDate(0, -8, 0)
+	eightMonthsAgo := currentDate.AddDate(0, -10, 0)
 
 	for _, channelInput := range channels {
 		log.Println("Running ETL for: ", channelInput.Title)
@@ -222,24 +222,30 @@ func runETL(ctx context.Context, firestoreClient *firestore.Client, httpClient *
 		if dryRun {
 			log.Print("Skip uploading data.\n\n")
 			continue
-		} else {
-			if err := loadVideosbyChannelId(ctx, firestoreClient, channel.Id, videos); err != nil {
-				return err
-			}
-			log.Println("Loaded video data.")
-
-			if err := loadLinksByChannelAndVideoIds(ctx, firestoreClient, channel.Id, links); err != nil {
-				return err
-			}
-			log.Println("Loaded link data.")
-
-			if err := loadChannel(ctx, firestoreClient, channel); err != nil {
-				return err
-			}
-			log.Println("Loaded channel data.")
-
-			log.Print("Successfully updated database.\n\n")
 		}
+
+		if len(videos) == 0 || getNumberOfLinks(links) == 0 {
+			log.Print("No new videos or links to upload.\n\n")
+			continue
+		}
+
+		if err := loadVideosbyChannelId(ctx, firestoreClient, channel.Id, videos); err != nil {
+			return err
+		}
+		log.Println("Loaded video data.")
+
+		if err := loadLinksByChannelAndVideoIds(ctx, firestoreClient, channel.Id, links); err != nil {
+			return err
+		}
+		log.Println("Loaded link data.")
+
+		if err := loadChannel(ctx, firestoreClient, channel); err != nil {
+			return err
+		}
+		log.Println("Loaded channel data.")
+
+		log.Print("Successfully updated database.\n\n")
+
 	}
 
 	if !dryRun {

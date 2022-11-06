@@ -13,6 +13,7 @@ services:
       # uncomment NODE_ENV to test prod build.
       NODE_ENV: development
       SERVER_URL: http://server:8000
+
     # uncomment from here
     volumes:
       - ./:/opt/app

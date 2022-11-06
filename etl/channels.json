@@ -1,4 +1,18 @@
 [
+  { "title": "DoroCubillo", "categories": ["fashion", "beauty"] },
+  { "title": "juliafei", "categories": ["lifestyle", "fashion"] },
+  { "title": "sarahpan", "categories": ["technology", "lifestyle"] },
+  { "title": "marselaaa", "categories": ["technology", "lifestyle", "beauty"] },
+  { "title": "ElsaScola", "categories": ["technology"] },
+  { "title": "seyunyoon", "categories": ["fashion", "lifestyle"] },
+  {"title": "WithSandra", "categories": ["technology"]},
+  { "title": "Natacha Oceane", "categories": ["gym"]},
+  { "title": "Nathalie Martin", "categories": ["fashion"]},
+  { "title": "maisyleigh", "categories": ["technology", "fashion", "lifestyle"]},
+  { "ttile": "TonyCassara", "categories": ["technology"]},
+  { "title": "BabeEngineer", "categories": ["technology", "fashion"]},
+  { "title": "ItsYuyan", "categories": ["fashion"]},
+  { "title": "FlourishPlanner", "categories": ["technology", "lifestyle"]},
   {"title": "TimDessaint", "categories":["fashion"]},
   {"title": "fashionbyally", "categories": ["fashion"]},
   { "title": "uravgconsumer", "categories": ["technology"]},
@@ -19,7 +33,6 @@
   { "title": "MarquesBrownlee", "categories": ["technology"] },
   { "title": "HarpersBazaar", "categories": ["beauty", "fashion"] },
   { "title": "cookingwithdog", "categories": ["food"] },
-  { "title": "Food52", "categories": ["food"] },
-  { "title": "Claire Saffitz x Dessert Person", "categories": ["food"] }
+  { "title": "Food52", "categories": ["food"] }
 ]
 

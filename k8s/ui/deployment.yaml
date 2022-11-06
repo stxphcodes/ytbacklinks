@@ -20,13 +20,19 @@ spec:
         app: ui
     spec:
       containers:
-        - image: us-east4-docker.pkg.dev/backlinks-81c44/ui/ui:20221010-1
+        - image: us-east4-docker.pkg.dev/backlinks-81c44/ui/ui:20221024
           name: ui
           imagePullPolicy: Always
 
           env:
             - name: SERVER_URL
               value: "http://server:8000"
+
+            - name: NEXT_PUBLIC_GOOGLE_ANALYTICS
+              valueFrom:
+                secretKeyRef:
+                  name: ui
+                  key: NEXT_PUBLIC_GOOGLE_ANALYTICS
 
           command: ["sh"]
           args: ["-c", "npm start"]
