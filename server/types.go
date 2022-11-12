@@ -88,6 +88,14 @@ type ChannelResponse struct {
 	Videos  interface{} // []{Video: {video object}, Links: { link object }}
 }
 
+type ChannelSearchResponse struct {
+	HitCount       int
+	TypesenseCount int
+	Term           string
+	ChannelIds     []string
+	LinkHitCount   map[string]int // channel id -> link hit count
+}
+
 // SearchResult is the intermediary data type
 // that transforms typesense result into an API response type.
 type SearchResult interface {
@@ -122,7 +130,14 @@ type ChannelResult struct {
 	Links   []interface{}
 }
 
+type ChannelSearchResult struct {
+	TypesenseCount int
+	ChannelIds     map[string]struct{}
+	LinkHits       map[string]map[string]map[string]struct{} // channelid -> videoId -> linkId struct{}
+}
+
 // Compile time check that LinkSearchResult and
 // VideoSearchResult implements SearchResult interface.
 var _ SearchResult = &LinkSearchResult{}
 var _ SearchResult = &VideoSearchResult{}
+var _ SearchResult = &ChannelSearchResult{}
