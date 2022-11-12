@@ -1,7 +1,8 @@
 import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
 
-import ErrorPage from '../../../components/error';
+import Error from '../../../components/error';
+import ErrorPage from '../../../components/error/page';
 import SearchBar from '../../../components/searchbar';
 import Toggle from '../../../components/toggle';
 import { getChannel } from '../../../utils/getChannels';
@@ -334,12 +335,10 @@ function SearchResults(props: {
 }) {
   if (props.error) {
     return (
-      <div>
-        <p>
-          {props.error.Status} - {props.error.StatusText}
-        </p>
-        <p>{props.error.Message}</p>
-      </div>
+      <Error
+        header={`${props.error.Status} ${props.error.StatusText}`}
+        message={props.error.Message}
+      />
     );
   }
 
