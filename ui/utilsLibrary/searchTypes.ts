@@ -1,7 +1,7 @@
 import { Channel } from './firestoreTypes';
 
 export type SearchRequest = {
-    channelId: string;
+    channelId?: string;
     term: string;
 };
 
@@ -31,3 +31,10 @@ export type Channels = {
     Channels: Channel[];
 }
 
+export type ChannelSearchResponse = {
+    HitCount: number;
+    TypesenseCount: number;
+    Term: string;
+    ChannelIds: string[];
+    LinkHitCount: any;  //map-like type: [channelid: string -> link hit count: number]
+}
