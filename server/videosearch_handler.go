@@ -26,6 +26,7 @@ func VideoSearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 				"infix":     "always,always",
 				"sort_by":   "PublishedAtInt:desc",
 				"filter_by": "ChannelId:" + r.ChannelId,
+				"num_typos": "0",
 			})
 		if err != nil {
 			return echo.NewHTTPError(400, "Problem creating request: "+err.Error())

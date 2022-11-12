@@ -26,6 +26,7 @@ func LinkSearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 				"infix":     "always,always,always,always",
 				"sort_by":   "PublishedAtInt:desc",
 				"filter_by": "ChannelId:" + r.ChannelId,
+				"num_typos": "0",
 			},
 		)
 		if err != nil {
@@ -42,7 +43,7 @@ func LinkSearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 		result := &LinkSearchResult{
 			TypesenseCount: *tsResult.Found,
 			VideoIds:       make(map[string]struct{}),
-			LinkHits:       make(map[string]map[string]struct{}),
+			LinkHits:       make(map[string]map[string]struct{}), //videoId -> linkId:struct{}
 			VideoTitleHits: make(map[string]struct{}),
 		}
 		result.transformTypesenseResult(tsResult)
@@ -64,20 +65,24 @@ func (r *LinkSearchResult) transformTypesenseResult(result *api.SearchResult) {
 		videoId := m["VideoId"].(string)
 		linkId := m["Id"].(string)
 
-		r.VideoIds[videoId] = struct{}{}
-
-		linkMap := make(map[string]struct{})
-		for _, highlight := range *hit.Highlights {
-			if *highlight.Field == "VideoTitle" {
-				r.VideoTitleHits[videoId] = struct{}{}
-			} else {
-				// matched on link field
-				linkMap[linkId] = struct{}{}
-			}
+		if len(*hit.Highlights) < 1 {
+			continue
 		}
 
-		if len(linkMap) > 0 {
-			r.LinkHits[videoId] = linkMap
+		r.VideoIds[videoId] = struct{}{}
+		for _, highlight := range *hit.Highlights {
+			// document only matched on video title
+			if *highlight.Field == "VideoTitle" {
+				r.VideoTitleHits[videoId] = struct{}{}
+				// document matched on actual link parts
+			} else {
+				_, ok := r.LinkHits[videoId]
+				if !ok {
+					r.LinkHits[videoId] = map[string]struct{}{linkId: {}}
+				} else {
+					r.LinkHits[videoId][linkId] = struct{}{}
+				}
+			}
 		}
 	}
 
@@ -104,9 +109,6 @@ func (response *LinkSearchResponse) getHitCount() {
 	}
 
 	response.HitCount += len(response.VideoTitleHits)
-	// for _, array := range response.VideoTitleHits {
-	// 	response.HitCount += len(array)
-	// }
 
 	// Link or video title
 	if response.HitCount == 0 {
