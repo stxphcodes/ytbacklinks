@@ -56,10 +56,6 @@ func ChannelSearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 	}
 }
 
-func channelSearch() {
-
-}
-
 func (r *ChannelSearchResult) transformTypesenseResult(result *api.SearchResult) {
 	for _, hit := range *result.Hits {
 		m := *(hit.Document)
