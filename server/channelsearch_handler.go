@@ -17,19 +17,6 @@ func ChannelSearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 			return echo.NewHTTPError(400, "Bad request. Expected SearchRequest type.")
 		}
 
-		// channelreq, err := createTypesenseRequest(
-		// 	cfg,
-		// 	CHANNELS_SEARCH_URL_PATH,
-		// 	map[string]string{
-		// 		"q":        r.Term,
-		// 		"query_by": "Description,Title,Categories,CustomUrl",
-		// 		"infix":    "always,always,off,off",
-		// 	},
-		// )
-		// if err != nil {
-		// 	return echo.NewHTTPError(400, "Problem creating request: "+err.Error())
-		// }
-
 		req, err := createTypesenseRequest(
 			cfg,
 			LINKS_SEARCH_URL_PATH,
