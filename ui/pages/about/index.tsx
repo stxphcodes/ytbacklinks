@@ -6,9 +6,7 @@ export default function Index() {
       <div className="pb-4 text-center">
         <h1 className="text-md sm:text-2xl font-black pb-8">
           {" "}
-          Youtube Backlinks catalogs video description box text for Youtube
-          channels with a focus on making the links/products found within them
-          easily searchable.
+          YoutubeBacklinks catalogs video description box text for Youtube channels with a focus on making the links, products and discount codes found within them easily searchable.
         </h1>
 
         <div className="text-tiny sm:text-md">

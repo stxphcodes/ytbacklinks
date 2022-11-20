@@ -63,7 +63,7 @@ async function postLinkSearchRequest(serverUrl: string, request: SearchRequest) 
     })
     .catch(error => {
       r.Ok && r.SetDefaultError();
-      r.Message = error.Message || ErrUnknown;
+      r.Message = error.Message || error.message || ErrUnknown;
       r.RawMessage = error.RawMessage || `In ${postLinkSearchRequest.name}`;
     });
 
@@ -98,7 +98,7 @@ async function postVideoSearchRequest(serverUrl: string, request: SearchRequest)
     })
     .catch(error => {
       r.Ok && r.SetDefaultError();
-      r.Message = error.Message || ErrUnknown;
+      r.Message = error.Message || error.message || ErrUnknown;
       r.RawMessage = error.RawMessage || `In ${postVideoSearchRequest.name}`;
     });
 

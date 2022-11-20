@@ -8,7 +8,7 @@ import (
 	"github.com/typesense/typesense-go/typesense/api"
 )
 
-func LinkSearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
+func ChannelSearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		printLog("Received request", ctx.Request())
 
@@ -25,7 +25,6 @@ func LinkSearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 				"query_by":  "Brand,Description,Href,VideoTitle",
 				"infix":     "always,always,always,always",
 				"sort_by":   "PublishedAtInt:desc",
-				"filter_by": "ChannelId:" + r.ChannelId,
 				"num_typos": "0",
 			},
 		)
@@ -40,11 +39,10 @@ func LinkSearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 			return err
 		}
 
-		result := &LinkSearchResult{
+		result := &ChannelSearchResult{
 			TypesenseCount: *tsResult.Found,
-			VideoIds:       make(map[string]struct{}),
-			LinkHits:       make(map[string]map[string]struct{}), //videoId -> linkId:struct{}
-			VideoTitleHits: make(map[string]struct{}),
+			ChannelIds:     make(map[string]struct{}),
+			LinkHits:       make(map[string]map[string]map[string]struct{}), // channelId -> videoId -> linkId:struct{}
 		}
 		result.transformTypesenseResult(tsResult)
 
@@ -58,10 +56,11 @@ func LinkSearchHandler(ts *typesense.Client, cfg *Config) echo.HandlerFunc {
 	}
 }
 
-func (r *LinkSearchResult) transformTypesenseResult(result *api.SearchResult) {
+func (r *ChannelSearchResult) transformTypesenseResult(result *api.SearchResult) {
 	for _, hit := range *result.Hits {
 		m := *(hit.Document)
 
+		channelId := m["ChannelId"].(string)
 		videoId := m["VideoId"].(string)
 		linkId := m["Id"].(string)
 
@@ -69,18 +68,26 @@ func (r *LinkSearchResult) transformTypesenseResult(result *api.SearchResult) {
 			continue
 		}
 
-		r.VideoIds[videoId] = struct{}{}
+		r.ChannelIds[channelId] = struct{}{}
 		for _, highlight := range *hit.Highlights {
+			_, ok := r.LinkHits[channelId]
+			if !ok {
+				r.LinkHits[channelId] = map[string]map[string]struct{}{}
+			}
+
 			// document only matched on video title
 			if *highlight.Field == "VideoTitle" {
-				r.VideoTitleHits[videoId] = struct{}{}
-				// document matched on actual link parts
-			} else {
-				_, ok := r.LinkHits[videoId]
+				_, ok := r.LinkHits[channelId][videoId]
 				if !ok {
-					r.LinkHits[videoId] = map[string]struct{}{linkId: {}}
+					r.LinkHits[channelId][videoId] = map[string]struct{}{}
+				}
+			} else {
+				// document matched on actual link parts
+				_, ok := r.LinkHits[channelId][videoId]
+				if !ok {
+					r.LinkHits[channelId][videoId] = map[string]struct{}{linkId: {}}
 				} else {
-					r.LinkHits[videoId][linkId] = struct{}{}
+					r.LinkHits[channelId][videoId][linkId] = struct{}{}
 				}
 			}
 		}
@@ -89,29 +96,26 @@ func (r *LinkSearchResult) transformTypesenseResult(result *api.SearchResult) {
 	return
 }
 
-func (r *LinkSearchResult) toResponse(term string) interface{} {
-	response := &LinkSearchResponse{
+func (r *ChannelSearchResult) toResponse(term string) interface{} {
+	response := &ChannelSearchResponse{
 		TypesenseCount: r.TypesenseCount,
 		Term:           term,
-		VideoIds:       mapToArray(r.VideoIds),
-		LinkHits:       nestedMapToMapArray(r.LinkHits),
-		VideoTitleHits: r.VideoTitleHits,
+		ChannelIds:     mapToArray(r.ChannelIds),
+		LinkHitCount:   make(map[string]int),
 	}
-	response.getHitCount()
+
+	for channelId, videoHits := range r.LinkHits {
+		for _, linkHits := range videoHits {
+			// Matched on video title instead of links.
+			// Still add one to hit count.
+			if (len(linkHits)) == 0 {
+				response.LinkHitCount[channelId] += 1
+			} else {
+				response.LinkHitCount[channelId] += len(linkHits)
+			}
+
+		}
+	}
 
 	return response
-}
-
-func (response *LinkSearchResponse) getHitCount() {
-	// Hit Count = unique link hits + unique video title hits
-	for _, array := range response.LinkHits {
-		response.HitCount += len(array)
-	}
-
-	response.HitCount += len(response.VideoTitleHits)
-
-	// Link or video title
-	if response.HitCount == 0 {
-		response.HitCount = len(response.VideoIds)
-	}
 }

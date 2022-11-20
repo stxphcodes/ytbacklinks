@@ -31,7 +31,7 @@ export async function getChannels(serverUrl: string): Promise<TResponseWrapper>{
     })
     .catch(error => {
       r.Ok && r.SetDefaultError();
-      r.Message = error.Message || ErrUnknown;
+      r.Message = error.Message || error.message || ErrUnknown;
       r.RawMessage = error.RawMessage || `In ${getChannels.name}`;
     });
 
@@ -69,7 +69,7 @@ export async function getChannel(
     })
     .catch(error => {
       r.Ok && r.SetDefaultError();
-      r.Message = error.Message || ErrUnknown;
+      r.Message = error.Message || error.message || ErrUnknown;
       r.RawMessage = error.RawMessage || `In ${getChannel.name}`;
     });
 

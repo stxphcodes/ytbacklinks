@@ -42,7 +42,7 @@ export async function postNewChannelRequest(
     })
     .catch((error) => {
       r.Ok && r.SetDefaultError();
-      r.Message = error.Message || ErrUnknown;
+      r.Message = error.Message || error.message || ErrUnknown;
       r.RawMessage = error.RawMessage || `In ${postNewChannelRequest.name}`;
     });
 

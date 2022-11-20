@@ -155,6 +155,7 @@ func run() error {
 	})
 	mux.GET("/channels", ChannelsHandler(ts, &cfg))
 	mux.GET("/channel/:channelId", ChannelHandler(ts, &cfg))
+	mux.POST("/channels/search", ChannelSearchHandler(ts, &cfg))
 	mux.POST("/links/search", LinkSearchHandler(ts, &cfg))
 	mux.POST("/videos/search", VideoSearchHandler(ts, &cfg))
 	mux.POST("/channel/new", NewChannelHandler(gh, &cfg))

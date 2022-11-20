@@ -1,7 +1,9 @@
 import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
 
-import ErrorPage from '../../../components/error';
+import Error from '../../../components/error';
+import ErrorPage from '../../../components/error/page';
+import { LinkIcon } from '../../../components/icons/link';
 import SearchBar from '../../../components/searchbar';
 import Toggle from '../../../components/toggle';
 import { getChannel } from '../../../utils/getChannels';
@@ -334,12 +336,10 @@ function SearchResults(props: {
 }) {
   if (props.error) {
     return (
-      <div>
-        <p>
-          {props.error.Status} - {props.error.StatusText}
-        </p>
-        <p>{props.error.Message}</p>
-      </div>
+      <Error
+        header={`${props.error.Status} ${props.error.StatusText}`}
+        message={props.error.Message}
+      />
     );
   }
 
@@ -440,6 +440,21 @@ function VideoCard(props: {
   displayOption: string;
   searchTerm: string;
 }) {
+  // links in alphabetical order.
+  const links = new Map(
+    props.video.Links.map((link) => {
+      let text =
+        link.Brand !== ""
+          ? `${link.Brand} - ${link.Description}`
+          : link.Description;
+
+      if (props.searchTerm != "") {
+        text = highlightTerm(text, props.searchTerm);
+      }
+      return [text, link.Href];
+    })
+  );
+
   return (
     <div
       className="bg-theme-beige-1 grid grid-cols-1 md:grid-cols-4 md:gap-x-8 mt-4 p-4 rounded-lg shadow-sm"
@@ -475,10 +490,19 @@ function VideoCard(props: {
 
       <div className="col-span-3">
         {props.displayOption === "linksOnly" ? (
-          <ul className="flex flex-wrap md:place-content-start">
-            {props.video.Links.map((link) => {
+          <div>
+            {props.video.Links.sort((a, b) => {
+              let atext = a.Brand
+                ? `${a.Brand} - ${a.Description}`
+                : a.Description;
+              let btext = b.Brand
+                ? `${b.Brand} - ${b.Description}`
+                : b.Description;
+
+              return atext.toLowerCase().localeCompare(btext.toLowerCase());
+            }).map((link) => {
               return (
-                <LinkButton
+                <LinkText
                   link={link}
                   active={props.linkHits.includes(link.Id)}
                   key={link.Id}
@@ -486,8 +510,30 @@ function VideoCard(props: {
                 />
               );
             })}
-          </ul>
+          </div>
         ) : (
+          // <ul className="flex flex-wrap md:place-content-start">
+          //   {props.video.Links.sort((a, b) => {
+          //     // a.Description.localeCompare(b.Description))
+          //     let atext = a.Brand
+          //       ? `${a.Brand} - ${a.Description}`
+          //       : a.Description;
+          //     let btext = b.Brand
+          //       ? `${b.Brand} - ${b.Description}`
+          //       : b.Description;
+
+          //     return atext.toLowerCase().localeCompare(btext.toLowerCase());
+          //   }).map((link) => {
+          //     return (
+          //       <LinkButton
+          //         link={link}
+          //         active={props.linkHits.includes(link.Id)}
+          //         key={link.Id}
+          //         term={props.searchTerm}
+          //       />
+          //     );
+          //   })}
+          // </ul>
           <span className="whitespace-pre-line">
             {props.searchTerm == "" ? (
               <p
@@ -547,6 +593,30 @@ function highlightTerm(text: string, term: string) {
   });
 
   return textSplit.join(" ");
+}
+
+function LinkText(props: { link: Link; active: boolean; term: string }) {
+  let text =
+    props.link.Brand !== ""
+      ? `${props.link.Brand} - ${props.link.Description}`
+      : props.link.Description;
+
+  if (props.term != "") {
+    text = highlightTerm(text, props.term);
+  }
+
+  return (
+    <div className="flex items-center">
+      <LinkIcon />
+      <a
+        href={props.link.Href}
+        className="break-all block pb-1 hover:text-theme-yt-red px-2"
+        dangerouslySetInnerHTML={{
+          __html: text,
+        }}
+      ></a>
+    </div>
+  );
 }
 
 function LinkButton(props: { link: Link; active: boolean; term: string }) {

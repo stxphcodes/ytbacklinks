@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { CategoryCheckboxes } from '../../../components/categoryCheckboxes';
-import ErrorPage from '../../../components/error';
+import ErrorPage from '../../../components/error/page';
 import { FormField, FormTextField } from '../../../components/formField';
 import { getChannelCategories } from '../../../utils/getChannels';
 import { getServerUrl } from '../../../utils/getServer';
