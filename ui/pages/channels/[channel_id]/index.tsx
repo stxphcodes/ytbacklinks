@@ -1,9 +1,11 @@
 import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
 
+import AffiliateLinkCheck from '../../../components/affiliateLink';
 import Error from '../../../components/error';
 import ErrorPage from '../../../components/error/page';
 import { LinkIcon } from '../../../components/icons/link';
+import Modal from '../../../components/modal';
 import SearchBar from '../../../components/searchbar';
 import Toggle from '../../../components/toggle';
 import { getChannel } from '../../../utils/getChannels';
@@ -42,7 +44,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   let serverUrlResponse = getServerUrl();
   if (!serverUrlResponse.Ok) {
     return {
-      props: { error: serverUrlResponse },
+      props: {error: serverUrlResponse},
     };
   }
   let serverUrl = serverUrlResponse.Message;
@@ -50,7 +52,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   let channelResponse = await getChannel(serverUrl, channel_id);
   if (!channelResponse.Ok) {
     return {
-      props: { error: channelResponse },
+      props: {error: channelResponse},
     };
   }
 
@@ -64,7 +66,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   };
 };
 
-export default function Index({ videos, channel, serverUrl, error }: Props) {
+export default function Index({videos, channel, serverUrl, error}: Props) {
   if (error) {
     return <ErrorPage response={error} />;
   }
@@ -281,7 +283,7 @@ function ChannelPage(props: {
   );
 }
 
-function ChannelSidebar(props: { channel: Channel }) {
+function ChannelSidebar(props: {channel: Channel}) {
   return (
     <div className="rounded-lg sticky top-14 py-2">
       <img src={props.channel.ThumbnailUrl} referrerPolicy="no-referrer"></img>
@@ -301,7 +303,7 @@ function ChannelSidebar(props: { channel: Channel }) {
   );
 }
 
-function ChannelHeader(props: { channel: Channel }) {
+function ChannelHeader(props: {channel: Channel}) {
   return (
     <>
       <img
@@ -512,28 +514,6 @@ function VideoCard(props: {
             })}
           </div>
         ) : (
-          // <ul className="flex flex-wrap md:place-content-start">
-          //   {props.video.Links.sort((a, b) => {
-          //     // a.Description.localeCompare(b.Description))
-          //     let atext = a.Brand
-          //       ? `${a.Brand} - ${a.Description}`
-          //       : a.Description;
-          //     let btext = b.Brand
-          //       ? `${b.Brand} - ${b.Description}`
-          //       : b.Description;
-
-          //     return atext.toLowerCase().localeCompare(btext.toLowerCase());
-          //   }).map((link) => {
-          //     return (
-          //       <LinkButton
-          //         link={link}
-          //         active={props.linkHits.includes(link.Id)}
-          //         key={link.Id}
-          //         term={props.searchTerm}
-          //       />
-          //     );
-          //   })}
-          // </ul>
           <span className="whitespace-pre-line">
             {props.searchTerm == "" ? (
               <p
@@ -577,49 +557,93 @@ function highlightTerm(text: string, term: string) {
   let termSplit = term.split(" ");
 
   termSplit.forEach((termWord) => {
-    if (!termWord) {
-      return;
-    }
+    textSplit.forEach((textWord, index) => {
+      let newLineSplit = textWord.split("\n");
 
+      newLineSplit.forEach((newLineWord, index) => {
+        if (newLineWord.toLowerCase().includes(termWord.toLowerCase())) {
+          if (!newLineWord.includes("http")) {
+            newLineSplit[index] =
+              '<span class="bg-theme-yellow" >' + newLineWord + "</span>";
+          }
+        }
+      });
+
+      textWord = newLineSplit.join("\n");
+      textSplit[index] = textWord;
+    });
+  });
+  return textSplit.join(" ");
+}
+
+function containsTerm(text: string, term: string) {
+  let textSplit = text.split(" ");
+  let termSplit = term.split(" ");
+
+  let found = false;
+  termSplit.forEach((termWord) => {
     textSplit.forEach((word, index) => {
       let lowercaseWord = word.toLowerCase();
       if (lowercaseWord.includes(termWord.toLowerCase())) {
-        if (!word.includes("https")) {
-          textSplit[index] =
-            '<span class="bg-theme-yellow" >' + word + "</span>";
-        }
+        found = true;
+        return;
       }
     });
   });
 
-  return textSplit.join(" ");
+  return found;
 }
 
-function LinkText(props: { link: Link; active: boolean; term: string }) {
+function LinkText(props: {link: Link; active: boolean; term: string}) {
   let text =
     props.link.Brand !== ""
       ? `${props.link.Brand} - ${props.link.Description}`
       : props.link.Description;
 
+  let hasterm = false;
   if (props.term != "") {
-    text = highlightTerm(text, props.term);
+    hasterm = containsTerm(text, props.term);
   }
 
+  const [affiliateLinkCheck, setAffiliateLinkCheck] = useState(false);
+
   return (
-    <div className="flex items-center">
-      <LinkIcon />
-      <a
-        href={props.link.Href}
-        className="break-all block pb-1 hover:text-theme-yt-red px-2"
-        dangerouslySetInnerHTML={{
-          __html: text,
-        }}
-      ></a>
-    </div>
+    <>
+      <div className={`flex items-center mb-1`}>
+        <button
+          className="text-xs bg-theme-beige hover:bg-theme-beige-2 p-1 rounded-xl"
+          onClick={() => setAffiliateLinkCheck(!affiliateLinkCheck)}
+        >
+          <div className="flex justify-center">
+            <LinkIcon />{" "}
+          </div>
+          affiliate <br />
+          link check{" "}
+        </button>
+        <a
+          target="_blank"
+          href={props.link.Href}
+          className={`break-all block pb-1 hover:text-theme-yt-red px-2 ${
+            hasterm && "bg-theme-yellow"
+          }`}
+        >
+          {text}
+        </a>
+      </div>
+
+      {affiliateLinkCheck && (
+        <Modal
+          title="Affiliate Link Check"
+          subtitle="This window checks whether the link shared is an affiliate link."
+        >
+          <AffiliateLinkCheck Href={props.link.Href} />
+        </Modal>
+      )}
+    </>
   );
 }
 
-function LinkButton(props: { link: Link; active: boolean; term: string }) {
+function LinkButton(props: {link: Link; active: boolean; term: string}) {
   let buttonText =
     props.link.Brand !== ""
       ? `${props.link.Brand} - ${props.link.Description}`
@@ -655,7 +679,7 @@ function LinkButton(props: { link: Link; active: boolean; term: string }) {
   );
 }
 
-function HitCounts(props: { totalLinkHits: number; totalVideoHits: number }) {
+function HitCounts(props: {totalLinkHits: number; totalVideoHits: number}) {
   return (
     <div className="flex flex-wrap place-content-start gap-x-2 gap-y-1 text-sm mt-4">
       <div className="bg-theme-yt-red p-2 rounded  text-left text-white">

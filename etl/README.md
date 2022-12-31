@@ -17,3 +17,9 @@ ETL gets data from youtube, parses for links, and uploads to firestore database.
 
 1. export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/secrets/firebase-sa.json
 2. curl "https://firestore.googleapis.com/v1/projects/backlinks-81c44/databases/(default)/documents/channels"
+
+## Updating channels to production
+
+1. Run ETL via docker
+2. Delete existing server workload in console
+3. Run `kubectl apply --kustomize=k8s/server` to reapply server

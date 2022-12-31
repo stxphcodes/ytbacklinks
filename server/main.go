@@ -159,6 +159,7 @@ func run() error {
 	mux.POST("/links/search", LinkSearchHandler(ts, &cfg))
 	mux.POST("/videos/search", VideoSearchHandler(ts, &cfg))
 	mux.POST("/channel/new", NewChannelHandler(gh, &cfg))
+	mux.POST("/affiliatelink", AffiliateLinkHandler(&cfg))
 
 	return mux.Start(cfg.HttpAddr)
 }
