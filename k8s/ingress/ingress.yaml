@@ -48,3 +48,10 @@ spec:
                 name: server
                 port:
                   number: 8000
+          - path: "/affiliatelink"
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: server
+                port:
+                  number: 8000
