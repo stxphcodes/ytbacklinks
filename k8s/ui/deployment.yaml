@@ -37,13 +37,13 @@ spec:
           command: ["sh"]
           args: ["-c", "npm start"]
 
-          # resources:
-          #   limits:
-          #     cpu: 500m
-          #     memory: 5Gi
-          #   requests:
-          #     cpu: 500m
-          #     memory: 5Gi
+          resources:
+            limits:
+              cpu: 250m
+              memory: 128Mi
+            requests:
+              cpu: 250m
+              memory: 128Mi
 
           ports:
             - containerPort: 3000
