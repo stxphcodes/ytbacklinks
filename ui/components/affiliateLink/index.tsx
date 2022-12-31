@@ -74,7 +74,7 @@ export default function AffiliateLinkCheck(props: {Href: string}) {
 
 function ResultsTable(props: {response: AffiliateLinkResponse}) {
   return (
-    <div className="grid grid-cols-3 gap-x-4 py-4">
+    <div className="grid grid-cols-3 gap-x-4 py-4 max-w-md">
       <div className="col-span-3 font-bold py-2">Results</div>
       <div className="col-span-2">Number of redirects:</div>
       <div>{props.response.RedirectCount}</div>

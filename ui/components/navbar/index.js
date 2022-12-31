@@ -9,6 +9,7 @@ export default function Navbar() {
           Youtube Backlinks
         </a>
       </Link>
+      <Link href="/affiliate-link" shallow={false}>Affiliate Link Check</Link>
       <Link href="/about" shallow={false}>About</Link>
       <Link href="/channels/new">Add New Channel</Link>
     </nav>
