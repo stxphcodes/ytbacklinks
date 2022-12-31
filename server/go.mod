@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	cloud.google.com/go/firestore v1.6.1
+	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/google/go-github/v47 v47.1.0
 	github.com/heptiolabs/healthcheck v0.0.0-20211123025425-613501dd5deb
 	github.com/labstack/echo v3.3.10+incompatible
@@ -15,6 +16,7 @@ require (
 require (
 	cloud.google.com/go v0.103.0 // indirect
 	cloud.google.com/go/compute v1.7.0 // indirect
+	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/deepmap/oapi-codegen v1.11.0 // indirect
