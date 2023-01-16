@@ -12,6 +12,20 @@ Server is the backend behind YoutubeBacklinks. It asssumes an instance of Typese
 
 ### Requirements 
 
+
+### Run via binary
+1. Build binary: `go build -o ./app`
+2. Run binary:
+``` golang
+./app \
+    --typesense.key=abcxyz \ # typesense key 
+    --firestore.projectid=$(cat ../secrets/firebase-projectid.txt) \ # path to file containing GCP project id
+    --firestore.creds=/config/firebase-sa.json \ # path to GCP service account key
+    --github.pat=$GITHUB_PAT \ # github API token
+    --force.recreate=true \ # if true, recreate collections in Typesense 
+    --skip.firestore=true # if true, skip updating data from firestore
+```
+
 ### Run via docker-cokmpose 
 1. `export GITHUB_PAT=$(cat ../secrets/github.personal.token)`
 2. docker-compose up --build
