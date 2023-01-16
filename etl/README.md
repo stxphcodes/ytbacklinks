@@ -1,25 +1,40 @@
 # ETL
 
-ETL gets data from youtube, parses for links, and uploads to firestore database.
+ETL gets data from Youtube for the Youtube channles listed in [channels.json](./channels.json), parses every video's description box text for links, and uploads the data to a Google Firestore database. Note: Youtube quota per API token is 10000 units per day (every GET request for video data is 1 unit). 
 
-## Run locally
+
+## Local development
+
+### Requirements 
+It assumed you have access to a firestore database and a Youtube API token.
+
+### Run locally
 
 1. go build
-2. ./etl --youtube.key=$(cat ../secrets/youtube-api.key) --firestore.creds=../secrets/firebase-sa.json --firestore.projectid=$(cat ../secrets/firestore-projectid.txt) --channels.path=channels.json --dry.run=true
+2. 
+``` golang
+./etl \
+   --youtube.key=$(cat ../secrets/youtube-api.key) \ # Youtube API token
+   --firestore.creds=../secrets/firebase-sa.json \ # Path to firebase service account token 
+   --firestore.projectid=$(cat ../secrets/firestore-projectid.txt) \ # Path to Firebase Project ID 
+   --channels.path=channels.json \  # Path to list of channels to parse
+   --dry.run=true # Set to true to **skip** uploading to Firestore
+```
 
-## Docker
+### Run via Docker
 
 1. export YOUTUBE_KEY=$(cat ../secrets/youtube-api.key)
 2. export FIRESTORE_PROJECTID=$(cat ../secrets/firestore-projectid.txt)
 3. docker-compose up --build
 
-## Firestore REST API:
 
-1. export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/secrets/firebase-sa.json
-2. curl "https://firestore.googleapis.com/v1/projects/backlinks-81c44/databases/(default)/documents/channels"
+## Development notes
 
-## Updating channels to production
+- How to call Firestore REST API:
+  1. export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/secrets/firebase-sa.json
+  2. curl "https://firestore.googleapis.com/v1/projects/backlinks-81c44/databases/(default)/documents/channels"
 
-1. Run ETL via docker
-2. Delete existing server workload in console
-3. Run `kubectl apply --kustomize=k8s/server` to reapply server
+- How to update channels in production:
+  1. Run ETL using Run via Docker method 
+  2. Delete existing server workload in GCP via console 
+  3. Reapply server: `kubectl apply --kustomize=k8s/server` 
