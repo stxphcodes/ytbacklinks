@@ -1,12 +1,12 @@
 # ETL
 
-ETL gets data from Youtube for the Youtube channles listed in [channels.json](./channels.json), parses every video's description box text for links, and uploads the data to a Google Firestore database. Note: Youtube quota per API token is 10000 units per day (every GET request for video data is 1 unit). 
+ETL gets data from Youtube for the Youtube channles listed in [channels.json](./channels.json), parses every video's description box text for links, and uploads the data to a Google Firestore database. Note: Youtube quota per API token is 10000 units per day (every GET request for video data is 1 unit).
 
 
 ## Local development
 
 ### Requirements 
-It assumed you have access to a firestore database and a Youtube API token (see requirements at root-level directory), and Go and Docker are installed on your machine.
+It assumed you have access to a firestore database and a Youtube API token (see top-level [Readme](../README.md) requirements), and Go and Docker are installed on your machine.
 
 ### Run locally
 
