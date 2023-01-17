@@ -11,7 +11,7 @@ Server is the backend behind YoutubeBacklinks. It asssumes an instance of Typese
 ## Local development
 
 ### Requirements 
-
+See secret requirements in top-level [Readme](../README.md). Docker and go are installed on your local machine.
 
 ### Run via binary
 1. Build binary: `go build -o ./app`

@@ -6,12 +6,12 @@ ETL gets data from Youtube for the Youtube channles listed in [channels.json](./
 ## Local development
 
 ### Requirements 
-It assumed you have access to a firestore database and a Youtube API token.
+It assumed you have access to a firestore database and a Youtube API token (see requirements at root-level directory), and Go and Docker are installed on your machine.
 
 ### Run locally
 
-1. go build
-2. 
+1. Go to `etl/` directory and build the binary: `go build`
+2. Run the binary:
 ``` golang
 ./etl \
    --youtube.key=$(cat ../secrets/youtube-api.key) \ # Youtube API token
@@ -32,7 +32,8 @@ It assumed you have access to a firestore database and a Youtube API token.
 
 - How to call Firestore REST API:
   1. export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/secrets/firebase-sa.json
-  2. curl "https://firestore.googleapis.com/v1/projects/backlinks-81c44/databases/(default)/documents/channels"
+  2. export PROJECT_ID=$(cat ../secrets/firebase-projectid.txt)
+  3. curl "https://firestore.googleapis.com/v1/projects/$PROJECT_ID/databases/(default)/documents/channels"
 
 - How to update channels in production:
   1. Run ETL using Run via Docker method 

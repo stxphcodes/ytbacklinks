@@ -1,1 +1,1 @@
-Secrets go here.
+Secrets go here. Files added to this directory will be ignored. See [requirements](./README.md#requirements) to see what files are expected.

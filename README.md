@@ -18,7 +18,7 @@ To build and run YoutubeBacklinks locally, you need the following:
 1. Clone this repo and have docker installed
 2. A GCP account and a GCP project created. See https://console.cloud.google.com
 3. Under IAM & Admin, create a service account with Firebase Admin SDK rights. 
-4. Create an API key to use with the Youtube API. See 
+4. Create an API key to use with the Youtube API. See https://developers.google.com/youtube/registering_an_application
 5. Under the `secrets/` subdirectory, create the following files:
     - `firebase-projectid.txt`: Enter GCP Project ID from step 1 
     - `firebase-sa.json`: Go to the service account created in step 2 and download JSON key. Rename the file to firebase-sa.json. 
