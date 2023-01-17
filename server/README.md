@@ -15,18 +15,22 @@ Server is the backend behind YoutubeBacklinks. It asssumes an instance of Typese
 
 Request: 
 ``` bash
-curl -H "Content-type: application/json" -X POST "http://localhost:8000/links/search" -d '{"ChannelId": "UCqqJQ_cXSat0KIAVfIfKkVA", "Term": "udon"}'
+curl -H "Content-type: application/json" \
+     -X POST "http://localhost:8000/links/search" \
+     -d '{"ChannelId": "UCqqJQ_cXSat0KIAVfIfKkVA", "Term": "udon"}'
 ```
 Response:
 ``` json
 {"HitCount":4,"TypesenseCount":7,"Term":"udon","VideoIds":["r4L1UqnUScg"],"VideoTitleHits":{"r4L1UqnUScg":{}},"LinkHits":{"r4L1UqnUScg":["aHR0cHM6Ly93d3cuanVzdG9uZWNvb2tib29rLmNvbS9iZWVmLXVkb24v","aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g_dj10V19yM0FrUEJqQQ==","aHR0cHM6Ly93d3cuc2VyaW91c2VhdHMuY29tL2d5dWRvbi1qYXBhbmVzZS1zaW1tZXJlZC1iZWVmLWFuZC1yaWNlLWJvd2wtcmVjaXBl"]}}
 ```
 
-**Affiliate Link**
+**Affiliate Link endpoint**
 
 Request:
 ``` bash
-curl -H "Content-type: application/json" -X POST "http://localhost:8000/affiliatelink" -d '{"Href": "https://bit.ly/3VEHAG4"}'
+curl -H "Content-type: application/json" \
+     -X POST "http://localhost:8000/affiliatelink" \
+     -d '{"Href": "https://bit.ly/3VEHAG4"}'
 ```
 
 Response:
