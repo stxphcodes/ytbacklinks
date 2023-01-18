@@ -1,6 +1,13 @@
 # YoutubeBackinks 
 
-A web app to view and search for discount codes, product links and full video description box text of Youtube videos from popular Youtubers. See https://youtubebacklinks.com .
+A web app to view and search for discount codes, product links and full video description box text of Youtube videos from popular Youtubers. View the site at https://youtubebacklinks.com. See the Product Hunt launch [here](https://www.producthunt.com/products/youtubebacklinks#youtubebacklinks).
+<p float="left">
+<img src="https://user-images.githubusercontent.com/33664901/213187561-f3f1b4d2-8e46-40cb-852b-881c8b55832a.png" width="250" />
+<img src="https://user-images.githubusercontent.com/33664901/213187579-548e77b5-8d46-43e3-b615-59b40fd538ca.png" width="250" />
+<img src="https://user-images.githubusercontent.com/33664901/213188576-1a1c503d-1b1a-4df3-80e0-e3ed45f6a4d7.png" width="250" />
+</p>
+
+## Local development
 
 This repo comprises of:
 - `etl/`: parses data from Youtube API to upload to database 
@@ -10,8 +17,6 @@ This repo comprises of:
 - `ui/`: creates the frontend for YoutubeBacklinks
 
 Each subdirectory has its own README with more information. 
-
-## Local development
 
 ### Requirements
 To build and run YoutubeBacklinks locally, you need the following:
