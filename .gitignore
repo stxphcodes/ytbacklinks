@@ -2,3 +2,4 @@ etl/etl
 server/server
 **/secrets/*
 !secrets/README.md
+outreach/*
