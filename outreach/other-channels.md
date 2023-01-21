@@ -1,3 +1,0 @@
-- jedcal
-- dave2d
--
