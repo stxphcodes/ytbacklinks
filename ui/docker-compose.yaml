@@ -5,23 +5,25 @@ services:
     build:
       context: ./
       # change to Dockerfile for prod build.
-      dockerfile: Dockerfile.dev
-      # dockerfile: Dockerfile
+      #dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      args:
+        SERVER_URL: http://host.docker.internal:8000
     ports:
       - "3000:3000"
     environment:
       # uncomment NODE_ENV to test prod build.
-      NODE_ENV: development
-      SERVER_URL: http://server:8000
+      #NODE_ENV: development
+      SERVER_URL: http://host.docker.internal:8000
 
     # uncomment from here
-    volumes:
-      - ./:/opt/app
-      - /opt/app/node_modules
-      - /opt/app/.next
-    command: "npm run dev"
+    # volumes:
+    #   - ./:/opt/app
+    #   - /opt/app/node_modules
+    #   - /opt/app/.next
+    # command: "npm run dev"
     # to here to test prod build.
-    # command: "npm start"
+    command: "npm start"
     networks:
       - server_common_network
 networks:

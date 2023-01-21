@@ -7,6 +7,7 @@ import ErrorPage from '../components/error/page';
 import { ChevronDownIcon, ChevronUpIcon } from '../components/icons/chevron';
 import { CogIcon } from '../components/icons/cog';
 import SearchBar from '../components/searchbar';
+import SEOHeader from '../components/seo/header';
 import { getChannelCategories, getChannels } from '../utils/getChannels';
 import { getServerUrl } from '../utils/getServer';
 import { postChannelSearchRequest } from '../utils/postChannelSearchRequest';
@@ -15,74 +16,99 @@ import { ResponseWrapper, TResponseWrapper } from '../utilsLibrary/responseWrapp
 import { ChannelSearchResponse, SearchRequest } from '../utilsLibrary/searchTypes';
 
 type Props = {
+  metadata: any;
   channels: Channel[] | null;
   channelCategories: string[] | null;
   error: TResponseWrapper | null;
   serverUrl: string | null;
 };
 
-export async function getServerSideProps() {
-  let categories = getChannelCategories();
+export async function getStaticProps() {
+  let props: Props = {
+    metadata: {
+      title: "YotubeBacklinks Home",
+      description:
+        "View and search for products, discount codes, affiliate links and backlinks from popular youtubers.",
+    },
+    channels: null,
+    channelCategories: getChannelCategories(),
+    error: null,
+    serverUrl: null,
+  };
 
   let serverUrlResponse = getServerUrl();
   if (!serverUrlResponse.Ok) {
-    return {
-      props: { error: serverUrlResponse },
-    };
+    props.error = serverUrlResponse;
+    return {props: {...props}};
   }
   let serverUrl = serverUrlResponse.Message;
+  props.serverUrl = serverUrl;
 
   let response = await getChannels(serverUrl);
-  if (response.Ok) {
-    return {
-      props: {
-        channels: response.Message,
-        channelCategories: categories,
-        error: null,
-        serverUrl: serverUrl,
-      },
-    };
+  if (!response.Ok) {
+    props.error = response 
+    return {props: {...props}};
   }
 
-  return {
-    props: {
-      channels: null,
-      channelCategories: null,
-      serverUrl: null,
-      error: response,
-    },
-  };
+  props.channels=response.Message;
+  return {props: {...props}};
+  // if (response.Ok) {
+  //   props.channels = response.Message;
+  //   return {props};
+    // return {
+    //   props: {
+    //     channels: response.Message,
+    //     channelCategories: categories,
+    //     error: null,
+    //     serverUrl: serverUrl,
+    //   },
+    // };
+  // }
+
+  // return {props};
+
+  // return {
+  //   props: {
+  //     channels: null,
+  //     channelCategories: null,
+  //     serverUrl: null,
+  //     error: response,
+  //   },
+  // };
 }
 
 export default function Index({
+  metadata,
   channels,
   channelCategories,
   serverUrl,
   error,
 }: Props) {
-  if (error) {
-    return <ErrorPage response={error} />;
-  }
-
-  if (!channels || !channelCategories || !serverUrl) {
-    return (
-      <ErrorPage
-        response={new ResponseWrapper(
-          false,
-          500,
-          "Server Error",
-          "Unable to load channels. Missing props"
-        ).Serialize()}
-      />
-    );
-  }
-
   return (
-    <HomePage
-      channels={channels}
-      channelCategories={channelCategories}
-      serverUrl={serverUrl}
-    />
+    <>
+      <SEOHeader
+        title={metadata.title}
+        description={metadata.description}
+      />
+      {error ? (
+        <ErrorPage response={error} />
+      ) : !channels || !channelCategories || !serverUrl ? (
+        <ErrorPage
+          response={new ResponseWrapper(
+            false,
+            500,
+            "Server Error",
+            "Unable to load channels. Missing props"
+          ).Serialize()}
+        />
+      ) : (
+        <HomePage
+          channels={channels}
+          channelCategories={channelCategories}
+          serverUrl={serverUrl}
+        />
+      )}
+    </>
   );
 }
 
@@ -336,7 +362,7 @@ function ChannelsToDisplay(props: {
   );
 }
 
-function ChannelCard(props: { channel: Channel; hitCount?: number }) {
+function ChannelCard(props: {channel: Channel; hitCount?: number}) {
   return (
     <Link href={`/channels/${props.channel.Id}`} key={props.channel.Id}>
       <button className="bg-white shadow-lg text-center p-2 hover:scale-105">

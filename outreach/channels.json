@@ -1,0 +1,243 @@
+[
+  {
+    "title": "TimDessaint",
+    "email": ["contact@timdessaint.com"],
+    "contacted": true,
+    "discord": ""
+  },
+
+  {
+    "title": "fashionbyally",
+    "email": ["mgmt@fashionbyally.com"],
+    "contacted": true,
+    "discord": ""
+  },
+  {
+    "title": "uravgconsumer",
+    "email": ["UrAvgConsumer@gmail.com", "UrAvgGf@gmail.com"],
+    "contacted": true,
+    "discord": "https://discord.gg/F7Q2F7aque",
+    "discordMessaged": true
+  },
+  {
+    "title": "LinusTechTips",
+    "email": ["info@linusmediagroup.com"],
+    "contacted": true,
+    "discord": ""
+  },
+  {
+    "title": "HanaLee93",
+    "email": ["jhpglobalmgmt@gmail.com"],
+    "contacted": true,
+    "discord": ""
+  },
+  {
+    "title": "freddymylove",
+    "email": ["enquiries@freddymylove.co.uk"],
+    "contacted": true,
+    "discord": ""
+  },
+  {
+    "title": "cocobeautea",
+    "email": ["cocobeautea@mcsaatchisocial.com"],
+    "contacted": true,
+    "discord": ""
+  },
+  {
+    "title": "listed",
+    "email": ["listed@serhant.com"],
+    "contacted": false,
+    "discord": ""
+  },
+  {
+    "title": "lonefox",
+    "email": ["lonefoxhome@gmail.com"],
+    "contacted": true,
+    "discord": ""
+  },
+  {
+    "title": "CatCreature",
+    "email": ["catcreaturecontact@gmail.com"],
+    "contacted": true,
+    "discord": ""
+  },
+  {
+    "title": "theneedledrop",
+    "email": ["https://www.theneedledrop.com/contact"],
+    "contacted": true,
+    "discord": ""
+  },
+  {
+    "title": "Jenn Im",
+    "email": ["jenn@rare.global"],
+    "contacted": true,
+    "discord": ""
+  },
+  {
+    "title": "Freesia Park",
+    "email": ["contact@freesiapark.com"],
+    "contacted": true,
+    "discord": "https://discord.gg/7jNfnuSy4x",
+    "discordContact": true
+  },
+  {
+    "title": "Vogue",
+    "email": ["help@vogue.com"],
+    "contacted": true,
+    "discord": ""
+  },
+  {
+    "title": "JKenjiLopezAlt",
+    "email": ["wscarlett@wwnorton.com"],
+    "contacted": true,
+    "discord": ""
+  },
+  {
+    "title": "ArchitecturalDigest",
+    "email": ["contact@archdigest.com"],
+    "contacted": true,
+    "discord": ""
+  },
+  {
+    "title": "shutupandsitdown",
+    "email": ["contact@shutupandsitdown.com"],
+    "contacted": true,
+    "discord": ""
+  },
+  {
+    "title": "MarquesBrownlee",
+    "email": ["business@MKBHD.com"],
+    "contacted": true,
+    "discord": ""
+  },
+  {
+    "title": "HarpersBazaar",
+    "email": ["harpersbazaarmag@gmail.com"],
+    "contacted": true
+  },
+  {
+    "title": "cookingwithdog",
+    "email": ["business@cookingwithdog.com"],
+    "contacted": false,
+    "discord": ""
+  },
+  { "title": "Food52", "email": ["help@food52.com"], "contacted": false, "discord": "" },
+  {
+    "title": "Claire Saffitz x Dessert Person",
+    "email": ["adam.nettler@caa.com"],
+    "contacted": false,
+    "discord": ""
+  },
+  {
+    "title": "itsyuyan",
+    "email": ["yuyan@select.co"],
+    "contacted": true,
+    "discord": "",
+    "discordContact" : ""
+  },
+  {
+    "title": "flourishplanner",
+    "email": ["kristine@theflourishplanner.com"],
+    "contacted": true,
+    "discord": "",
+    "discordContact" : ""
+  },
+  {
+    "title": "withsandra",
+    "email": ["hello@withsandra.dev"],
+    "contacted": false,
+    "discord": "cyber security friends",
+    "discordContact" : "yes"
+  },
+  {
+    "title": "doro cubillo",
+    "email": ["dorocubillo@gmail.com"],
+    "contacted": true,
+    "discord": "",
+    "discordContact" : ""
+  },
+  {
+    "title": "julia fei",
+    "email": ["laujuliafei@gmail.com"],
+    "contacted": false,
+    "discord": "",
+    "discordContact" : ""
+  },
+  {
+    "title": "sarah pan",
+    "email": ["hi.sarahpan@gmail.com"],
+    "contacted": false,
+    "discord": "",
+    "discordContact" : ""
+  },
+  {
+    "title": "marselaaa",
+    "email": ["contactmarsela@gmail.com"],
+    "contacted": false,
+    "discord": "",
+    "discordContact" : ""
+  },
+  {
+    "title": "ElsaScola",
+    "email": [""],
+    "contacted": false,
+    "discord": "",
+    "discordContact" : ""
+  },
+  {
+    "title": "seyunyoon",
+    "email": ["seyunyoon.business@gmail.com"],
+    "contacted": false,
+    "discord": "",
+    "discordContact" : ""
+  },
+  {
+    "title": "Natacha Oceane",
+    "email": ["noceanelee@gmail.com"],
+    "contacted": false,
+    "discord": "",
+    "discordContact" : ""
+  },
+  {
+    "title": "Nathalie Martin",
+    "email": ["info@woahstyle.com", "michael@pitch-management.com"],
+    "contacted": false,
+    "discord": "",
+    "discordContact" : ""
+  },
+  {
+    "title": "maisyleigh",
+    "email": ["maisyleighproductions@gmail.com"],
+    "contacted": false,
+    "discord": "",
+    "discordContact" : ""
+  },
+  {
+    "title": "TonyCassara",
+    "email": ["collabwithtony@gmail.com"],
+    "contacted": false,
+    "discord": "",
+    "discordContact" : ""
+  },
+  {
+    "title": "BabeEngineer",
+    "email": ["contact@babeengineer.com"],
+    "contacted": false,
+    "discord": "",
+    "discordContact" : ""
+  }, 
+  {
+    "title": "",
+    "email": [""],
+    "contacted": false,
+    "discord": "",
+    "discordContact" : ""
+  },
+  {
+    "title": "",
+    "email": [""],
+    "contacted": false,
+    "discord": "",
+    "discordContact" : ""
+  }
+]

@@ -10,28 +10,39 @@ import { NewChannelRequest } from '../../../utilsLibrary/newChannelTypes';
 import { ResponseWrapper, TResponseWrapper } from '../../../utilsLibrary/responseWrapper';
 
 type Props = {
+  metadata: any;
   serverUrl: string | null;
   error: TResponseWrapper | null;
   channelCategories: string[] | null;
 };
 
-export async function getServerSideProps() {
-  let categories = getChannelCategories();
+export async function getStaticProps() {
+  let props: Props = {
+    metadata: {
+      title: "Add new channel",
+      description: "Add a new youtube channel to scrape for backlinks.",
+    },
+    serverUrl: null,
+    error: null,
+    channelCategories: getChannelCategories(),
+  };
 
   let serverUrlResponse = getServerUrl();
   if (!serverUrlResponse.Ok) {
-    return {
-      props: { error: serverUrlResponse },
-    };
+    props.error = serverUrlResponse;
+    return {props};
   }
-  let serverUrl = serverUrlResponse.Message;
 
-  return {
-    props: { serverUrl: serverUrl, channelCategories: categories, error: null },
-  };
+  props.serverUrl = serverUrlResponse.Message;
+  return {props};
+  // let serverUrl = serverUrlResponse.Message;
+
+  // return {
+  //   props: { serverUrl: serverUrl, channelCategories: categories, error: null },
+  // };
 }
 
-export default function Index({ serverUrl, channelCategories, error }: Props) {
+export default function Index({serverUrl, channelCategories, error}: Props) {
   if (error) {
     return <ErrorPage response={error} />;
   }
@@ -240,7 +251,7 @@ function AddNewChannelPage(props: {
   );
 }
 
-function SuccessOrErrorMessage(props: { message: string; submessage: string }) {
+function SuccessOrErrorMessage(props: {message: string; submessage: string}) {
   return (
     <>
       <h1 className="text-center my-6 font-black tracking-tight text-3xl">

@@ -1,12 +1,32 @@
 import Link from 'next/link';
 
-export default function Index() {
+import SEOHeader from '../../components/seo/header';
+
+export async function getStaticProps() {
+  return {
+    props: {
+      metadata: {
+        title: "About",
+        description:
+          "YoutubeBacklinks was created to make searching the description box text in youtube videos easy.",
+      },
+    },
+  };
+}
+
+export default function Index(props: {metadata: any}) {
   return (
     <>
+      <SEOHeader
+        title={props.metadata.title}
+        description={props.metadata.description}
+      />
       <div className="pb-4 text-center">
         <h1 className="text-md sm:text-2xl font-black pb-8">
           {" "}
-          YoutubeBacklinks catalogs video description box text for Youtube channels with a focus on making the links, products and discount codes found within them easily searchable.
+          YoutubeBacklinks catalogs video description box text for Youtube
+          channels with a focus on making the links, products and discount codes
+          found within them easily searchable.
         </h1>
 
         <div className="text-tiny sm:text-md">
@@ -31,28 +51,19 @@ export default function Index() {
           </div>
           <div>
             <h2 className="font-black mb-4">The Long</h2>
-            As someone who grew up following aesthetic youtube vloggers and
-            wanting to curate a life like theirs, I was stoked to move to a
-            brand new apartment earlier this year with my partner and pup. I
-            watched a lot of youtube vidoes to get inspiration on how to fill
-            the new space, everything ranging from house decor and furniture to
-            tech recommendations and culinary essentials.
+            I created YoutubeBacklinks to fix a problem that I experienced
+            personally. As someone who watches a lot of lifestyle, DIY and tech
+            videos on Youtube, I'm often left aimlessly searching for product
+            links or discount codes days or weeks after watching a video because
+            the native Youtube search engine doesn't parse through description
+            box text.
             <br />
             <br />
-            The youtubers I watch often review or mention products in their
-            videos, and will link the product (usually with a discount code or
-            affiliate link) in the description box. However, finding the link
-            when I needed it days or weeks later was always an arduous process.
-            I would have to sift through multiple videos in my history before
-            getting the right one since the native Youtube search box doesn't
-            search through all of the description box text.
-            <br />
-            <br /> That's the main reason I created this web app. The search
-            engine behind YoutubeBacklinks prioritizes description box text, and
-            it also displays description boxes for multiple videos in one screen
-            so it makes it easier to sift through and find what you're looking
-            for. <br /> <br />I hope this site can be as useful to you as it is
-            to me! Feel free to add a new channel by filling out{" "}
+            The search engine behind YoutubeBacklinks prioritizes description
+            box text, and it also displays description boxes for multiple videos
+            in one screen so it makes it easier to sift through and find what
+            you're looking for. <br /> <br />I hope this site can be as useful
+            to you as it is to me! Feel free to add a new channel by filling out{" "}
             <Link href="/channels/new">
               <a className="text-theme-yt-red">this form</a>
             </Link>
@@ -61,26 +72,24 @@ export default function Index() {
 
           <div>
             <h2 className="font-black mb-4">The Technical</h2>
-            If you're here because I mentioned this in my resume or a job
-            application, the tech stack that I used to create the site:
+            How I created YoutubeBacklinks:
             <ul className="list-disc list-outside pl-4 pt-4 space-y-4 ">
               <li>
                 Wrote an ETL pipeline in GoLang that extracts data from the
-                Youtube API and loads it into Firestore, a document-oriented
-                database
+                Youtube API and loads it into a database. The ETL runs weekly as
+                a cronjob to update the database with new videos and links.
               </li>
               <li>
-                The backend is a RESTful service written in Golang that creates
-                and loads data to a Typesense search engine to send queries to
+                The backend is a RESTful service written in Golang. On startup,
+                the service loads the database into Typesense, the search
+                engine. Afterwards, the server is ready to accept requests from
+                the client.
               </li>
               <li>
                 The frontend is a NextJS React app written in Typescript with
-                TailwindCSS for styling
+                TailwindCSS for styling.
               </li>
-              <li>
-                The site is deployed to Google Kubernetes Eninge using kustomize
-                files
-              </li>
+              <li>The site is deployed to Google Kubernetes Engine.</li>
             </ul>
           </div>
         </div>

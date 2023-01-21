@@ -286,7 +286,11 @@ function ChannelPage(props: {
 function ChannelSidebar(props: {channel: Channel}) {
   return (
     <div className="rounded-lg sticky top-14 py-2">
-      <img src={props.channel.ThumbnailUrl} referrerPolicy="no-referrer"></img>
+      <img
+        src={props.channel.ThumbnailUrl}
+        referrerPolicy="no-referrer"
+        alt={`${props.channel.Title} channel thumbnail.`}
+      ></img>
       <h1 className="py-4 font-black text-2xl lg:text-3xl ">
         {props.channel.Title}
       </h1>
@@ -310,6 +314,7 @@ function ChannelHeader(props: {channel: Channel}) {
         className="object-scale-down w-20"
         src={props.channel.ThumbnailUrl}
         referrerPolicy="no-referrer"
+        alt={`${props.channel.Title} channle thumbnail.`}
       />
       <div className="ml-8">
         <h1 className="font-black text-2xl md:text-3xl">
@@ -470,6 +475,7 @@ function VideoCard(props: {
           <img
             className="w-24 md:w-auto md:h-auto "
             src={props.video.ThumbnailUrl}
+            alt={`${props.video.Title} video thumbnail.`}
           />
         </a>
 

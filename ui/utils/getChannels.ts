@@ -32,7 +32,7 @@ export async function getChannels(serverUrl: string): Promise<TResponseWrapper>{
     .catch(error => {
       r.Ok && r.SetDefaultError();
       r.Message = error.Message || error.message || ErrUnknown;
-      r.RawMessage = error.RawMessage || `In ${getChannels.name}`;
+      r.RawMessage = error.RawMessage || error.cause || `In ${getChannels.name}`;
     });
 
   return r.Serialize();

@@ -1,39 +1,32 @@
 import '../styles/base.css';
 
-import Head from 'next/head';
+import Script from 'next/script';
 
 import Banner from '../components/banner';
 import Footer from '../components/footer';
 import Navbar from '../components/navbar';
 
-import type { AppProps } from "next/app";
+import type {AppProps} from "next/app";
 
-function MyApp({ Component, pageProps }: AppProps) {
+function MyApp({Component, pageProps}: AppProps) {
   return (
     <>
-      <Head>
-        {/* <!-- Google tag (gtag.js) --> */}
-        {/* https://mariestarck.com/add-google-analytics-to-your-next-js-application-in-5-easy-steps/ */}
-        <script
-          async
-          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}`}
-        ></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
+    {/* https://nextjs.org/docs/messages/next-script-for-ga */}
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}`}
+        strategy="afterInteractive"
+      ></Script>
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`
           window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
+          function gtag(){window.dataLayer.push(arguments);}
           gtag('js', new Date());
+
           gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}', {
             page_path: window.location.pathname,
           });
-          `,
-          }}
-        />
-        <title>Youtube Backlinks</title>
-        <link rel="icon" type="image/x-icon" href="/static/favicon.png"></link>
-      </Head>
-
+        `}
+      </Script>
       <Navbar />
       <Banner bgcolor="theme-yt-red" textcolor="white" icon={true}>
         This website is still in beta phase and may have bugs. If you experience

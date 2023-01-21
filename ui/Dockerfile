@@ -1,5 +1,8 @@
 FROM node:18-alpine
 
+ARG SERVER_URL
+ENV SERVER_URL=$SERVER_URL
+
 WORKDIR /opt/app
 
 # Install dependencies based on the preferred package manager
