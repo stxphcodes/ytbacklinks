@@ -26,7 +26,7 @@ type Props = {
 export async function getStaticProps() {
   let props: Props = {
     metadata: {
-      title: "YotubeBacklinks Home",
+      title: "YoutubeBacklinks",
       description:
         "View and search for products, discount codes, affiliate links and backlinks from popular youtubers.",
     },
@@ -52,29 +52,6 @@ export async function getStaticProps() {
 
   props.channels=response.Message;
   return {props: {...props}};
-  // if (response.Ok) {
-  //   props.channels = response.Message;
-  //   return {props};
-    // return {
-    //   props: {
-    //     channels: response.Message,
-    //     channelCategories: categories,
-    //     error: null,
-    //     serverUrl: serverUrl,
-    //   },
-    // };
-  // }
-
-  // return {props};
-
-  // return {
-  //   props: {
-  //     channels: null,
-  //     channelCategories: null,
-  //     serverUrl: null,
-  //     error: response,
-  //   },
-  // };
 }
 
 export default function Index({

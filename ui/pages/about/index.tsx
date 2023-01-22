@@ -6,15 +6,15 @@ export async function getStaticProps() {
   return {
     props: {
       metadata: {
-        title: "About",
+        title: "Youtube Backlinks About",
         description:
-          "YoutubeBacklinks was created to make searching the description box text in youtube videos easy.",
+          "YoutubeBacklinks was created to make searching the description box text in youtube videos easy. Easily search for product links, backlinks and discount codes from popular youtubers and check if product links are affiliate links.",
       },
     },
   };
 }
 
-export default function Index(props: {metadata: any}) {
+export default function Index(props: { metadata: any }) {
   return (
     <>
       <SEOHeader

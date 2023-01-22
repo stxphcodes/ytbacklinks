@@ -7,9 +7,9 @@
 
       <loc>https://youtubebacklinks.com/</loc>
 
-      <lastmod>2005-01-01</lastmod>
+      <lastmod>2023-01-01</lastmod>
 
-      <changefreq>weekly</changefreq>
+      <changefreq>monthly</changefreq>
 
       <priority>0.8</priority>
 
@@ -20,7 +20,7 @@
 
       <loc>https://youtubebacklinks.com/about</loc>
 
-      <lastmod>2005-01-01</lastmod>
+      <lastmod>2023-01-01</lastmod>
 
       <changefreq>monthly</changefreq>
 
@@ -32,31 +32,7 @@
 
       <loc>https://youtubebacklinks.com/channels/new</loc>
 
-      <lastmod>2005-01-01</lastmod>
-
-      <changefreq>monthly</changefreq>
-
-      <priority>0.1</priority>
-
-   </url>
-
-   <url>
-
-      <loc>https://youtubebacklinks.com/channels/new</loc>
-
-      <lastmod>2005-01-01</lastmod>
-
-      <changefreq>monthly</changefreq>
-
-      <priority>0.1</priority>
-
-   </url>
-
-    <url>
-
-      <loc>https://youtubebacklinks.com/channels/new</loc>
-
-      <lastmod>2005-01-01</lastmod>
+      <lastmod>2023-01-01</lastmod>
 
       <changefreq>monthly</changefreq>
 

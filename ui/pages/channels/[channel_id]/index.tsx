@@ -13,13 +13,15 @@ import { getServerUrl } from '../../../utils/getServer';
 import { postSearchRequest } from '../../../utils/postSearchRequest';
 import { Channel, Link, VideoUI } from '../../../utilsLibrary/firestoreTypes';
 import {
-    ErrUrlParam, ResponseWrapper, TResponseWrapper
+  ErrUrlParam, ResponseWrapper, TResponseWrapper
 } from '../../../utilsLibrary/responseWrapper';
 import {
-    LinkSearchResponse, SearchRequest, VideoSearchResponse
+  LinkSearchResponse, SearchRequest, VideoSearchResponse
 } from '../../../utilsLibrary/searchTypes';
+import SEOHeader from '../../../components/seo/header';
 
 type Props = {
+  metadata: any;
   channel: Channel | null;
   videos: VideoUI[] | null;
   error: TResponseWrapper | null;
@@ -27,66 +29,79 @@ type Props = {
 };
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
+  let props: Props = {
+    metadata: {
+      title: "A youtube channel's backlinks",
+      description: "Backlinks, products, discount codes and affiliate links parsed from a youtuber",
+    },
+    channel: null,
+    videos: null,
+    error: null,
+    serverUrl: null,
+  }
+
   const channel_id = context.params?.channel_id;
   if (typeof channel_id !== "string") {
-    return {
-      props: {
-        error: new ResponseWrapper(
-          false,
-          400,
-          "Bad Request",
-          `${ErrUrlParam} ${channel_id}`
-        ).Serialize(),
-      },
-    };
+    props.error = new ResponseWrapper(
+      false,
+      400,
+      "Bad Request",
+      `${ErrUrlParam} ${channel_id}`
+    ).Serialize()
+    return { props: { ...props } }
   }
 
   let serverUrlResponse = getServerUrl();
   if (!serverUrlResponse.Ok) {
+    props.error = serverUrlResponse
     return {
-      props: {error: serverUrlResponse},
-    };
+      props: { ...props }
+    }
   }
-  let serverUrl = serverUrlResponse.Message;
+  props.serverUrl = serverUrlResponse.Message
 
-  let channelResponse = await getChannel(serverUrl, channel_id);
+  let channelResponse = await getChannel(serverUrlResponse.Message, channel_id);
   if (!channelResponse.Ok) {
-    return {
-      props: {error: channelResponse},
-    };
+    props.error = channelResponse
+    return { props: { ...props } }
   }
+  props.channel = channelResponse.Message.Channel
+  props.videos = channelResponse.Message.Videos
+  props.metadata.title = `${props.channel?.Title} backlinks, products, discount codes, affiliate links`
+  props.metadata.description = `Backlinks, products, discount codes and affiliate links parsed from the description box text of youtube channel ${props.channel?.Title}`
 
   return {
-    props: {
-      channel: channelResponse.Message.Channel,
-      videos: channelResponse.Message.Videos,
-      serverUrl: serverUrl,
-      error: null,
-    },
-  };
+    props: { ...props }
+  }
 };
 
-export default function Index({videos, channel, serverUrl, error}: Props) {
-  if (error) {
-    return <ErrorPage response={error} />;
-  }
-
-  if (!channel || !videos || !serverUrl) {
-    return (
-      <ErrorPage
-        response={new ResponseWrapper(
-          false,
-          500,
-          "Server Error",
-          "Unable to get channel info and videos."
-        ).Serialize()}
-      />
-    );
-  }
-
+export default function Index({ metadata, videos, channel, serverUrl, error }: Props) {
   return (
-    <ChannelPage channel={channel} videos={videos} serverUrl={serverUrl} />
-  );
+    <>
+      <SEOHeader
+        title={metadata.title}
+        description={metadata.description}
+      />
+      {error ? (
+        <ErrorPage response={error} />
+      ) : !channel || !videos || !serverUrl ? (
+        <ErrorPage
+          response={new ResponseWrapper(
+            false,
+            500,
+            "Server Error",
+            "Unable to get channel info and videos"
+          ).Serialize()}
+        />
+      ) : (
+        <ChannelPage
+          channel={channel}
+          videos={videos}
+          serverUrl={serverUrl}
+        />
+      )}
+    </>
+  )
 }
 
 function ChannelPage(props: {
@@ -283,7 +298,7 @@ function ChannelPage(props: {
   );
 }
 
-function ChannelSidebar(props: {channel: Channel}) {
+function ChannelSidebar(props: { channel: Channel }) {
   return (
     <div className="rounded-lg sticky top-14 py-2">
       <img
@@ -307,7 +322,7 @@ function ChannelSidebar(props: {channel: Channel}) {
   );
 }
 
-function ChannelHeader(props: {channel: Channel}) {
+function ChannelHeader(props: { channel: Channel }) {
   return (
     <>
       <img
@@ -402,7 +417,7 @@ function SearchResults(props: {
                 titleHit={
                   props.linkSearchResponse
                     ? props.linkSearchResponse.VideoTitleHits[video.Id] !==
-                      undefined
+                    undefined
                     : false
                 }
                 linkHits={
@@ -425,7 +440,7 @@ function SearchResults(props: {
                 titleHit={
                   props.videoSearchResponse
                     ? props.videoSearchResponse.VideoTitleHits[video.Id] !==
-                      undefined
+                    undefined
                     : false
                 }
                 linkHits={[]}
@@ -600,7 +615,7 @@ function containsTerm(text: string, term: string) {
   return found;
 }
 
-function LinkText(props: {link: Link; active: boolean; term: string}) {
+function LinkText(props: { link: Link; active: boolean; term: string }) {
   let text =
     props.link.Brand !== ""
       ? `${props.link.Brand} - ${props.link.Description}`
@@ -629,9 +644,8 @@ function LinkText(props: {link: Link; active: boolean; term: string}) {
         <a
           target="_blank"
           href={props.link.Href}
-          className={`break-all block pb-1 hover:text-theme-yt-red px-2 ${
-            hasterm && "bg-theme-yellow"
-          }`}
+          className={`break-all block pb-1 hover:text-theme-yt-red px-2 ${hasterm && "bg-theme-yellow"
+            }`}
         >
           {text}
         </a>
@@ -649,7 +663,7 @@ function LinkText(props: {link: Link; active: boolean; term: string}) {
   );
 }
 
-function LinkButton(props: {link: Link; active: boolean; term: string}) {
+function LinkButton(props: { link: Link; active: boolean; term: string }) {
   let buttonText =
     props.link.Brand !== ""
       ? `${props.link.Brand} - ${props.link.Description}`
@@ -685,7 +699,7 @@ function LinkButton(props: {link: Link; active: boolean; term: string}) {
   );
 }
 
-function HitCounts(props: {totalLinkHits: number; totalVideoHits: number}) {
+function HitCounts(props: { totalLinkHits: number; totalVideoHits: number }) {
   return (
     <div className="flex flex-wrap place-content-start gap-x-2 gap-y-1 text-sm mt-4">
       <div className="bg-theme-yt-red p-2 rounded  text-left text-white">

@@ -6,8 +6,8 @@ export type Metadata = {
 };
 
 export default function SEOHeader(props: {
-  title?: string;
-  description?: string;
+  title: string;
+  description: string;
   otherMetadata?: Metadata[];
 }) {
   return (
