@@ -39,19 +39,19 @@ export async function getStaticProps() {
   let serverUrlResponse = getServerUrl();
   if (!serverUrlResponse.Ok) {
     props.error = serverUrlResponse;
-    return {props: {...props}};
+    return { props }
   }
   let serverUrl = serverUrlResponse.Message;
   props.serverUrl = serverUrl;
 
   let response = await getChannels(serverUrl);
   if (!response.Ok) {
-    props.error = response 
-    return {props: {...props}};
+    props.error = response
+    return { props }
   }
+  props.channels = response.Message;
 
-  props.channels=response.Message;
-  return {props: {...props}};
+  return { props }
 }
 
 export default function Index({
@@ -339,7 +339,7 @@ function ChannelsToDisplay(props: {
   );
 }
 
-function ChannelCard(props: {channel: Channel; hitCount?: number}) {
+function ChannelCard(props: { channel: Channel; hitCount?: number }) {
   return (
     <Link href={`/channels/${props.channel.Id}`} key={props.channel.Id}>
       <button className="bg-white shadow-lg text-center p-2 hover:scale-105">

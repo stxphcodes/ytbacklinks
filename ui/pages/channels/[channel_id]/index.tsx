@@ -48,31 +48,28 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       "Bad Request",
       `${ErrUrlParam} ${channel_id}`
     ).Serialize()
-    return { props: { ...props } }
+    return { props }
   }
 
   let serverUrlResponse = getServerUrl();
   if (!serverUrlResponse.Ok) {
     props.error = serverUrlResponse
-    return {
-      props: { ...props }
-    }
+    return { props }
+
   }
   props.serverUrl = serverUrlResponse.Message
 
   let channelResponse = await getChannel(serverUrlResponse.Message, channel_id);
   if (!channelResponse.Ok) {
     props.error = channelResponse
-    return { props: { ...props } }
+    return { props }
   }
   props.channel = channelResponse.Message.Channel
   props.videos = channelResponse.Message.Videos
   props.metadata.title = `${props.channel?.Title} backlinks, products, discount codes, affiliate links`
   props.metadata.description = `Backlinks, products, discount codes and affiliate links parsed from the description box text of youtube channel ${props.channel?.Title}`
 
-  return {
-    props: { ...props }
-  }
+  return { props }
 };
 
 export default function Index({ metadata, videos, channel, serverUrl, error }: Props) {
