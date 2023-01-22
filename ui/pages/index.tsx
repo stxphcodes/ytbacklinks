@@ -248,16 +248,16 @@ function Header() {
       <h1 className="text-3xl md:text-5xl lg:text-6xl font-black">
         <span className="text-theme-yt-red">Youtube</span> BackLinks
       </h1>
-      <h3 className="mb-6">
+      <h2 className="mb-6">
         <span className="font-black">back·link</span>{" "}
         <span className="text-theme-beige-3">(noun)</span>{" "}
         <span className="italic">
           an incoming hyperlink from one web page to another website{" "}
         </span>
-      </h3>
+      </h2>
       <p className="text-lg font-black">
-        View and search for linked products and discount codes from popular
-        youtubers.
+        View and search for product links and discount codes from popular
+        youtubers and check for affiliate links.
       </p>
     </div>
   );
