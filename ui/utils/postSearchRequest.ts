@@ -37,7 +37,7 @@ export async function postSearchRequest(serverUrl: string, request: SearchReques
 
 async function postLinkSearchRequest(serverUrl: string, request: SearchRequest) {
   let url = new URL(serverUrl);
-  url.pathname = `/links/search`;
+  url.pathname = `/api/links/search`;
 
   let r = new ResponseWrapper();
   await fetch(url.toString(), {
@@ -72,7 +72,7 @@ async function postLinkSearchRequest(serverUrl: string, request: SearchRequest) 
 
 async function postVideoSearchRequest(serverUrl: string, request: SearchRequest) {
   let url = new URL(serverUrl);
-  url.pathname = `/videos/search`;
+  url.pathname = `/api/videos/search`;
 
   let r = new ResponseWrapper();
   await fetch(url.toString(), {

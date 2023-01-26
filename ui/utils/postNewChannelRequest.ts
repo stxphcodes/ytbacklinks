@@ -16,7 +16,7 @@ export async function postNewChannelRequest(
   }
 
   let url = new URL(serverUrl);
-  url.pathname = `/channel/new`;
+  url.pathname = `/api/channel/new`;
 
   let r = new ResponseWrapper();
   await fetch(url.toString(), {

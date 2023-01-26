@@ -29,7 +29,7 @@ export async function postAffiliateLink(request: AffiliateLinkRequest) {
     serverUrl = new URL("http://localhost:8000");
   }
 
-  serverUrl.pathname = "/affiliatelink";
+  serverUrl.pathname = "/api/affiliatelink";
 
   let r = new ResponseWrapper();
   await fetch(serverUrl.toString(), {
