@@ -20,35 +20,7 @@ spec:
                 name: ui
                 port:
                   number: 3000
-          - path: "/links/search"
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: server
-                port:
-                  number: 8000
-          - path: "/videos/search"
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: server
-                port:
-                  number: 8000
-          - path: "/channels/search"
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: server
-                port:
-                  number: 8000
-          - path: "/channel/new"
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: server
-                port:
-                  number: 8000
-          - path: "/affiliatelink"
+          - path: "/api/*"
             pathType: ImplementationSpecific
             backend:
               service:

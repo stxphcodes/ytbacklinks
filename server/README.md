@@ -1,12 +1,12 @@
 # Server
 
 Server is the backend behind YoutubeBacklinks. It asssumes an instance of Typesense (search engine) is running and uploads data from Firestore (database) to it every time it restarts. It then starts the server and waits for requests from the frontend. The following are its endpoints:
-- `/channel/:channelId`: returns data for a specific channel 
-- `/channels/search`: given a search term, search all channels for videos or links with that term
-- `/links/search`: given a search term, search all links for that term
-- `/videos/search`: given a search term, search all videos for that term 
-- `/channel/new`: add a new channel to the ETL
-- `/affilliateLink`: given a link, check whether the link is an affiliate link
+- `/api/channel/:channelId`: returns data for a specific channel 
+- `/api/channels/search`: given a search term, search all channels for videos or links with that term
+- `/api/links/search`: given a search term, search all links for that term
+- `/api/videos/search`: given a search term, search all videos for that term 
+- `/api/channel/new`: add a new channel to the ETL
+- `/api/affilliateLink`: given a link, check whether the link is an affiliate link
 
 
 ## Examples
@@ -16,7 +16,7 @@ Server is the backend behind YoutubeBacklinks. It asssumes an instance of Typese
 Request: 
 ``` bash
 curl -H "Content-type: application/json" \
-     -X POST "http://localhost:8000/links/search" \
+     -X POST "http://localhost:8000/api/links/search" \
      -d '{"ChannelId": "UCqqJQ_cXSat0KIAVfIfKkVA", "Term": "udon"}'
 ```
 Response:
@@ -29,7 +29,7 @@ Response:
 Request:
 ``` bash
 curl -H "Content-type: application/json" \
-     -X POST "http://localhost:8000/affiliatelink" \
+     -X POST "http://localhost:8000/api/affiliatelink" \
      -d '{"Href": "https://bit.ly/3VEHAG4"}'
 ```
 

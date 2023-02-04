@@ -6,7 +6,7 @@ import {
 
 export async function getChannels(serverUrl: string): Promise<TResponseWrapper>{
   let url = new URL(serverUrl)
-  url.pathname = `/channels`;
+  url.pathname = `/api/channels`;
 
   let r = new ResponseWrapper();
   await fetch(url.toString(), {
@@ -32,7 +32,7 @@ export async function getChannels(serverUrl: string): Promise<TResponseWrapper>{
     .catch(error => {
       r.Ok && r.SetDefaultError();
       r.Message = error.Message || error.message || ErrUnknown;
-      r.RawMessage = error.RawMessage || `In ${getChannels.name}`;
+      r.RawMessage = error.RawMessage || error.cause || `In ${getChannels.name}`;
     });
 
   return r.Serialize();
@@ -44,7 +44,7 @@ export async function getChannel(
   channelId: string
 ): Promise<TResponseWrapper> {
   let url = new URL(serverUrl)
-  url.pathname = `/channel/${channelId}`
+  url.pathname = `/api/channel/${channelId}`
 
   let r = new ResponseWrapper();
   await fetch(url.toString(), {

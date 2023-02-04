@@ -20,7 +20,7 @@ spec:
         app: ui
     spec:
       containers:
-        - image: us-east4-docker.pkg.dev/backlinks-81c44/ui/ui:20221231
+        - image: us-east4-docker.pkg.dev/backlinks-81c44/ui/ui:20230125-1
           name: ui
           imagePullPolicy: Always
 

@@ -153,13 +153,13 @@ func run() error {
 	mux.GET("/", func(ctx echo.Context) error {
 		return ctx.JSON(200, nil)
 	})
-	mux.GET("/channels", ChannelsHandler(ts, &cfg))
-	mux.GET("/channel/:channelId", ChannelHandler(ts, &cfg))
-	mux.POST("/channels/search", ChannelSearchHandler(ts, &cfg))
-	mux.POST("/links/search", LinkSearchHandler(ts, &cfg))
-	mux.POST("/videos/search", VideoSearchHandler(ts, &cfg))
-	mux.POST("/channel/new", NewChannelHandler(gh, &cfg))
-	mux.POST("/affiliatelink", AffiliateLinkHandler(&cfg))
+	mux.GET("/api/channels", ChannelsHandler(ts, &cfg))
+	mux.GET("/api/channel/:channelId", ChannelHandler(ts, &cfg))
+	mux.POST("/api/channels/search", ChannelSearchHandler(ts, &cfg))
+	mux.POST("/api/links/search", LinkSearchHandler(ts, &cfg))
+	mux.POST("/api/videos/search", VideoSearchHandler(ts, &cfg))
+	mux.POST("/api/channel/new", NewChannelHandler(gh, &cfg))
+	mux.POST("/api/affiliatelink", AffiliateLinkHandler(&cfg))
 
 	return mux.Start(cfg.HttpAddr)
 }

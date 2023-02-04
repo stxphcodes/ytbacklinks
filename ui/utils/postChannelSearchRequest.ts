@@ -13,7 +13,7 @@ export async function postChannelSearchRequest(serverUrl: string, request: Searc
   }
   
     let url = new URL(serverUrl);
-    url.pathname = `/channels/search`;
+    url.pathname = `/api/channels/search`;
   
     let r = new ResponseWrapper();
     await fetch(url.toString(), {

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { CategoryCheckboxes } from '../../../components/categoryCheckboxes';
 import ErrorPage from '../../../components/error/page';
 import { FormField, FormTextField } from '../../../components/formField';
+import SEOHeader from '../../../components/seo/header';
 import { getChannelCategories } from '../../../utils/getChannels';
 import { getServerUrl } from '../../../utils/getServer';
 import { postNewChannelRequest } from '../../../utils/postNewChannelRequest';
@@ -10,51 +11,55 @@ import { NewChannelRequest } from '../../../utilsLibrary/newChannelTypes';
 import { ResponseWrapper, TResponseWrapper } from '../../../utilsLibrary/responseWrapper';
 
 type Props = {
+  metadata: any;
   serverUrl: string | null;
   error: TResponseWrapper | null;
   channelCategories: string[] | null;
 };
 
-export async function getServerSideProps() {
-  let categories = getChannelCategories();
+export async function getStaticProps() {
+  let props: Props = {
+    metadata: {
+      title: "Add new channel",
+      description: "Add a new youtube channel to scrape for backlinks, products, discount codes and affiliate links.",
+    },
+    serverUrl: null,
+    error: null,
+    channelCategories: getChannelCategories(),
+  };
 
   let serverUrlResponse = getServerUrl();
   if (!serverUrlResponse.Ok) {
-    return {
-      props: { error: serverUrlResponse },
-    };
+    props.error = serverUrlResponse;
+    return { props };
   }
-  let serverUrl = serverUrlResponse.Message;
 
-  return {
-    props: { serverUrl: serverUrl, channelCategories: categories, error: null },
-  };
+  props.serverUrl = serverUrlResponse.Message;
+  return { props };
 }
 
-export default function Index({ serverUrl, channelCategories, error }: Props) {
-  if (error) {
-    return <ErrorPage response={error} />;
-  }
-
-  if (!channelCategories || !serverUrl) {
-    return (
-      <ErrorPage
-        response={new ResponseWrapper(
-          false,
-          500,
-          "Server Error",
-          "Unable to get server and channel categories info."
-        ).Serialize()}
-      />
-    );
-  }
-
+export default function Index({ metadata, serverUrl, channelCategories, error }: Props) {
   return (
-    <AddNewChannelPage
-      channelCategories={channelCategories}
-      serverUrl={serverUrl}
-    />
-  );
+    <>
+      <SEOHeader title={metadata.title} description={metadata.description} />
+      {error ? <ErrorPage response={error} /> :
+        !channelCategories || !serverUrl ?
+          <ErrorPage
+            response={new ResponseWrapper(
+              false,
+              500,
+              "Server Error",
+              "Unable to get server and channel categories info."
+            ).Serialize()}
+          /> :
+          <AddNewChannelPage
+            channelCategories={channelCategories}
+            serverUrl={serverUrl}
+          />
+      }
+
+    </>
+  )
 }
 
 function AddNewChannelPage(props: {
@@ -197,9 +202,8 @@ function AddNewChannelPage(props: {
           <CategoryCheckboxes
             channelCategories={[...props.channelCategories, "other"]}
             handleCategoryCheck={handleCategoryCheck}
-            styles={`px-3 rounded-lg my-4 grid grid-cols-1 sm:grid-cols-3 border ${
-              categories.length === 0 ? "border-red-500" : "border-gray"
-            }`}
+            styles={`px-3 rounded-lg my-4 grid grid-cols-1 sm:grid-cols-3 border ${categories.length === 0 ? "border-red-500" : "border-gray"
+              }`}
           />
         </FormField>
 

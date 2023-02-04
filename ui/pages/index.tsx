@@ -7,6 +7,7 @@ import ErrorPage from '../components/error/page';
 import { ChevronDownIcon, ChevronUpIcon } from '../components/icons/chevron';
 import { CogIcon } from '../components/icons/cog';
 import SearchBar from '../components/searchbar';
+import SEOHeader from '../components/seo/header';
 import { getChannelCategories, getChannels } from '../utils/getChannels';
 import { getServerUrl } from '../utils/getServer';
 import { postChannelSearchRequest } from '../utils/postChannelSearchRequest';
@@ -15,74 +16,76 @@ import { ResponseWrapper, TResponseWrapper } from '../utilsLibrary/responseWrapp
 import { ChannelSearchResponse, SearchRequest } from '../utilsLibrary/searchTypes';
 
 type Props = {
+  metadata: any;
   channels: Channel[] | null;
   channelCategories: string[] | null;
   error: TResponseWrapper | null;
   serverUrl: string | null;
 };
 
-export async function getServerSideProps() {
-  let categories = getChannelCategories();
+export async function getStaticProps() {
+  let props: Props = {
+    metadata: {
+      title: "YoutubeBacklinks",
+      description:
+        "View and search for products, discount codes, affiliate links and backlinks from popular youtubers.",
+    },
+    channels: null,
+    channelCategories: getChannelCategories(),
+    error: null,
+    serverUrl: null,
+  };
 
   let serverUrlResponse = getServerUrl();
   if (!serverUrlResponse.Ok) {
-    return {
-      props: { error: serverUrlResponse },
-    };
+    props.error = serverUrlResponse;
+    return { props }
   }
   let serverUrl = serverUrlResponse.Message;
+  props.serverUrl = serverUrl;
 
   let response = await getChannels(serverUrl);
-  if (response.Ok) {
-    return {
-      props: {
-        channels: response.Message,
-        channelCategories: categories,
-        error: null,
-        serverUrl: serverUrl,
-      },
-    };
+  if (!response.Ok) {
+    props.error = response
+    return { props }
   }
+  props.channels = response.Message;
 
-  return {
-    props: {
-      channels: null,
-      channelCategories: null,
-      serverUrl: null,
-      error: response,
-    },
-  };
+  return { props }
 }
 
 export default function Index({
+  metadata,
   channels,
   channelCategories,
   serverUrl,
   error,
 }: Props) {
-  if (error) {
-    return <ErrorPage response={error} />;
-  }
-
-  if (!channels || !channelCategories || !serverUrl) {
-    return (
-      <ErrorPage
-        response={new ResponseWrapper(
-          false,
-          500,
-          "Server Error",
-          "Unable to load channels. Missing props"
-        ).Serialize()}
-      />
-    );
-  }
-
   return (
-    <HomePage
-      channels={channels}
-      channelCategories={channelCategories}
-      serverUrl={serverUrl}
-    />
+    <>
+      <SEOHeader
+        title={metadata.title}
+        description={metadata.description}
+      />
+      {error ? (
+        <ErrorPage response={error} />
+      ) : !channels || !channelCategories || !serverUrl ? (
+        <ErrorPage
+          response={new ResponseWrapper(
+            false,
+            500,
+            "Server Error",
+            "Unable to load channels. Missing props"
+          ).Serialize()}
+        />
+      ) : (
+        <HomePage
+          channels={channels}
+          channelCategories={channelCategories}
+          serverUrl={serverUrl}
+        />
+      )}
+    </>
   );
 }
 
@@ -245,16 +248,16 @@ function Header() {
       <h1 className="text-3xl md:text-5xl lg:text-6xl font-black">
         <span className="text-theme-yt-red">Youtube</span> BackLinks
       </h1>
-      <h3 className="mb-6">
+      <h2 className="mb-6">
         <span className="font-black">back·link</span>{" "}
         <span className="text-theme-beige-3">(noun)</span>{" "}
         <span className="italic">
           an incoming hyperlink from one web page to another website{" "}
         </span>
-      </h3>
+      </h2>
       <p className="text-lg font-black">
-        View and search for linked products and discount codes from popular
-        youtubers.
+        View and search for product links and discount codes from popular
+        youtubers and check for affiliate links.
       </p>
     </div>
   );
