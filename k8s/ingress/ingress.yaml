@@ -17,13 +17,6 @@ spec:
             pathType: ImplementationSpecific
             backend:
               service:
-                name: ui
-                port:
-                  number: 3000
-          - path: "/api/*"
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: server
+                name: redirect-server
                 port:
                   number: 8000

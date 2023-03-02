@@ -1,0 +1,59 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: redirect-server
+  labels:
+    service: redirect-server
+    app: redirect-server
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: redirect-server
+      app: redirect-server
+  template:
+    metadata:
+      labels:
+        service: redirect-server
+        app: redirect-server
+    spec:
+      containers:
+        - image: us-east1-docker.pkg.dev/backlinks-81c44/redirect/redirect:20230302-1
+          name: service
+          imagePullPolicy: Always
+          command: ["sh"]
+          args:
+            [
+              "-c",
+              "/app",
+            ]
+
+          resources:
+            limits:
+              cpu: 125m
+              memory: 64Mi
+            requests:
+              cpu: 125m
+              memory: 64Mi
+
+          ports:
+            - containerPort: 8000
+            - containerPort: 8001
+
+          livenessProbe:
+            httpGet:
+              scheme: HTTP
+              path: /live
+              port: 8001
+            initialDelaySeconds: 60
+            periodSeconds: 5
+
+          readinessProbe:
+            httpGet:
+              scheme: HTTP
+              path: /ready
+              port: 8001
+            initialDelaySeconds: 60
+            periodSeconds: 5

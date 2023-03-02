@@ -1,0 +1,12 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: redirect-server
+
+spec:
+  type: NodePort
+  selector:
+    app: redirect-server
+  ports:
+    - port: 8000
